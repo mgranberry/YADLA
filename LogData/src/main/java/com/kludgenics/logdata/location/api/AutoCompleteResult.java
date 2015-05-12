@@ -1,4 +1,4 @@
-package com.kludgenics.logdata;
+package com.kludgenics.logdata.location.api;
 
 import java.util.List;
 

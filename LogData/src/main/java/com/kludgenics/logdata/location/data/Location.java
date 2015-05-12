@@ -1,4 +1,4 @@
-package com.kludgenics.logdata;
+package com.kludgenics.logdata.location.data;
 
 /**
  * Created by matthiasgranberry on 5/12/15.

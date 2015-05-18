@@ -1,5 +1,7 @@
 package com.kludgenics.logdata.location.data;
 
+import android.os.Parcelable;
+
 /**
  * Created by matthiasgranberry on 5/12/15.
  */
@@ -8,5 +10,6 @@ public interface Location {
     String getName();
     String getLocationTypes();
     String getAddress();
-    Location getPosition();
+    Position getPosition();
+    String getAttributionSnippet();
 }

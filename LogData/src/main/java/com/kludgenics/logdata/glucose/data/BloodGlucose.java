@@ -12,4 +12,9 @@ public interface BloodGlucose {
         CGM,
         SMBG
     }
+
+    public enum Unit {
+        MGDL,
+        MMOL_L
+    }
 }

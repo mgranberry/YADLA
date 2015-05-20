@@ -10,7 +10,7 @@ public class Position {
     private double longitude;
     private Double radius;
 
-    public Position(double longitude, double latitude, @Nullable Double radius) {
+    public Position(double latitude, double longitude, @Nullable Double radius) {
         this.latitude = latitude;
         this.longitude = longitude;
         this.radius = radius;

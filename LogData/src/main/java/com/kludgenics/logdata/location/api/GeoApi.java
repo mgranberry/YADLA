@@ -10,6 +10,8 @@ import java.util.List;
  * Created by matthiasgranberry on 5/11/15.
  */
 public interface GeoApi {
+    Observable<Location> getCurrentLocation();
+    Observable<Location> getCurrentLocation(String categories);
     Observable<Location> search(Position position);
     Observable<Location> search(Position position, String categories);
     Observable<AutoCompleteResult> autoComplete(Position position, String query);

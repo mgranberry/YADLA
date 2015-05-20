@@ -7,9 +7,9 @@ import android.os.Parcelable;
  */
 public interface Location {
     String getId();
-    String getName();
+    CharSequence getName();
     String getLocationTypes();
-    String getAddress();
+    CharSequence getAddress();
     Position getPosition();
-    String getAttributionSnippet();
+    CharSequence getAttributionSnippet();
 }

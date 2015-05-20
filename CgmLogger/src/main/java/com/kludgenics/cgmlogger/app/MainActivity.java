@@ -1,6 +1,10 @@
 package com.kludgenics.cgmlogger.app;
 
 import android.app.Activity;
+import android.content.ComponentName;
+import android.content.Intent;
+import android.content.ServiceConnection;
+import android.os.IBinder;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.app.ActionBar;
 import android.support.v4.app.Fragment;
@@ -17,6 +21,10 @@ import android.view.ViewGroup;
 import android.support.v4.widget.DrawerLayout;
 import android.widget.ArrayAdapter;
 import android.widget.TextView;
+import com.kludgenics.logdata.location.api.BaseGmsPlaceService;
+import com.kludgenics.logdata.location.api.GeoApi;
+import com.kludgenics.logdata.location.data.Location;
+import rx.Subscriber;
 
 
 public class MainActivity extends ActionBarActivity
@@ -31,6 +39,25 @@ public class MainActivity extends ActionBarActivity
      * Used to store the last screen title. For use in {@link #restoreActionBar()}.
      */
     private CharSequence mTitle;
+    private GeoApi mPlaceService;
+    private boolean mBound;
+
+    private ServiceConnection mPlaceConnection = new ServiceConnection() {
+
+        @Override
+        public void onServiceConnected(ComponentName className,
+                                       IBinder service) {
+            // We've bound to LocalService, cast the IBinder and get LocalService instance
+            BaseGmsPlaceService.LocalBinder binder = (BaseGmsPlaceService.LocalBinder) service;
+            mPlaceService = binder.getService();
+            mBound = true;
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName arg0) {
+            mBound = false;
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,6 +72,13 @@ public class MainActivity extends ActionBarActivity
         mNavigationDrawerFragment.setUp(
                 R.id.navigation_drawer,
                 (DrawerLayout) findViewById(R.id.drawer_layout));
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        Intent serviceIntent = new Intent(this, BaseGmsPlaceService.class);
+        bindService(serviceIntent, mPlaceConnection, BIND_AUTO_CREATE);
     }
 
     @Override
@@ -71,9 +105,26 @@ public class MainActivity extends ActionBarActivity
     }
 
     public void restoreActionBar() {
-        ActionBar actionBar = getSupportActionBar();
+        final ActionBar actionBar = getSupportActionBar();
         actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_STANDARD);
         actionBar.setDisplayShowTitleEnabled(true);
+        mPlaceService.getCurrentLocation().subscribe(new Subscriber<Location>() {
+
+            @Override
+            public void onCompleted() {
+            }
+
+            @Override
+            public void onError(Throwable e) {
+
+            }
+
+            @Override
+            public void onNext(Location location) {
+                actionBar.setTitle(location.getName());
+
+            }
+        });
         actionBar.setTitle(mTitle);
     }
 

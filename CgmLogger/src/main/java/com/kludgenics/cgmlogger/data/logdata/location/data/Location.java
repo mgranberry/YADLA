@@ -1,6 +1,4 @@
-package com.kludgenics.logdata.location.data;
-
-import android.os.Parcelable;
+package com.kludgenics.cgmlogger.data.data.logdata.location.data;
 
 /**
  * Created by matthiasgranberry on 5/12/15.

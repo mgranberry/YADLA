@@ -1,4 +1,4 @@
-package com.kludgenics.glucosegrapher;
+package com.kludgenics.cgmlogger.data.data;
 
 import java.util.Date;
 

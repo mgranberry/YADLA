@@ -1,4 +1,4 @@
-package com.kludgenics.logdata.location.data;
+package com.kludgenics.cgmlogger.data.data.logdata.location.data;
 
 import com.google.android.gms.location.places.Place;
 import com.google.android.gms.maps.model.LatLng;

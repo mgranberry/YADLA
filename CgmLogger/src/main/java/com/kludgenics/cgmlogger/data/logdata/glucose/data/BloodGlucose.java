@@ -1,4 +1,4 @@
-package com.kludgenics.logdata.glucose.data;
+package com.kludgenics.cgmlogger.data.data.logdata.glucose.data;
 
 /**
  * Created by matthiasgranberry on 5/12/15.

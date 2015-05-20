@@ -1,10 +1,8 @@
-package com.kludgenics.logdata.location.api;
+package com.kludgenics.cgmlogger.data.data.logdata.location.api;
 
-import com.kludgenics.logdata.location.data.Location;
-import com.kludgenics.logdata.location.data.Position;
+import com.kludgenics.cgmlogger.data.data.logdata.location.data.Location;
+import com.kludgenics.cgmlogger.data.data.logdata.location.data.Position;
 import rx.Observable;
-
-import java.util.List;
 
 /**
  * Created by matthiasgranberry on 5/11/15.

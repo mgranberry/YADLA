@@ -1,4 +1,6 @@
-package com.kludgenics.cgmlogger.data.data.logdata.location.data;
+package com.kludgenics.cgmlogger.data.logdata.location.data;
+
+import com.kludgenics.cgmlogger.data.logdata.location.data.Position;
 
 /**
  * Created by matthiasgranberry on 5/12/15.

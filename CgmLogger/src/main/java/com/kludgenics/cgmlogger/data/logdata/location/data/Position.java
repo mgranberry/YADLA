@@ -1,4 +1,4 @@
-package com.kludgenics.cgmlogger.data.data.logdata.location.data;
+package com.kludgenics.cgmlogger.data.logdata.location.data;
 
 import android.support.annotation.Nullable;
 

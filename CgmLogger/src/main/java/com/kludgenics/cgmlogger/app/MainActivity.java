@@ -9,21 +9,18 @@ import android.support.v7.app.ActionBarActivity;
 import android.support.v7.app.ActionBar;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
-import android.content.Context;
-import android.os.Build;
 import android.os.Bundle;
-import android.view.Gravity;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.support.v4.widget.DrawerLayout;
-import android.widget.ArrayAdapter;
-import android.widget.TextView;
-import com.kludgenics.logdata.location.api.BaseGmsPlaceService;
-import com.kludgenics.logdata.location.api.GeoApi;
-import com.kludgenics.logdata.location.data.Location;
+import com.kludgenics.cgmlogger.data.logdata.location.api.BaseGmsPlaceService;
+import com.kludgenics.cgmlogger.data.logdata.location.api.GeoApi;
+import com.kludgenics.cgmlogger.data.logdata.location.data.GooglePlacesLocation;
+import com.kludgenics.cgmlogger.data.logdata.location.data.Location;
 import rx.Subscriber;
 
 
@@ -82,6 +79,14 @@ public class MainActivity extends ActionBarActivity
     }
 
     @Override
+    protected void onStop() {
+        super.onStop();
+        if (mBound)
+            unbindService(mPlaceConnection);
+        mBound = false;
+    }
+
+    @Override
     public void onNavigationDrawerItemSelected(int position) {
         // update the main content by replacing fragments
         FragmentManager fragmentManager = getSupportFragmentManager();
@@ -108,23 +113,43 @@ public class MainActivity extends ActionBarActivity
         final ActionBar actionBar = getSupportActionBar();
         actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_STANDARD);
         actionBar.setDisplayShowTitleEnabled(true);
-        mPlaceService.getCurrentLocation().subscribe(new Subscriber<Location>() {
+        if (mBound) {
+            rx.Observable<Location> locationObservable = mPlaceService.getCurrentLocation();
 
-            @Override
-            public void onCompleted() {
-            }
+            locationObservable.take(1).subscribe(new Subscriber<Location>() {
 
-            @Override
-            public void onError(Throwable e) {
+                @Override
+                public void onCompleted() {
+                }
 
-            }
+                @Override
+                public void onError(Throwable e) {
 
-            @Override
-            public void onNext(Location location) {
-                actionBar.setTitle(location.getName());
+                }
 
-            }
-        });
+                @Override
+                public void onNext(Location location) {
+                    actionBar.setTitle(location.getName());
+
+                }
+            });
+            locationObservable.subscribe(new Subscriber<Location>() {
+                @Override
+                public void onCompleted() {
+
+                }
+
+                @Override
+                public void onError(Throwable e) {
+
+                }
+
+                @Override
+                public void onNext(Location location) {
+                    Log.d("LocResult", location.getName().toString() + "(" + ((GooglePlacesLocation) location).getLikelihood() + ")");
+                }
+            });
+        }
         actionBar.setTitle(mTitle);
     }
 

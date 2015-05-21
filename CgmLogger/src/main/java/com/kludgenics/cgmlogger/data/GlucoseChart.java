@@ -1,4 +1,4 @@
-package com.kludgenics.cgmlogger.data.data;
+package com.kludgenics.cgmlogger.data;
 
 import android.content.Context;
 import android.util.AttributeSet;

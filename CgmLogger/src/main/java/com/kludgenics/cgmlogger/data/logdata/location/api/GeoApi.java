@@ -1,7 +1,7 @@
-package com.kludgenics.cgmlogger.data.data.logdata.location.api;
+package com.kludgenics.cgmlogger.data.logdata.location.api;
 
-import com.kludgenics.cgmlogger.data.data.logdata.location.data.Location;
-import com.kludgenics.cgmlogger.data.data.logdata.location.data.Position;
+import com.kludgenics.cgmlogger.data.logdata.location.data.Location;
+import com.kludgenics.cgmlogger.data.logdata.location.data.Position;
 import rx.Observable;
 
 /**

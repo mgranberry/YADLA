@@ -19,6 +19,10 @@ import com.kludgenics.cgmlogger.data.logdata.location.data.Position;
 import rx.Observable;
 import rx.Subscriber;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
+
 
 /**
  * Created by matthiasgranberry on 5/17/15.
@@ -102,12 +106,19 @@ public class BaseGmsPlaceService extends Service implements GeoApi, GoogleApiCli
 
     @Override
     public Observable<Location> getCurrentLocation() {
-        return getCurrentLocation(null);
+        return getCurrentLocation("");
     }
 
     @Override
     public Observable<Location> getCurrentLocation(String categories) {
-        final PlaceFilter filter = new PlaceFilter();
+
+        ArrayList<Integer> placeSet = new ArrayList<Integer>();
+        if (categories.contains("food"))  {
+            placeSet.add(Place.TYPE_FOOD);
+        }
+
+        final PlaceFilter filter = new PlaceFilter(placeSet, false, null, null);
+        Log.d("gcl", "ps:" + placeSet.get(0));
         return Observable.create(new Observable.OnSubscribe<Location>() {
 
             @Override

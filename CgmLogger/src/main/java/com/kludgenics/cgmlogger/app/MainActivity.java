@@ -5,11 +5,14 @@ import android.content.ComponentName;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.IBinder;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.FragmentActivity;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.app.ActionBar;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -47,11 +50,14 @@ public class MainActivity extends ActionBarActivity
             // We've bound to LocalService, cast the IBinder and get LocalService instance
             BaseGmsPlaceService.LocalBinder binder = (BaseGmsPlaceService.LocalBinder) service;
             mPlaceService = binder.getService();
+            Log.d("Bound", "Bound");
             mBound = true;
         }
 
         @Override
         public void onServiceDisconnected(ComponentName arg0) {
+            Log.d("Unbound", "UnBound");
+
             mBound = false;
         }
     };
@@ -75,6 +81,7 @@ public class MainActivity extends ActionBarActivity
     protected void onStart() {
         super.onStart();
         Intent serviceIntent = new Intent(this, BaseGmsPlaceService.class);
+        Log.d("binding", "binding");
         bindService(serviceIntent, mPlaceConnection, BIND_AUTO_CREATE);
     }
 
@@ -114,7 +121,8 @@ public class MainActivity extends ActionBarActivity
         actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_STANDARD);
         actionBar.setDisplayShowTitleEnabled(true);
         if (mBound) {
-            rx.Observable<Location> locationObservable = mPlaceService.getCurrentLocation();
+            Log.d("Bound", "for food");
+            rx.Observable<Location> locationObservable = mPlaceService.getCurrentLocation("food");
 
             locationObservable.take(1).subscribe(new Subscriber<Location>() {
 
@@ -146,7 +154,7 @@ public class MainActivity extends ActionBarActivity
 
                 @Override
                 public void onNext(Location location) {
-                    Log.d("LocResult", location.getName().toString() + "(" + ((GooglePlacesLocation) location).getLikelihood() + ")");
+                    Log.d("LocResult", location.getName().toString() + "(" + ((GooglePlacesLocation) location).getLikelihood() + ")" + ((GooglePlacesLocation) location).getLocationTypes());
                 }
             });
         }

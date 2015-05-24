@@ -1,7 +1,7 @@
 package com.kludgenics.cgmlogger.data.logdata.location.api;
 
 import com.google.gson.annotations.Expose;
-import com.kludgenics.cgmlogger.data.logdata.location.data.Location;
+import com.kludgenics.cgmlogger.data.logdata.location.data.GeocodedLocation;
 import com.kludgenics.cgmlogger.data.logdata.location.data.Position;
 import org.apache.commons.lang3.StringUtils;
 
@@ -10,7 +10,7 @@ import java.util.List;
 /**
  * Created by matthiasgranberry on 5/23/15.
  */
-public class GooglePlacesWebLocation implements Location {
+public class GooglePlacesWebLocation implements GeocodedLocation {
     @Expose
     String place_id;
     @Expose

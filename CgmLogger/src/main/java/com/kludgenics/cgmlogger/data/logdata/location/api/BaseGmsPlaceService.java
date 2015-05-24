@@ -9,19 +9,7 @@ import android.os.IBinder;
 import android.util.Log;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.common.api.PendingResult;
-import com.google.android.gms.common.api.ResultCallback;
-import com.google.android.gms.common.api.Status;
 import com.google.android.gms.location.places.*;
-import com.kludgenics.cgmlogger.data.logdata.location.data.GooglePlacesLocation;
-import com.kludgenics.cgmlogger.data.logdata.location.data.Location;
-import com.kludgenics.cgmlogger.data.logdata.location.data.Position;
-import rx.Observable;
-import rx.Subscriber;
-
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Set;
 
 
 /**

@@ -9,7 +9,7 @@ import com.google.android.gms.location.places.*;
 import com.google.gson.GsonBuilder;
 import com.google.gson.annotations.Expose;
 import com.kludgenics.cgmlogger.data.logdata.location.data.GooglePlacesLocation;
-import com.kludgenics.cgmlogger.data.logdata.location.data.Location;
+import com.kludgenics.cgmlogger.data.logdata.location.data.GeocodedLocation;
 import com.kludgenics.cgmlogger.data.logdata.location.data.Position;
 import org.apache.commons.lang3.StringUtils;
 import retrofit.RestAdapter;
@@ -69,12 +69,12 @@ class GooglePlacesApi implements GeoApi {
     }
 
     @Override
-    public Observable<Location> getCurrentLocation() {
+    public Observable<GeocodedLocation> getCurrentLocation() {
         return getCurrentLocation("");
     }
 
     @Override
-    public Observable<Location> getCurrentLocation(String categories) {
+    public Observable<GeocodedLocation> getCurrentLocation(String categories) {
 
         ArrayList<String> placeSet = new ArrayList<String>();
         NearbySearchResponse response = null;
@@ -88,14 +88,14 @@ class GooglePlacesApi implements GeoApi {
                 .flatMap(LOCATION_ID_FUNC)
                 .take(10) // API docs indicate a limit of 10 IDs
                 .toList()
-                .flatMap(new Func1<List<String>, Observable<Location>>() {
+                .flatMap(new Func1<List<String>, Observable<GeocodedLocation>>() {
 
                     @Override
-                    public Observable<Location> call(List<String> placeIds) {
+                    public Observable<GeocodedLocation> call(List<String> placeIds) {
                         final PlaceFilter filter = new PlaceFilter(true, placeIds);
-                        return Observable.create(new Observable.OnSubscribe<Location>() {
+                        return Observable.create(new Observable.OnSubscribe<GeocodedLocation>() {
                             @Override
-                            public void call(final Subscriber<? super Location> subscriber) {
+                            public void call(final Subscriber<? super GeocodedLocation> subscriber) {
                                 Log.d(TAG, "filter: " + StringUtils.join(filter.getPlaceIds(), "|"));
                                 PendingResult<PlaceLikelihoodBuffer> result = Places.PlaceDetectionApi.getCurrentPlace(mClient, filter);
 
@@ -124,15 +124,15 @@ class GooglePlacesApi implements GeoApi {
     }
 
     @Override
-    public Observable<Location> search(Position position) {
+    public Observable<GeocodedLocation> search(Position position) {
         return search(position, null);
     }
 
     @Override
-    public Observable<Location> search(Position position, final String categories) {
-        return Observable.create(new Observable.OnSubscribe<Location>() {
+    public Observable<GeocodedLocation> search(Position position, final String categories) {
+        return Observable.create(new Observable.OnSubscribe<GeocodedLocation>() {
             @Override
-            public void call(Subscriber<? super Location> subscriber) {
+            public void call(Subscriber<? super GeocodedLocation> subscriber) {
 
             }
         });
@@ -149,13 +149,13 @@ class GooglePlacesApi implements GeoApi {
     }
 
     @Override
-    public Observable<Location> getInfo(String id) {
+    public Observable<GeocodedLocation> getInfo(String id) {
         final String placeId = id;
 
-        return Observable.create(new Observable.OnSubscribe<Location>() {
+        return Observable.create(new Observable.OnSubscribe<GeocodedLocation>() {
 
             @Override
-            public void call(final Subscriber<? super Location> subscriber) {
+            public void call(final Subscriber<? super GeocodedLocation> subscriber) {
                 PendingResult<PlaceBuffer> result = Places.GeoDataApi.getPlaceById(mClient, placeId);
                 result.setResultCallback(new ResultCallback<PlaceBuffer>() {
                     @Override

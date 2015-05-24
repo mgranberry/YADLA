@@ -5,14 +5,11 @@ import android.content.ComponentName;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.IBinder;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.app.FragmentActivity;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.app.ActionBar;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.os.Bundle;
-import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -23,7 +20,7 @@ import android.support.v4.widget.DrawerLayout;
 import com.kludgenics.cgmlogger.data.logdata.location.api.BaseGmsPlaceService;
 import com.kludgenics.cgmlogger.data.logdata.location.api.GeoApi;
 import com.kludgenics.cgmlogger.data.logdata.location.data.GooglePlacesLocation;
-import com.kludgenics.cgmlogger.data.logdata.location.data.Location;
+import com.kludgenics.cgmlogger.data.logdata.location.data.GeocodedLocation;
 import rx.Subscriber;
 
 
@@ -122,9 +119,9 @@ public class MainActivity extends ActionBarActivity
         actionBar.setDisplayShowTitleEnabled(true);
         if (mBound) {
             Log.d("Bound", "for food");
-            rx.Observable<Location> locationObservable = mPlaceService.getCurrentLocation("food");
+            rx.Observable<GeocodedLocation> locationObservable = mPlaceService.getCurrentLocation("food");
 
-            locationObservable.take(1).subscribe(new Subscriber<Location>() {
+            locationObservable.take(1).subscribe(new Subscriber<GeocodedLocation>() {
 
                 @Override
                 public void onCompleted() {
@@ -136,12 +133,12 @@ public class MainActivity extends ActionBarActivity
                 }
 
                 @Override
-                public void onNext(Location location) {
-                    actionBar.setTitle(location.getName());
+                public void onNext(GeocodedLocation geocodedLocation) {
+                    actionBar.setTitle(geocodedLocation.getName());
 
                 }
             });
-            locationObservable.subscribe(new Subscriber<Location>() {
+            locationObservable.subscribe(new Subscriber<GeocodedLocation>() {
                 @Override
                 public void onCompleted() {
 
@@ -153,8 +150,8 @@ public class MainActivity extends ActionBarActivity
                 }
 
                 @Override
-                public void onNext(Location location) {
-                    Log.d("LocResult", location.getName().toString() + "(" + ((GooglePlacesLocation) location).getLikelihood() + ")" + ((GooglePlacesLocation) location).getLocationTypes());
+                public void onNext(GeocodedLocation geocodedLocation) {
+                    Log.d("LocResult", geocodedLocation.getName().toString() + "(" + ((GooglePlacesLocation) geocodedLocation).getLikelihood() + ")" + ((GooglePlacesLocation) geocodedLocation).getLocationTypes());
                 }
             });
         }

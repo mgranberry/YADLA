@@ -5,7 +5,7 @@ import com.kludgenics.cgmlogger.data.logdata.location.data.Position;
 /**
  * Created by matthiasgranberry on 5/12/15.
  */
-public interface Location {
+public interface GeocodedLocation {
     String getId();
     CharSequence getName();
     String getLocationTypes();

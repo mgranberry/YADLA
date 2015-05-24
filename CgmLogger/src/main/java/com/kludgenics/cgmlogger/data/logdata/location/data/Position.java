@@ -1,5 +1,6 @@
 package com.kludgenics.cgmlogger.data.logdata.location.data;
 
+import android.location.Location;
 import android.support.annotation.Nullable;
 
 /**
@@ -10,10 +11,15 @@ public class Position {
     private double longitude;
     private Double radius;
 
+    public Position(Location location) {
+        this(location.getLatitude(), location.getLongitude(), (double) location.getAccuracy());
+    }
+
     public Position(double latitude, double longitude, @Nullable Double radius) {
         this.latitude = latitude;
         this.longitude = longitude;
-        this.radius = radius;
+        if (radius != null && radius != 0.0)
+            this.radius = radius;
     }
 
     public Position(double latitude, double longitude) {

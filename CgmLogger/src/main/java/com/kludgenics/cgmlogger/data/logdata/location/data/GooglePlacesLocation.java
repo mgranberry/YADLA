@@ -8,7 +8,7 @@ import java.util.List;
 /**
  * Created by matthiasgranberry on 5/18/15.
  */
-public class GooglePlacesLocation implements Location {
+public class GooglePlacesLocation implements GeocodedLocation {
     Place mPlace;
     CharSequence mAttribution;
     float mLikelihood;

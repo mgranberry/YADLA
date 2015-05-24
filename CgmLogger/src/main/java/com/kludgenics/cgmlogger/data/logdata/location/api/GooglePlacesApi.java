@@ -79,77 +79,48 @@ class GooglePlacesApi implements GeoApi {
         ArrayList<String> placeSet = new ArrayList<String>();
         NearbySearchResponse response = null;
 
-        if (categories.contains("food"))  {
-            Log.d(TAG, "foodQuery");
+        Observable<NearbySearchResponse> responseObservable = mGooglePlacesEndpoint.nearbySearchObservable(MAPS_API_KEY, "30.485277,-97.678878", 200, categories);
 
-            Observable<NearbySearchResponse> responseObservable = mGooglePlacesEndpoint.nearbySearchObservable(MAPS_API_KEY, "30.485277,-97.678878", 200, categories);
+        // Perform a Places API query on the returned results of the filtered WS call
 
-            // Perform a Places API query on the returned results of the filtered WS call
+        return responseObservable
+                .flatMap(RESPONSE_LOCATION_FUNC)
+                .flatMap(LOCATION_ID_FUNC)
+                .take(10) // API docs indicate a limit of 10 IDs
+                .toList()
+                .flatMap(new Func1<List<String>, Observable<Location>>() {
 
-            return responseObservable
-                    .flatMap(RESPONSE_LOCATION_FUNC)
-                    .flatMap(LOCATION_ID_FUNC)
-                    .toList()
-                    .flatMap(new Func1<List<String>, Observable<Location>>() {
+                    @Override
+                    public Observable<Location> call(List<String> placeIds) {
+                        final PlaceFilter filter = new PlaceFilter(true, placeIds);
+                        return Observable.create(new Observable.OnSubscribe<Location>() {
+                            @Override
+                            public void call(final Subscriber<? super Location> subscriber) {
+                                Log.d(TAG, "filter: " + StringUtils.join(filter.getPlaceIds(), "|"));
+                                PendingResult<PlaceLikelihoodBuffer> result = Places.PlaceDetectionApi.getCurrentPlace(mClient, filter);
 
-                        @Override
-                        public Observable<Location> call(List<String> placeIds) {
-                            final PlaceFilter filter = new PlaceFilter(true, placeIds);
-                            return Observable.create(new Observable.OnSubscribe<Location>() {
-                                @Override
-                                public void call(final Subscriber<? super Location> subscriber) {
-                                    Log.d(TAG, "filter: " + StringUtils.join(filter.getPlaceIds(),"|"));
-                                    PendingResult<PlaceLikelihoodBuffer> result = Places.PlaceDetectionApi.getCurrentPlace(mClient, filter);
-
-                                    result.setResultCallback(new ResultCallback<PlaceLikelihoodBuffer>() {
-                                        @Override
-                                        public void onResult(PlaceLikelihoodBuffer placeLikelihoods) {
-                                            for (PlaceLikelihood placeLikelihood: placeLikelihoods) {
-                                                Place place = placeLikelihood.getPlace();
-                                                if (!subscriber.isUnsubscribed() && filter.matches(place)) // this filter.matches(place) is a work-around for a google bug
-                                                    subscriber.onNext(new GooglePlacesLocation(place, placeLikelihood.getLikelihood(), placeLikelihoods.getAttributions()));
-                                            }
-                                            Status status = placeLikelihoods.getStatus();
-                                            if (!status.isSuccess()) {
-                                                // @TODO propagate this error somehow
-                                                // subscriber.onError();
-                                            }
-                                            placeLikelihoods.release();
-                                            if (!subscriber.isUnsubscribed())
-                                                subscriber.onCompleted();
+                                result.setResultCallback(new ResultCallback<PlaceLikelihoodBuffer>() {
+                                    @Override
+                                    public void onResult(PlaceLikelihoodBuffer placeLikelihoods) {
+                                        for (PlaceLikelihood placeLikelihood : placeLikelihoods) {
+                                            Place place = placeLikelihood.getPlace();
+                                            if (!subscriber.isUnsubscribed() /*&& filter.matches(place)*/) // this filter.matches(place) is a work-around for a google bug
+                                                subscriber.onNext(new GooglePlacesLocation(place, placeLikelihood.getLikelihood(), placeLikelihoods.getAttributions()));
                                         }
-                                    });
-                                }
-                            });
-                        }
-                    });
-        } else {
-            return Observable.create(new Observable.OnSubscribe<Location>() {
-
-                @Override
-                public void call(final Subscriber<? super Location> subscriber) {
-                    PendingResult<PlaceLikelihoodBuffer> result = Places.PlaceDetectionApi.getCurrentPlace(mClient, null);
-                    result.setResultCallback(new ResultCallback<PlaceLikelihoodBuffer>() {
-                        @Override
-                        public void onResult(PlaceLikelihoodBuffer placeLikelihoods) {
-                            for (PlaceLikelihood placeLikelihood : placeLikelihoods) {
-                                Place place = placeLikelihood.getPlace();
-                                if (!subscriber.isUnsubscribed())
-                                    subscriber.onNext(new GooglePlacesLocation(place, placeLikelihood.getLikelihood(), placeLikelihoods.getAttributions()));
+                                        Status status = placeLikelihoods.getStatus();
+                                        if (!status.isSuccess()) {
+                                            // @TODO propagate this error somehow
+                                            // subscriber.onError();
+                                        }
+                                        placeLikelihoods.release();
+                                        if (!subscriber.isUnsubscribed())
+                                            subscriber.onCompleted();
+                                    }
+                                });
                             }
-                            Status status = placeLikelihoods.getStatus();
-                            if (!status.isSuccess()) {
-                                // @TODO propagate this error somehow
-                                // subscriber.onError();
-                            }
-                            placeLikelihoods.release();
-                            if (!subscriber.isUnsubscribed())
-                                subscriber.onCompleted();
-                        }
-                    });
-                }
-            });
-        }
+                        });
+                    }
+                });
     }
 
     @Override

@@ -1,46 +1,47 @@
 package com.kludgenics.cgmlogger.data.logdata.glucose.data.nightscout;
 
-import com.activeandroid.Model;
-import com.activeandroid.annotation.Column;
-import com.activeandroid.annotation.Table;
 import com.google.gson.annotations.Expose;
 import com.kludgenics.cgmlogger.data.logdata.glucose.data.BloodGlucose;
+import io.realm.RealmObject;
 
 /**
  * Created by matthiasgranberry on 5/21/15.
  */
-@Table(name="Entries")
-public class SgvEntry extends Model implements BloodGlucose {
-    @Column(name="device")
+public class SgvEntry extends RealmObject implements BloodGlucose {
     @Expose
-    String device;
-    @Column(name="date")
+    private String device;
     @Expose
-    long date;
-    @Column(name="sgv")
+    private long date;
     @Expose
-    int sgv;
-    @Column(name="direction")
+    private int sgv;
     @Expose
-    String direction;
-    @Column(name="type")
+    private String direction;
     @Expose
-    String type;
-    @Column(name="filtered")
+    private String type;
     @Expose
-    int filtered;
-    @Column(name="unfiltered")
+    private int filtered;
     @Expose
-    int unfiltered;
-    @Column(name="rssi")
+    private int unfiltered;
     @Expose
-    int rssi;
-    @Column(name="noise")
+    private int rssi;
     @Expose
-    int noise;
+    private int noise;
 
     public SgvEntry() {
         super();
+    }
+
+    public SgvEntry(String device, long date, int sgv, String direction, String type, int filtered, int unfiltered, int rssi, int noise) {
+        this();
+        this.device = device;
+        this.date = date;
+        this.sgv = sgv;
+        this.direction = direction;
+        this.type = type;
+        this.filtered = filtered;
+        this.unfiltered = unfiltered;
+        this.rssi = rssi;
+        this.noise = noise;
     }
 
     @Override
@@ -62,4 +63,38 @@ public class SgvEntry extends Model implements BloodGlucose {
     public Type getType() {
         return Type.CGM;
     }
+
+    public String getDevice() {
+        return device;
+    }
+
+    public long getDate() {
+        return date;
+    }
+
+    public int getSgv() {
+        return sgv;
+    }
+
+    public String getDirection() {
+        return direction;
+    }
+
+    public int getFiltered() {
+        return filtered;
+    }
+
+    public int getUnfiltered() {
+        return unfiltered;
+    }
+
+    public int getRssi() {
+        return rssi;
+    }
+
+    public int getNoise() {
+        return noise;
+    }
+
+
 }

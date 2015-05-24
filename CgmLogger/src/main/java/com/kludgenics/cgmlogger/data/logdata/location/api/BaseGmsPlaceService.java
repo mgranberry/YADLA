@@ -27,7 +27,7 @@ import java.util.Set;
 /**
  * Created by matthiasgranberry on 5/17/15.
  */
-public class BaseGmsPlaceService extends Service implements GeoApi, GoogleApiClient.OnConnectionFailedListener, GoogleApiClient.ConnectionCallbacks {
+public class BaseGmsPlaceService extends Service implements GoogleApiClient.OnConnectionFailedListener, GoogleApiClient.ConnectionCallbacks {
     //@Inject
     GoogleApiClient mGoogleApiClient;
 
@@ -70,7 +70,7 @@ public class BaseGmsPlaceService extends Service implements GeoApi, GoogleApiCli
 
     public class LocalBinder extends Binder {
         public GeoApi getService() {
-            return BaseGmsPlaceService.this;
+            return new GooglePlacesApi(mGoogleApiClient);
         }
     }
 
@@ -104,100 +104,4 @@ public class BaseGmsPlaceService extends Service implements GeoApi, GoogleApiCli
     }
 
 
-    @Override
-    public Observable<Location> getCurrentLocation() {
-        return getCurrentLocation("");
-    }
-
-    @Override
-    public Observable<Location> getCurrentLocation(String categories) {
-
-        ArrayList<Integer> placeSet = new ArrayList<Integer>();
-        if (categories.contains("food"))  {
-            placeSet.add(Place.TYPE_FOOD);
-        }
-
-        final PlaceFilter filter = new PlaceFilter(placeSet, false, null, null);
-        Log.d("gcl", "ps:" + placeSet.get(0));
-        return Observable.create(new Observable.OnSubscribe<Location>() {
-
-            @Override
-            public void call(final Subscriber<? super Location> subscriber) {
-                PendingResult<PlaceLikelihoodBuffer> result = Places.PlaceDetectionApi.getCurrentPlace(mGoogleApiClient, filter);
-                result.setResultCallback(new ResultCallback<PlaceLikelihoodBuffer>() {
-                    @Override
-                    public void onResult(PlaceLikelihoodBuffer placeLikelihoods) {
-                        for (PlaceLikelihood placeLikelihood: placeLikelihoods) {
-                            Place place = placeLikelihood.getPlace();
-                            if (!subscriber.isUnsubscribed())
-                                subscriber.onNext(new GooglePlacesLocation(place, placeLikelihood.getLikelihood(), placeLikelihoods.getAttributions()));
-                        }
-                        Status status = placeLikelihoods.getStatus();
-                        if (!status.isSuccess()) {
-                            // @TODO propagate this error somehow
-                            //subscriber.onError();
-                        }
-                        placeLikelihoods.release();
-                        if (!subscriber.isUnsubscribed())
-                            subscriber.onCompleted();
-                    }
-                });
-            }
-        });
-    }
-
-    @Override
-    public Observable<Location> search(Position position) {
-        return search(position, null);
-    }
-
-    @Override
-    public Observable<Location> search(Position position, final String categories) {
-        return Observable.create(new Observable.OnSubscribe<Location>() {
-            @Override
-            public void call(Subscriber<? super Location> subscriber) {
-
-            }
-        });
-    }
-
-    @Override
-    public Observable<AutoCompleteResult> autoComplete(Position position, String query) {
-        return autoComplete(position, query, null);
-    }
-
-    @Override
-    public Observable<AutoCompleteResult> autoComplete(Position position, String query, String categories) {
-        return null;
-    }
-
-    @Override
-    public Observable<Location> getInfo(String id) {
-        final String placeId = id;
-
-        return Observable.create(new Observable.OnSubscribe<Location>() {
-
-            @Override
-            public void call(final Subscriber<? super Location> subscriber) {
-                PendingResult<PlaceBuffer> result = Places.GeoDataApi.getPlaceById(mGoogleApiClient, placeId);
-                result.setResultCallback(new ResultCallback<PlaceBuffer>() {
-                    @Override
-                    public void onResult(PlaceBuffer places) {
-                        for (Place place: places) {
-                            if (!subscriber.isUnsubscribed())
-                                subscriber.onNext(new GooglePlacesLocation(place, 1.0f, places.getAttributions()));
-                        }
-                        Status status = places.getStatus();
-                        if (!status.isSuccess()) {
-                            // @TODO propagate this error somehow
-                            //subscriber.onError();
-                        }
-                        places.release();
-                        if (!subscriber.isUnsubscribed())
-                            subscriber.onCompleted();
-                    }
-                });
-            }
-        });
-    }
 }

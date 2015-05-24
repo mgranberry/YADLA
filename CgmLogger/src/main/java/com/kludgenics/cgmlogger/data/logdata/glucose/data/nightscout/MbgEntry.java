@@ -3,23 +3,27 @@ package com.kludgenics.cgmlogger.data.logdata.glucose.data.nightscout;
 import com.google.gson.annotations.Expose;
 import com.kludgenics.cgmlogger.data.logdata.glucose.data.BloodGlucose;
 import io.realm.RealmObject;
+import io.realm.annotations.Ignore;
+import kotlin.Unit;
+
+import java.util.Date;
 
 /**
  * Created by matthiasgranberry on 5/24/15.
  */
-public class MbgEntry extends RealmObject implements BloodGlucose {
+public class MbgEntry implements BloodGlucose {
     @Expose
     private String device;
     @Expose
     private int mbg;
     @Expose
-    private long date;
+    private Date date;
 
     public MbgEntry() {
         super();
     }
 
-    public MbgEntry(String device, long date, int mbg) {
+    public MbgEntry(String device, Date date, int mbg) {
         this();
         this.device = device;
         this.mbg = mbg;
@@ -32,17 +36,17 @@ public class MbgEntry extends RealmObject implements BloodGlucose {
     }
 
     @Override
-    public long getTimestamp() {
+    public Date getDate() {
         return date;
     }
 
     @Override
-    public Type getType() {
-        return Type.SMBG;
+    public String getType() {
+        return BloodGlucose.TYPE_SMBG;
     }
 
     @Override
-    public Unit getUnit() {
-        return Unit.MGDL;
+    public String getUnit() {
+        return BloodGlucose.UNIT_MGDL;
     }
 }

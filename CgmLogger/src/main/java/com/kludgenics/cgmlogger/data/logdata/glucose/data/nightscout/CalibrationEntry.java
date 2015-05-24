@@ -30,4 +30,44 @@ public class CalibrationEntry extends RealmObject {
         this.intercept = intercept;
         this.scale = scale;
     }
+
+    public String getDevice() {
+        return device;
+    }
+
+    public void setDevice(String device) {
+        this.device = device;
+    }
+
+    public long getDate() {
+        return date;
+    }
+
+    public void setDate(long date) {
+        this.date = date;
+    }
+
+    public int getSlope() {
+        return slope;
+    }
+
+    public void setSlope(int slope) {
+        this.slope = slope;
+    }
+
+    public int getIntercept() {
+        return intercept;
+    }
+
+    public void setIntercept(int intercept) {
+        this.intercept = intercept;
+    }
+
+    public int getScale() {
+        return scale;
+    }
+
+    public void setScale(int scale) {
+        this.scale = scale;
+    }
 }

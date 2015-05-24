@@ -2,6 +2,8 @@ package com.kludgenics.cgmlogger.data.logdata.glucose.data.nightscout;
 
 import com.google.gson.annotations.Expose;
 
+import java.util.Date;
+
 /**
  * Created by matthiasgranberry on 5/24/15.
  */
@@ -48,11 +50,11 @@ public class NightscoutApiEntry {
     }
 
     public MbgEntry asMbg() {
-        return new MbgEntry(device, date, mbg);
+        return new MbgEntry(device, new Date(date), mbg);
     }
 
     public SgvEntry asSgv() {
-        return new SgvEntry(device, date, sgv, direction, type, filtered, unfiltered, rssi, noise);
+        return new SgvEntry(device, new Date(date), sgv, direction, filtered, unfiltered, rssi, noise);
     }
 
     enum Type {

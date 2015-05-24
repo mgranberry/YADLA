@@ -3,21 +3,22 @@ package com.kludgenics.cgmlogger.data.logdata.glucose.data.nightscout;
 import com.google.gson.annotations.Expose;
 import com.kludgenics.cgmlogger.data.logdata.glucose.data.BloodGlucose;
 import io.realm.RealmObject;
+import kotlin.Unit;
+
+import java.util.Date;
 
 /**
  * Created by matthiasgranberry on 5/21/15.
  */
-public class SgvEntry extends RealmObject implements BloodGlucose {
+public class SgvEntry implements BloodGlucose {
     @Expose
     private String device;
     @Expose
-    private long date;
+    private Date date;
     @Expose
     private int sgv;
     @Expose
     private String direction;
-    @Expose
-    private String type;
     @Expose
     private int filtered;
     @Expose
@@ -31,13 +32,12 @@ public class SgvEntry extends RealmObject implements BloodGlucose {
         super();
     }
 
-    public SgvEntry(String device, long date, int sgv, String direction, String type, int filtered, int unfiltered, int rssi, int noise) {
+    public SgvEntry(String device, Date date, int sgv, String direction, int filtered, int unfiltered, int rssi, int noise) {
         this();
         this.device = device;
         this.date = date;
         this.sgv = sgv;
         this.direction = direction;
-        this.type = type;
         this.filtered = filtered;
         this.unfiltered = unfiltered;
         this.rssi = rssi;
@@ -45,8 +45,8 @@ public class SgvEntry extends RealmObject implements BloodGlucose {
     }
 
     @Override
-    public Unit getUnit() {
-        return Unit.MGDL;
+    public String getUnit() {
+        return BloodGlucose.UNIT_MGDL;
     }
 
     @Override
@@ -55,20 +55,16 @@ public class SgvEntry extends RealmObject implements BloodGlucose {
     }
 
     @Override
-    public long getTimestamp() {
-        return date;
-    }
-
-    @Override
-    public Type getType() {
-        return Type.CGM;
+    public String getType() {
+        return BloodGlucose.TYPE_CGM;
     }
 
     public String getDevice() {
         return device;
     }
 
-    public long getDate() {
+    @Override
+    public Date getDate() {
         return date;
     }
 

@@ -34,6 +34,9 @@ public class NightscoutApiTreatment extends RealmObject {
     private String notes;
     @Expose
     private String units;
+    @Expose
+    private int carbs;
+
 
     public int getCarbs() {
         return carbs;
@@ -122,9 +125,6 @@ public class NightscoutApiTreatment extends RealmObject {
     public void setId(String id) {
         this.id = id;
     }
-
-    @Expose
-    int carbs;
 
     public NightscoutApiTreatment() {
         super();

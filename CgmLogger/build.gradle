@@ -1,12 +1,15 @@
 buildscript {
+    ext.kotlin_version = '0.11.91.2'
     repositories {
         jcenter()
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:1.1.1'
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
     }
 }
 apply plugin: 'com.android.application'
+apply plugin: 'kotlin-android'
 
 repositories {
     jcenter()
@@ -20,7 +23,7 @@ android {
 
     defaultConfig {
         applicationId "com.kludgenics.cgmlogger.app"
-        minSdkVersion 9
+        minSdkVersion 14
         targetSdkVersion 22
         versionCode 1
         versionName "1.0"
@@ -49,4 +52,5 @@ dependencies {
     compile 'com.google.code.gson:gson:2.3.1'
     compile 'org.apache.commons:commons-lang3:3.4'
     compile 'io.realm:realm-android:0.80.3'
+    compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
 }

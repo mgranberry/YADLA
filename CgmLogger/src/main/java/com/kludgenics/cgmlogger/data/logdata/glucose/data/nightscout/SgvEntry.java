@@ -1,6 +1,7 @@
 package com.kludgenics.cgmlogger.data.logdata.glucose.data.nightscout;
 
 import com.google.gson.annotations.Expose;
+import com.google.gson.annotations.SerializedName;
 import com.kludgenics.cgmlogger.data.logdata.glucose.data.BloodGlucose;
 import io.realm.RealmObject;
 import kotlin.Unit;
@@ -11,6 +12,9 @@ import java.util.Date;
  * Created by matthiasgranberry on 5/21/15.
  */
 public class SgvEntry implements BloodGlucose {
+    @Expose
+    @SerializedName("_id")
+    private String id;
     @Expose
     private String device;
     @Expose
@@ -44,6 +48,10 @@ public class SgvEntry implements BloodGlucose {
         this.noise = noise;
     }
 
+    public String getId() {
+        return id;
+    }
+
     @Override
     public String getUnit() {
         return BloodGlucose.UNIT_MGDL;
@@ -51,7 +59,7 @@ public class SgvEntry implements BloodGlucose {
 
     @Override
     public double getValue() {
-        return sgv;
+        return getSgv();
     }
 
     @Override

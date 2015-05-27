@@ -1,11 +1,12 @@
 buildscript {
-    ext.kotlin_version = '0.11.91.2'
+    ext.kotlin_version = '0.11.91.4'
     repositories {
         jcenter()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:1.1.1'
+        classpath 'com.android.tools.build:gradle:1.2.3'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+        classpath "org.jetbrains.kotlin:kotlin-android-extensions:$kotlin_version"
     }
 }
 apply plugin: 'com.android.application'
@@ -17,16 +18,34 @@ repositories {
     maven { url "https://oss.sonatype.org/content/repositories/snapshots/" }
 }
 
+
 android {
+
     compileSdkVersion 22
     buildToolsVersion "22.0.1"
 
+    sourceSets {
+        main.kotlin.srcDirs += 'src/main/kotlin'
+        main.java.srcDirs += 'src/main/kotlin'
+    }
+
     defaultConfig {
         applicationId "com.kludgenics.cgmlogger.app"
-        minSdkVersion 14
+        minSdkVersion 15
         targetSdkVersion 22
         versionCode 1
         versionName "1.0"
+    }
+    productFlavors {
+        dev {
+            minSdkVersion 21
+        }
+        prod {
+            minSdkVersion 15
+        }
+    }
+    lintOptions {
+        abortOnError false
     }
 
     compileOptions {
@@ -44,13 +63,15 @@ android {
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
     compile 'com.android.support:appcompat-v7:22.1.1'
-    compile 'com.google.android.gms:play-services:7.3.0'
+    compile 'com.google.android.gms:play-services-identity:7.3.0'
+    compile 'com.google.android.gms:play-services-location:7.3.0'
     compile 'com.squareup.retrofit:retrofit:1.9.0'
     compile 'io.reactivex:rxjava:1.0.11'
     compile 'com.squareup.okhttp:okhttp:2.4.0-RC1'
     compile 'com.squareup.okhttp:okhttp-urlconnection:2.4.0-RC1'
     compile 'com.google.code.gson:gson:2.3.1'
-    compile 'org.apache.commons:commons-lang3:3.4'
     compile 'io.realm:realm-android:0.80.3'
+    compile 'org.jetbrains.anko:anko:0.6-15'
+    compile 'io.reactivex:rxkotlin:0.21.0'
     compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
 }

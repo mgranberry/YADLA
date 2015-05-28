@@ -24,10 +24,14 @@ import rx.Observable
 import rx.Subscriber
 import rx.functions.Func1
 import com.kludgenics.cgmlogger.data.logdata.glucose.data.asMgDl
+import rx.lang.kotlin.*
+import java.util.Date
+import java.util.concurrent.TimeUnit
+import com.kludgenics.cgmlogger.extension.*
 /**
  * Created by matthiasgranberry on 5/23/15.
  */
-class GooglePlacesApi(private val mClient: GoogleApiClient? = null) : GeoApi {
+class GooglePlacesApi(private val mClient: GoogleApiClient) : GeoApi {
     private val mGooglePlacesEndpoint: NearbySearchEndpoint
 
     {
@@ -43,69 +47,69 @@ class GooglePlacesApi(private val mClient: GoogleApiClient? = null) : GeoApi {
     }
 
     override fun getCurrentLocation(categories: String): Observable<GeocodedLocation> {
-        val location = LocationServices.FusedLocationApi.getLastLocation(mClient)
-        if (categories == "") {
-            return Observable.create<GeocodedLocation>(object : Observable.OnSubscribe<GeocodedLocation> {
-                override fun call(subscriber: Subscriber<in GeocodedLocation>) {
-                    val result = Places.PlaceDetectionApi.getCurrentPlace(mClient, null)
+        // (1/2)* erfc(0.0059709(-118.7)) - (1/2)* erfc(0.0059709(118.7))
+        // erf ~= 1- (1/(1 + .278393*x + .230389*x*x + .000972*x*x*x + .078108*x*x*x*x)^4)
+        if (!mClient.isConnected())
+            return Observable.empty()
+        if (categories == "" || LocationServices.FusedLocationApi.getLocationAvailability(mClient).isLocationAvailable() == false) {
+            return deferredObservable {
+                Observable.create<GeocodedLocation>(object : Observable.OnSubscribe<GeocodedLocation> {
+                    override fun call(subscriber: Subscriber<in GeocodedLocation>) {
+                        val result = Places.PlaceDetectionApi.getCurrentPlace(mClient, null)
 
-                    result.setResultCallback(object : ResultCallback<PlaceLikelihoodBuffer> {
-                        override fun onResult(placeLikelihoods: PlaceLikelihoodBuffer) {
-                            for (placeLikelihood in placeLikelihoods) {
-                                val place = placeLikelihood.getPlace()
-                                if (!subscriber.isUnsubscribed())
-                                    subscriber.onNext(GooglePlacesLocation(place, placeLikelihood.getLikelihood(), placeLikelihoods.getAttributions()))
+                        result.setResultCallback(object : ResultCallback<PlaceLikelihoodBuffer> {
+                            override fun onResult(placeLikelihoods: PlaceLikelihoodBuffer) {
+                                val attribution = placeLikelihoods.getAttributions()
+                                placeLikelihoods.toObservable()
+                                        .map { GooglePlacesLocation(it.getPlace(), it.getLikelihood(), attribution) }
+                                        .subscribe(subscriber)
+                                placeLikelihoods.release()
                             }
-                            val status = placeLikelihoods.getStatus()
-                            if (!status.isSuccess()) {
-                                // @TODO propagate this error somehow
-                                // subscriber.onError();
-                            }
-                            placeLikelihoods.release()
-                            if (!subscriber.isUnsubscribed())
-                                subscriber.onCompleted()
-                        }
-                    })
-                }
-            })
+                        })
+                    }
+                }).cache()
+            }
         } else {
-
+            val location = LocationServices.FusedLocationApi.getLastLocation(mClient)
+            Log.d(TAG, "Location: ${Date(location.getTime())} ${location.getLatitude()},${location.getLongitude()} ${location.getAccuracy()}")
             val responseObservable = mGooglePlacesEndpoint.nearbySearchObservable(MAPS_API_KEY, "${location.getLatitude()},${location.getLongitude()}", location.getAccuracy() * 2, categories)
 
             // Perform a Places API query on the returned results of the filtered WS call
 
-            return responseObservable.flatMap<GooglePlacesWebLocation>(RESPONSE_LOCATION_FUNC).flatMap<String>(LOCATION_ID_FUNC).toList()
-                    .take(10) // API docs indicate a limit of 10 ID
-                    .flatMap<GeocodedLocation>(object : Func1<List<String>, Observable<GeocodedLocation>> {
-                        override fun call(placeIds: List<String>): Observable<GeocodedLocation> {
-                            val filter = PlaceFilter(true, placeIds)
-                            return Observable.create<GeocodedLocation>(object : Observable.OnSubscribe<GeocodedLocation> {
-                                override fun call(subscriber: Subscriber<in GeocodedLocation>) {
-                                    Log.d(TAG, "filter: " + filter.getPlaceIds().join("|"))
-                                    val result = Places.PlaceDetectionApi.getCurrentPlace(mClient, filter)
+            return deferredObservable {
+                responseObservable.flatMap<GooglePlacesWebLocation>(RESPONSE_LOCATION_FUNC).flatMap<String>(LOCATION_ID_FUNC).toList()
+                        .take(10) // API docs indicate a limit of 10 ID
+                        .flatMap<GeocodedLocation>(object : Func1<List<String>, Observable<GeocodedLocation>> {
+                            override fun call(placeIds: List<String>): Observable<GeocodedLocation> {
+                                val filter = PlaceFilter(true, placeIds)
+                                return Observable.create<GeocodedLocation>(object : Observable.OnSubscribe<GeocodedLocation> {
+                                    override fun call(subscriber: Subscriber<in GeocodedLocation>) {
+                                        Log.d(TAG, "filter: " + filter.getPlaceIds().join("|"))
+                                        val result = Places.PlaceDetectionApi.getCurrentPlace(mClient, filter)
 
-                                    result.setResultCallback(object : ResultCallback<PlaceLikelihoodBuffer> {
-                                        override fun onResult(placeLikelihoods: PlaceLikelihoodBuffer) {
-                                            for (placeLikelihood in placeLikelihoods) {
-                                                val place = placeLikelihood.getPlace()
-                                                if (!subscriber.isUnsubscribed() && filter.matches(place))
-                                                // this filter.matches(place) is a work-around for a google bug
-                                                    subscriber.onNext(GooglePlacesLocation(place, placeLikelihood.getLikelihood(), placeLikelihoods.getAttributions()))
+                                        result.setResultCallback(object : ResultCallback<PlaceLikelihoodBuffer> {
+                                            override fun onResult(placeLikelihoods: PlaceLikelihoodBuffer) {
+                                                val attribution = placeLikelihoods.getAttributions()
+                                                val retObservable = placeLikelihoods.toObservable()
+                                                        .filter {
+                                                            val latlng = it.getPlace().getLatLng()
+                                                            val loc = Location("mock")
+                                                            loc.setLatitude(latlng.latitude)
+                                                            loc.setLongitude(latlng.longitude)
+                                                            val place = it.getPlace()
+                                                            Log.d(TAG, "${place.getName()} (dist ${location.distanceTo(loc)}, pinside ${location.probabilityWithin(loc)}")
+                                                            return@filter filter.matches(it.getPlace())
+                                                        }
+                                                        .map { GooglePlacesLocation(it.getPlace(), it.getLikelihood(), attribution) }
+                                                        .subscribe(subscriber)
+                                                placeLikelihoods.release()
                                             }
-                                            val status = placeLikelihoods.getStatus()
-                                            if (!status.isSuccess()) {
-                                                // @TODO propagate this error somehow
-                                                // subscriber.onError();
-                                            }
-                                            placeLikelihoods.release()
-                                            if (!subscriber.isUnsubscribed())
-                                                subscriber.onCompleted()
-                                        }
-                                    })
-                                }
-                            })
-                        }
-                    })
+                                        })
+                                    }
+                                })
+                            }
+                        })
+            }.cache()
         }
     }
 

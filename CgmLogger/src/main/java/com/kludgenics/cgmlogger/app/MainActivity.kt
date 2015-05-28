@@ -18,10 +18,10 @@ import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import android.support.v4.widget.DrawerLayout
-import com.kludgenics.cgmlogger.data.logdata.location.api.BaseGmsPlaceService
-import com.kludgenics.cgmlogger.data.logdata.location.api.GeoApi
-import com.kludgenics.cgmlogger.data.logdata.location.data.GooglePlacesLocation
-import com.kludgenics.cgmlogger.data.logdata.location.data.GeocodedLocation
+import com.kludgenics.cgmlogger.app.service.BaseGmsPlaceService
+import com.kludgenics.cgmlogger.data.location.GeoApi
+import com.kludgenics.cgmlogger.data.location.places.GooglePlacesLocation
+import com.kludgenics.cgmlogger.data.location.data.GeocodedLocation
 import rx.Subscriber
 
 import rx.lang.kotlin.*

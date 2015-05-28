@@ -27,9 +27,9 @@
             </intent-filter>
         </activity>
         <service
-            android:name="com.kludgenics.cgmlogger.data.logdata.location.api.BaseGmsPlaceService"
+            android:name=".service.BaseGmsPlaceService"
             android:exported="false"/>
-        <service android:name=".ActivityRecognitionIntentService"/>
+        <service android:name=".service.ActivityRecognitionIntentService"/>
     </application>
 
 </manifest>

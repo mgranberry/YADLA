@@ -27,7 +27,7 @@
             </intent-filter>
         </activity>
         <service
-            android:name=".service.NightscoutIntentService"
+            android:name=".service.TaskService"
             android:permission="com.google.android.gms.permission.BIND_NETWORK_TASK_SERVICE"
             android:exported="true">
             <intent-filter>

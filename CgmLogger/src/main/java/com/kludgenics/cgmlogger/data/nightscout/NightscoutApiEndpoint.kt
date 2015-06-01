@@ -7,7 +7,7 @@ import rx.Observable
 /**
  * Created by matthiasgranberry on 5/21/15.
  */
-trait NightscoutApiEndpoint {
+interface NightscoutApiEndpoint {
     GET("/api/v1/entries.json")
     public fun getEntries(Query("count") count: Int): Observable<List<NightscoutApiEntry>>
 

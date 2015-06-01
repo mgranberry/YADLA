@@ -8,7 +8,7 @@ import rx.Observable
 /**
  * Created by matthiasgranberry on 5/11/15.
  */
-public trait GeoApi {
+public interface GeoApi {
     public fun getCurrentLocation(): Observable<GeocodedLocation>
     public fun getCurrentLocation(categories: String): Observable<GeocodedLocation>
     public fun search(position: Position): Observable<GeocodedLocation>

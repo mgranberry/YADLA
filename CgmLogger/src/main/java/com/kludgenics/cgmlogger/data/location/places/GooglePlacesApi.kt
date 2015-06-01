@@ -153,7 +153,7 @@ class GooglePlacesApi(private val mClient: GoogleApiClient) : GeoApi {
         })
     }
 
-    trait NearbySearchEndpoint {
+    interface NearbySearchEndpoint {
 
         GET("/maps/api/place/nearbysearch/json")
         public fun nearbySearch(Query("key") key: String, Query("location") location: String, Query("radius") radius: Float): NearbySearchResponse

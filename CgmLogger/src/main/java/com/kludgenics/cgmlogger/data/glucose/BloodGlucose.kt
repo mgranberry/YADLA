@@ -8,7 +8,7 @@ import kotlin.properties.Delegates
 /**
  * Created by matthiasgranberry on 5/12/15.
  */
-public trait BloodGlucose {
+public interface BloodGlucose {
     public fun getId(): String
     public fun getValue(): Double
     public fun getDate(): Date

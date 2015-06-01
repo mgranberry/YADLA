@@ -38,14 +38,8 @@ public class NightscoutApiEntry : NightscoutEntry {
     Expose
     private val noise: Int = 0
 
-    public fun getType(): Type {
-        if (type == "mbg")
-            return Type.MBG
-        if (type == "sgv")
-            return Type.SGV
-        if (type == "cal")
-            return Type.CAL
-        return Type.UNKNOWN
+    public fun getType(): String {
+        return type
     }
 
     public fun asCalibration(): CalibrationEntry {
@@ -72,10 +66,10 @@ public class NightscoutApiEntry : NightscoutEntry {
         return Date(date)
     }
 
-    enum class Type {
-        SGV
-        MBG
-        CAL
-        UNKNOWN
+    companion object Type {
+        val SGV = "sgv"
+        val MBG = "mbg"
+        val CAL = "cal"
     }
+
 }

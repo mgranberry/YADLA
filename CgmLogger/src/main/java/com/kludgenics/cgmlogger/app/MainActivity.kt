@@ -11,6 +11,7 @@ import android.support.v7.app.ActionBar
 import android.support.v4.app.Fragment
 import android.support.v4.app.FragmentManager
 import android.os.Bundle
+import android.support.v4.app.ActivityCompat
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.Menu
@@ -18,18 +19,23 @@ import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import android.support.v4.widget.DrawerLayout
+import android.support.v7.app.AppCompatActivity
 import com.kludgenics.cgmlogger.app.service.BaseGmsPlaceService
+import com.kludgenics.cgmlogger.app.service.LocationIntentService
+import com.kludgenics.cgmlogger.data.activity.PlayServicesActivity
 import com.kludgenics.cgmlogger.data.location.GeoApi
 import com.kludgenics.cgmlogger.data.location.places.GooglePlacesLocation
 import com.kludgenics.cgmlogger.data.location.data.GeocodedLocation
+import com.kludgenics.cgmlogger.data.location.data.Position
+import io.realm.Realm
+import org.jetbrains.anko.*
 import rx.Subscriber
-
 import rx.lang.kotlin.*
 import rx.lang.kotlin.toObservable
 import rx.lang.kotlin.onError
+import com.kludgenics.cgmlogger.extension.*
 
-
-public class MainActivity : ActionBarActivity(), NavigationDrawerFragment.NavigationDrawerCallbacks {
+public class MainActivity : BaseActivity(), NavigationDrawerFragment.NavigationDrawerCallbacks, AnkoLogger {
     /**
      * Fragment managing the behaviors, interactions and presentation of the navigation drawer.
      */
@@ -60,26 +66,37 @@ public class MainActivity : ActionBarActivity(), NavigationDrawerFragment.Naviga
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        super<ActionBarActivity>.onCreate(savedInstanceState)
+        super<BaseActivity>.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
         mNavigationDrawerFragment = getSupportFragmentManager().findFragmentById(R.id.navigation_drawer) as NavigationDrawerFragment
         mTitle = getTitle()
-
+        startService(intentFor<LocationIntentService>().setAction(LocationIntentService.ACTION_START_LOCATION_UPDATES))
         // Set up the drawer.
         mNavigationDrawerFragment!!.setUp(R.id.navigation_drawer, findViewById(R.id.drawer_layout) as DrawerLayout)
-
+        val realm = Realm.getInstance(ctx)
+        realm.use {
+            val res = realm.allObjects(javaClass<Position>())
+            res.forEach {
+                info("Position/Location: ${it.getLatitude()},${it.getLongitude()} ${it.getAccuracy()} ${it.getTime()} ${it.getLocation()}")
+            }
+            val acts = realm.allObjects(javaClass<PlayServicesActivity>())
+            acts.forEach {
+                info("Activity: ${it.getActivityId()}, ${it.getConfidence()}, ${it.getTime()}")
+            }
+        }
     }
 
+
     override fun onStart() {
-        super<ActionBarActivity>.onStart()
+        super<BaseActivity>.onStart()
         val serviceIntent = Intent(this, javaClass<BaseGmsPlaceService>())
         Log.d("binding", "binding")
         bindService(serviceIntent, mPlaceConnection, Context.BIND_AUTO_CREATE)
     }
 
     override fun onStop() {
-        super<ActionBarActivity>.onStop()
+        super<BaseActivity>.onStop()
         if (mBound)
             unbindService(mPlaceConnection)
         mBound = false
@@ -128,7 +145,7 @@ public class MainActivity : ActionBarActivity(), NavigationDrawerFragment.Naviga
             restoreActionBar()
             return true
         }
-        return super<ActionBarActivity>.onCreateOptionsMenu(menu)
+        return super<BaseActivity>.onCreateOptionsMenu(menu)
     }
 
     override fun onOptionsItemSelected(item: MenuItem?): Boolean {
@@ -142,7 +159,7 @@ public class MainActivity : ActionBarActivity(), NavigationDrawerFragment.Naviga
             return true
         }
 
-        return super<ActionBarActivity>.onOptionsItemSelected(item)
+        return super<BaseActivity>.onOptionsItemSelected(item)
     }
 
     /**

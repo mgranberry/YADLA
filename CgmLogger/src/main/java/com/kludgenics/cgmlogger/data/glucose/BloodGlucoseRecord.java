@@ -31,13 +31,12 @@ public class BloodGlucoseRecord extends RealmObject implements BloodGlucose {
 
     }
 
-    @NotNull
     @Override
     public double getValue() {
         return value;
     }
 
-    public void setValue(@NotNull double value) {
+    public void setValue(double value) {
         this.value = value;
     }
 
@@ -81,5 +80,5 @@ public class BloodGlucoseRecord extends RealmObject implements BloodGlucose {
         this.id = id;
     }
 
-
 }
+

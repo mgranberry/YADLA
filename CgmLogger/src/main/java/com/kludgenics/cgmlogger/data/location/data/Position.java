@@ -12,14 +12,17 @@ import java.util.Date;
 public class Position extends RealmObject {
     private double latitude;
     private double longitude;
-    private float radius;
+    private float accuracy;
     private Date time;
     @Ignore
     Location location;
 
     public Location getLocation() {
         location = new Location("database");
-        location.setAccuracy(getRadius());
+        location.setLatitude(getLatitude());
+        location.setLongitude(getLongitude());
+        location.setAccuracy(getAccuracy());
+        location.setTime(getTime().getTime());
         return location;
     }
 
@@ -31,11 +34,11 @@ public class Position extends RealmObject {
         this(location.getLatitude(), location.getLongitude(),  location.getAccuracy(), location.getTime());
     }
 
-    public Position(double latitude, double longitude, float radius, long time) {
+    public Position(double latitude, double longitude, float accuracy, long time) {
         this();
         this.latitude = latitude;
         this.longitude = longitude;
-        this.radius = radius;
+        this.accuracy = accuracy;
         this.time = new Date(time);
     }
 
@@ -76,19 +79,19 @@ public class Position extends RealmObject {
     }
 
     /**
-     * Get the radius associated with this position in meters
-     * @return radius (m)
+     * Get the accuracy associated with this position in meters
+     * @return accuracy (m)
      */
-    public float getRadius() {
-        return radius;
+    public float getAccuracy() {
+        return accuracy;
     }
 
     /**
-     * Set the radius assoziated with this position in meters
-     * @param radius
+     * Set the accuracy associated with this position in meters
+     * @param accuracy
      */
-    public void setRadius(float radius) {
-        this.radius = radius;
+    public void setAccuracy(float accuracy) {
+        this.accuracy = accuracy;
     }
 
     public Date getTime() {

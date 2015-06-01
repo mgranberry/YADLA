@@ -9,6 +9,7 @@ import java.util.Date
  * Created by matthiasgranberry on 5/24/15.
  */
 public class MbgEntry() : BloodGlucose, NightscoutEntry {
+
     Expose
     SerializedName("_id")
     private var id: String = ""

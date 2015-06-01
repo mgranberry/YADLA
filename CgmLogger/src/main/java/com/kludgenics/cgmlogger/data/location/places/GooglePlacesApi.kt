@@ -35,8 +35,7 @@ import java.util.Date
  */
 class GooglePlacesApi(private val mClient: GoogleApiClient) : GeoApi {
     private val mGooglePlacesEndpoint: NearbySearchEndpoint
-
-    {
+    init {
         val adapter = RestAdapter.Builder().setEndpoint(PLACES_API_URL).setLogLevel(RestAdapter.LogLevel.FULL).setConverter(GsonConverter(GsonBuilder().excludeFieldsWithoutExposeAnnotation().create())).build()
         mGooglePlacesEndpoint = adapter.create<NearbySearchEndpoint>(javaClass<NearbySearchEndpoint>())
     }
@@ -93,15 +92,6 @@ class GooglePlacesApi(private val mClient: GoogleApiClient) : GeoApi {
                                             override fun onResult(placeLikelihoods: PlaceLikelihoodBuffer) {
                                                 val attribution = placeLikelihoods.getAttributions()
                                                 placeLikelihoods.toObservable()
-                                                        /*.filter {
-                                                            val latlng = it.getPlace().getLatLng()
-                                                            val loc = Location("mock")
-                                                            loc.setLatitude(latlng.latitude)
-                                                            loc.setLongitude(latlng.longitude)
-                                                            val place = it.getPlace()
-                                                            Log.d(TAG, "${place.getName()} (dist ${location.distanceTo(loc)}, pinside ${location.probabilityWithin(loc)}")
-                                                            return@filter filter.matches(it.getPlace())
-                                                        }*/
                                                         .map { GooglePlacesLocation(it.getPlace(), it.getLikelihood(), attribution) }
                                                         .subscribe(subscriber)
                                                 placeLikelihoods.release()

@@ -1,6 +1,9 @@
 package com.kludgenics.cgmlogger.data.glucose
 
+import org.jetbrains.annotations.NotNull
 import java.util.Date
+import java.util.InvalidPropertiesFormatException
+import kotlin.properties.Delegates
 
 /**
  * Created by matthiasgranberry on 5/12/15.
@@ -25,9 +28,9 @@ public trait BloodGlucose {
  */
 fun BloodGlucose.asMgDl(): Int {
     return when (getUnit()) {
-        in BloodGlucose.UNIT_MGDL -> getValue().toInt()
-        in BloodGlucose.UNIT_MMOL -> (getValue() * 18.01559).toInt()
-        else -> getValue().toInt()
+        BloodGlucose.UNIT_MGDL -> getValue().toInt()
+        BloodGlucose.UNIT_MMOL -> (getValue() * 18.01559).toInt()
+        else -> throw IllegalArgumentException("Invalid unit ${getUnit()}")
     }
 }
 
@@ -37,9 +40,9 @@ fun BloodGlucose.asMgDl(): Int {
  */
 fun BloodGlucose.asMmol(): Double {
     return when (getUnit()) {
-        in BloodGlucose.UNIT_MGDL -> getValue() / 18.01559
-        in BloodGlucose.UNIT_MMOL -> getValue()
-        else -> getValue()
+        BloodGlucose.UNIT_MGDL -> getValue() / 18.01559
+        BloodGlucose.UNIT_MMOL -> getValue()
+        else -> throw IllegalArgumentException("Invalid unit ${getUnit()}")
     }
 }
 
@@ -48,8 +51,8 @@ fun BloodGlucose.asMmol(): Double {
  */
 fun BloodGlucose.asUnit(unit: String): Double {
     return when (unit) {
-        in BloodGlucose.UNIT_MGDL -> asMgDl().toDouble()
-        in BloodGlucose.UNIT_MMOL -> asMmol()
-        else -> getValue()
+        BloodGlucose.UNIT_MGDL -> asMgDl().toDouble()
+        BloodGlucose.UNIT_MMOL -> asMmol()
+        else -> throw IllegalArgumentException("Invalid unit $unit")
     }
 }

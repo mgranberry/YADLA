@@ -11,6 +11,6 @@ import com.kludgenics.cgmlogger.util.EventBus
 public class LoggerApplication : Application() {
     override fun onCreate() {
         super.onCreate()
-        EventBus.getSubject().onNext("Application started")
+        EventBus.get().onNext("Application started")
     }
 }

@@ -12,5 +12,5 @@ import rx.subjects.Subject
 
 public object EventBus {
     private val subject: PublishSubject<Any> = PublishSubject.create()
-    public fun getSubject(): PublishSubject<Any> { return subject }
+    public fun get(): PublishSubject<Any> { return subject }
 }

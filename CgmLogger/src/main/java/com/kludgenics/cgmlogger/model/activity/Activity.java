@@ -1,4 +1,4 @@
-package com.kludgenics.cgmlogger.data.activity;
+package com.kludgenics.cgmlogger.model.activity;
 
 import java.util.Date;
 

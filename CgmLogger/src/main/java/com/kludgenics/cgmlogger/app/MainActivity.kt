@@ -22,11 +22,11 @@ import android.support.v4.widget.DrawerLayout
 import android.support.v7.app.AppCompatActivity
 import com.kludgenics.cgmlogger.app.service.BaseGmsPlaceService
 import com.kludgenics.cgmlogger.app.service.LocationIntentService
-import com.kludgenics.cgmlogger.data.activity.PlayServicesActivity
-import com.kludgenics.cgmlogger.data.location.GeoApi
-import com.kludgenics.cgmlogger.data.location.places.GooglePlacesLocation
-import com.kludgenics.cgmlogger.data.location.data.GeocodedLocation
-import com.kludgenics.cgmlogger.data.location.data.Position
+import com.kludgenics.cgmlogger.model.activity.PlayServicesActivity
+import com.kludgenics.cgmlogger.model.location.GeoApi
+import com.kludgenics.cgmlogger.model.location.places.GooglePlacesLocation
+import com.kludgenics.cgmlogger.model.location.data.GeocodedLocation
+import com.kludgenics.cgmlogger.model.location.data.Position
 import io.realm.Realm
 import org.jetbrains.anko.*
 import rx.Subscriber

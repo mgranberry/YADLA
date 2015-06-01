@@ -1,8 +1,8 @@
-package com.kludgenics.cgmlogger.data.location
+package com.kludgenics.cgmlogger.model.location
 
-import com.kludgenics.cgmlogger.data.location.places.AutoCompleteResult
-import com.kludgenics.cgmlogger.data.location.data.GeocodedLocation
-import com.kludgenics.cgmlogger.data.location.data.Position
+import com.kludgenics.cgmlogger.model.location.places.AutoCompleteResult
+import com.kludgenics.cgmlogger.model.location.data.GeocodedLocation
+import com.kludgenics.cgmlogger.model.location.data.Position
 import rx.Observable
 
 /**

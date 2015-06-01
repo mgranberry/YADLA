@@ -1,4 +1,4 @@
-package com.kludgenics.cgmlogger.data.glucose
+package com.kludgenics.cgmlogger.model.glucose
 
 import org.jetbrains.annotations.NotNull
 import java.util.Date

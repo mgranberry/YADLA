@@ -1,4 +1,4 @@
-package com.kludgenics.cgmlogger.data.math
+package com.kludgenics.cgmlogger.model.math
 
 import rx.Observable
 import rx.Subscriber

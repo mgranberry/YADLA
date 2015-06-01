@@ -1,4 +1,4 @@
-package com.kludgenics.cgmlogger.data.nightscout
+package com.kludgenics.cgmlogger.model.nightscout
 
 import retrofit.http.GET
 import retrofit.http.Query

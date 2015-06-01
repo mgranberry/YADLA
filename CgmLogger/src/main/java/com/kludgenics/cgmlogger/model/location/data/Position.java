@@ -1,4 +1,4 @@
-package com.kludgenics.cgmlogger.data.location.data;
+package com.kludgenics.cgmlogger.model.location.data;
 
 import android.location.Location;
 import io.realm.RealmObject;

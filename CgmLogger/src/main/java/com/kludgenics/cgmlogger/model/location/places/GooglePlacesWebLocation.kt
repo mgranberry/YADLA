@@ -1,8 +1,8 @@
-package com.kludgenics.cgmlogger.data.location.places
+package com.kludgenics.cgmlogger.model.location.places
 
 import com.google.gson.annotations.Expose
-import com.kludgenics.cgmlogger.data.location.data.GeocodedLocation
-import com.kludgenics.cgmlogger.data.location.data.Position
+import com.kludgenics.cgmlogger.model.location.data.GeocodedLocation
+import com.kludgenics.cgmlogger.model.location.data.Position
 import java.util.Collections
 
 /**

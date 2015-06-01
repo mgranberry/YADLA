@@ -1,8 +1,8 @@
-package com.kludgenics.cgmlogger.data.nightscout
+package com.kludgenics.cgmlogger.model.nightscout
 
 import com.google.gson.annotations.Expose
 import com.google.gson.annotations.SerializedName
-import com.kludgenics.cgmlogger.data.glucose.BloodGlucose
+import com.kludgenics.cgmlogger.model.glucose.BloodGlucose
 import java.util.Date
 
 /**

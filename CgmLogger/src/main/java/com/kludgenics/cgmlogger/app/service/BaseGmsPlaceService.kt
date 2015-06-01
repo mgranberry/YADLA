@@ -11,8 +11,8 @@ import com.google.android.gms.common.ConnectionResult
 import com.google.android.gms.common.api.GoogleApiClient
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.places.Places
-import com.kludgenics.cgmlogger.data.location.places.GooglePlacesApi
-import com.kludgenics.cgmlogger.data.location.GeoApi
+import com.kludgenics.cgmlogger.model.location.places.GooglePlacesApi
+import com.kludgenics.cgmlogger.model.location.GeoApi
 
 /**
  * Created by matthiasgranberry on 5/17/15.

@@ -12,8 +12,8 @@ import com.google.android.gms.common.api.GoogleApiClient
 import com.google.android.gms.common.api.ResultCallback
 import com.google.android.gms.common.api.Status
 import com.google.android.gms.location.*
-import com.kludgenics.cgmlogger.data.activity.PlayServicesActivity
-import com.kludgenics.cgmlogger.data.location.data.Position
+import com.kludgenics.cgmlogger.model.activity.PlayServicesActivity
+import com.kludgenics.cgmlogger.model.location.data.Position
 import com.kludgenics.cgmlogger.extension.Geofence
 import com.kludgenics.cgmlogger.extension.GeofencingRequest
 import org.jetbrains.anko.*

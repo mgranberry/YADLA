@@ -1,4 +1,4 @@
-package com.kludgenics.cgmlogger.data.location.places;
+package com.kludgenics.cgmlogger.model.location.places;
 
 import java.util.List;
 

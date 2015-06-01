@@ -1,4 +1,4 @@
-package com.kludgenics.cgmlogger.data.location.places
+package com.kludgenics.cgmlogger.model.location.places
 
 import android.location.Location
 import android.util.Log
@@ -11,13 +11,13 @@ import com.google.android.gms.location.places.PlaceLikelihoodBuffer
 import com.google.android.gms.location.places.Places
 import com.google.gson.GsonBuilder
 import com.google.gson.annotations.Expose
-import com.kludgenics.cgmlogger.data.glucose.BloodGlucose
-import com.kludgenics.cgmlogger.data.glucose.asMgDl
-import com.kludgenics.cgmlogger.data.location.GeoApi
-import com.kludgenics.cgmlogger.data.location.places.AutoCompleteResult
-import com.kludgenics.cgmlogger.data.location.data.GeocodedLocation
-import com.kludgenics.cgmlogger.data.location.places.GooglePlacesLocation
-import com.kludgenics.cgmlogger.data.location.data.Position
+import com.kludgenics.cgmlogger.model.glucose.BloodGlucose
+import com.kludgenics.cgmlogger.model.glucose.asMgDl
+import com.kludgenics.cgmlogger.model.location.GeoApi
+import com.kludgenics.cgmlogger.model.location.places.AutoCompleteResult
+import com.kludgenics.cgmlogger.model.location.data.GeocodedLocation
+import com.kludgenics.cgmlogger.model.location.places.GooglePlacesLocation
+import com.kludgenics.cgmlogger.model.location.data.Position
 import com.kludgenics.cgmlogger.extension.probabilityWithin
 import retrofit.RestAdapter
 import retrofit.converter.GsonConverter

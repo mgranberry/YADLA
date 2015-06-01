@@ -1,4 +1,4 @@
-package com.kludgenics.cgmlogger.data.glucose;
+package com.kludgenics.cgmlogger.model.glucose;
 
 import io.realm.RealmObject;
 import org.jetbrains.annotations.NotNull;

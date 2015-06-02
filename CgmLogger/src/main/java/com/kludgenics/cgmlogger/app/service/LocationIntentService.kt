@@ -70,8 +70,6 @@ public class LocationIntentService : IntentService("location"), GoogleApiClient.
     }
 
     override fun onHandleIntent(intent: Intent?) {
-        if ((client != null) && !client!!.isConnected())
-            client!!.blockingConnect()
 
         when (intent?.getAction()) {
             ACTION_LOCATION_UPDATE -> {
@@ -95,6 +93,9 @@ public class LocationIntentService : IntentService("location"), GoogleApiClient.
                 }
             }
             ACTION_BOOT, ACTION_START_LOCATION_UPDATES -> {
+                if ((client != null) && !client!!.isConnected())
+                    client!!.blockingConnect()
+
                 requestLocationUpdates()
                 requestActivityUpdates()
             }
@@ -150,6 +151,8 @@ public class LocationIntentService : IntentService("location"), GoogleApiClient.
         else
             50f
 
+        // @TODO this will eventually expire.  Something needs to be done to make it last longer
+        // than a day.
         return LocationRequest.create()
                 .setExpirationTime(SystemClock.elapsedRealtime() + DateUtils.DAY_IN_MILLIS)
                 //.setInterval(DateUtils.MINUTE_IN_MILLIS)

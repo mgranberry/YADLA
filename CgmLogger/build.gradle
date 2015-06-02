@@ -38,7 +38,7 @@ android {
     }
     productFlavors {
         dev {
-            minSdkVersion 21
+            minSdkVersion 15
         }
         prod {
             minSdkVersion 15
@@ -53,8 +53,12 @@ android {
         targetCompatibility JavaVersion.VERSION_1_6
     }
     buildTypes {
+        debug {
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
         release {
-            minifyEnabled false
+            minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
@@ -74,8 +78,8 @@ dependencies {
     compile 'com.google.android.gms:play-services-gcm:7.5.0'
     compile 'com.squareup.retrofit:retrofit:1.9.0'
     compile 'io.reactivex:rxjava:1.0.11'
-    compile 'com.squareup.okhttp:okhttp:2.4.0-RC1'
-    compile 'com.squareup.okhttp:okhttp-urlconnection:2.4.0-RC1'
+    compile 'com.squareup.okhttp:okhttp:2.4.0'
+    compile 'com.squareup.okhttp:okhttp-urlconnection:2.4.0'
     compile 'com.google.code.gson:gson:2.3.1'
     compile 'io.realm:realm-android:0.80.3'
     compile 'org.jetbrains.anko:anko:0.6.2-15s'

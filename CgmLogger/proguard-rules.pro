@@ -20,3 +20,60 @@
 -keep class io.realm.** { *; }
 -dontwarn javax.**
 -dontwarn io.realm.**
+
+-dontobfuscate
+-optimizationpasses 5
+-dontusemixedcaseclassnames
+-dontskipnonpubliclibraryclasses
+-dontpreverify
+-verbose
+-optimizations !code/simplification/arithmetic,!field/*,!class/merging/*,!code/allocation/variable
+-dontwarn sun.misc.Unsafe
+-dontwarn com.google.appengine.api.urlfetch.*
+-dontwarn android.renderscript.*
+-dontwarn java.nio.file.*
+-dontwarn org.w3c.dom.events.*
+-dontwarn org.codehaus.mojo.animal_sniffer.IgnoreJRERequirement
+-dontwarn android.webkit.WebView
+-dontwarn com.squareup.okhttp.internal.huc.HttpsURLConnectionImpl
+-keep public class * extends android.app.Activity
+-keep public class * extends android.app.Application
+-keep public class * extends android.app.Service
+-keep public class * extends android.content.BroadcastReceiver
+-keep public class * extends android.content.ContentProvider
+-keep public class * extends android.app.backup.BackupAgentHelper
+-keep public class * extends android.preference.Preference
+-keep public class com.android.vending.licensing.ILicensingService
+
+-keepclasseswithmembernames class * {
+    native <methods>;
+}
+
+-keepclasseswithmembers class * {
+    public <init>(android.content.Context, android.util.AttributeSet);
+}
+
+-keepclasseswithmembers class * {
+    public <init>(android.content.Context, android.util.AttributeSet, int);
+}
+
+-keepclassmembers class * extends android.app.Activity {
+   public void *(android.view.View);
+}
+
+-keepclassmembers class * extends android.support.design.widget.CoordinatorLayout$Behavior {
+   public <init>();
+}
+
+-keepclassmembers class android.support.design.widget.FloatingActionButton$Behavior2 {
+   public <init>();
+}
+
+-keepclassmembers class * extends android.view.View { 
+   public <init>();
+}
+
+-keepclassmembers enum * {
+    public static **[] values();
+    public static ** valueOf(java.lang.String);
+}

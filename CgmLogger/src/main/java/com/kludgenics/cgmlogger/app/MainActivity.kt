@@ -5,62 +5,51 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
-import android.os.IBinder
-import android.support.v7.app.ActionBarActivity
-import android.support.v7.app.ActionBar
-import android.support.v4.app.Fragment
-import android.support.v4.app.FragmentManager
 import android.os.Bundle
-import android.support.v4.app.ActivityCompat
-import android.util.Log
-import android.view.LayoutInflater
-import android.view.Menu
-import android.view.MenuItem
-import android.view.View
-import android.view.ViewGroup
+import android.os.IBinder
+import android.support.design.widget.CoordinatorLayout
+import android.support.design.widget.FloatingActionButton
+import android.support.design.widget.NavigationView
+import android.support.design.widget.Snackbar
+import android.support.v4.app.Fragment
 import android.support.v4.widget.DrawerLayout
-import android.support.v7.app.AppCompatActivity
+import android.support.v7.app.ActionBar
+import android.support.v7.widget.Toolbar
+import android.util.Log
+import android.view.*
+import android.widget.FrameLayout
+import com.google.android.gms.location.DetectedActivity
 import com.kludgenics.cgmlogger.app.service.BaseGmsPlaceService
 import com.kludgenics.cgmlogger.app.service.LocationIntentService
+import com.kludgenics.cgmlogger.extension.*
 import com.kludgenics.cgmlogger.model.activity.PlayServicesActivity
 import com.kludgenics.cgmlogger.model.location.GeoApi
-import com.kludgenics.cgmlogger.model.location.places.GooglePlacesLocation
 import com.kludgenics.cgmlogger.model.location.data.GeocodedLocation
 import com.kludgenics.cgmlogger.model.location.data.Position
+import com.kludgenics.cgmlogger.model.location.places.GooglePlacesLocation
 import io.realm.Realm
 import org.jetbrains.anko.*
-import rx.Subscriber
-import rx.lang.kotlin.*
-import rx.lang.kotlin.toObservable
-import rx.lang.kotlin.onError
-import com.kludgenics.cgmlogger.extension.*
+import rx.lang.kotlin.subscriber
 
-public class MainActivity : BaseActivity(), NavigationDrawerFragment.NavigationDrawerCallbacks, AnkoLogger {
-    /**
-     * Fragment managing the behaviors, interactions and presentation of the navigation drawer.
-     */
-    private var mNavigationDrawerFragment: NavigationDrawerFragment? = null
-
+public class MainActivity : BaseActivity() {
+    override protected val navigationId = R.id.nav_home
     /**
      * Used to store the last screen title. For use in [.restoreActionBar].
      */
-    private var mTitle: CharSequence? = null
     private var mPlaceService: GeoApi? = null
     private var mBound: Boolean = false
-
+    private var coordinator: CoordinatorLayout? = null
+    //override val loggerTag = "MainActivity"
     private val mPlaceConnection = object : ServiceConnection {
 
         override fun onServiceConnected(className: ComponentName, service: IBinder) {
             // We've bound to LocalService, cast the IBinder and get LocalService instance
             val binder = service as BaseGmsPlaceService.LocalBinder
             mPlaceService = binder.getService()
-            Log.d("Bound", "Bound")
             mBound = true
         }
 
         override fun onServiceDisconnected(arg0: ComponentName) {
-            Log.d("Unbound", "UnBound")
-
             mBound = false
         }
     }
@@ -68,21 +57,51 @@ public class MainActivity : BaseActivity(), NavigationDrawerFragment.NavigationD
     override fun onCreate(savedInstanceState: Bundle?) {
         super<BaseActivity>.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        setupNavigationBar()
+        val toolbar = find<Toolbar>(R.id.toolbar)
+        setSupportActionBar(toolbar)
+        val ab = getSupportActionBar()
+        ab.setHomeAsUpIndicator(R.drawable.ic_photo_camera_white_24dp)
+        ab.setDisplayHomeAsUpEnabled(true)
 
-        mNavigationDrawerFragment = getSupportFragmentManager().findFragmentById(R.id.navigation_drawer) as NavigationDrawerFragment
-        mTitle = getTitle()
+        val navView = find<NavigationView>(R.id.nav_view)
+        navView.setNavigationItemSelectedListener {
+            handleNavigationBarClick(it)
+        }
+        val fab = find<FloatingActionButton>(R.id.fab)
+        fab.onClick {
+            wtf("snackbaring")
+            it.snackbar("Hello World!", Snackbar.LENGTH_SHORT, {
+                setAction("Click") {
+                    Log.d("hello", "world")
+                }
+            })
+            wtf("snackbarred")
+            //Snackbar.make(it, "Goodbye world!", Snackbar.LENGTH_SHORT).show()
+            wtf("sb2")
+        }
         startService(intentFor<LocationIntentService>().setAction(LocationIntentService.ACTION_START_LOCATION_UPDATES))
         // Set up the drawer.
-        mNavigationDrawerFragment!!.setUp(R.id.navigation_drawer, findViewById(R.id.drawer_layout) as DrawerLayout)
         val realm = Realm.getInstance(ctx)
         realm.use {
             val res = realm.allObjects(javaClass<Position>())
             res.forEach {
-                info("Position/Location: ${it.getLatitude()},${it.getLongitude()} ${it.getAccuracy()} ${it.getTime()} ${it.getLocation()}")
+                //info("Position/Location: ${it.getLatitude()},${it.getLongitude()} ${it.getAccuracy()} ${it.getTime()} ${it.getLocation()}")
             }
             val acts = realm.allObjects(javaClass<PlayServicesActivity>())
             acts.forEach {
-                info("Activity: ${it.getActivityId()}, ${it.getConfidence()}, ${it.getTime()}")
+                val activity = when(it.getActivityId()) {
+                    DetectedActivity.IN_VEHICLE -> "in_vehicle"
+                    DetectedActivity.ON_BICYCLE -> "on_bicycle"
+                    DetectedActivity.ON_FOOT -> "on_foot"
+                    DetectedActivity.RUNNING -> "running"
+                    DetectedActivity.STILL -> "still"
+                    DetectedActivity.TILTING -> "tilting"
+                    DetectedActivity.WALKING -> "walking"
+                    DetectedActivity.UNKNOWN -> "unknown"
+                    else -> "other"
+                }
+                //info("Activity: ${activity}, ${it.getConfidence()}, ${it.getTime()}")
             }
         }
     }
@@ -90,8 +109,14 @@ public class MainActivity : BaseActivity(), NavigationDrawerFragment.NavigationD
 
     override fun onStart() {
         super<BaseActivity>.onStart()
+        if (coordinator?.snackbar("Hello, World") == null) {
+            debug("Null coordinator")
+        }
+        else {
+            debug("Showed snackbar")
+        }
+        debug("binding")
         val serviceIntent = Intent(this, javaClass<BaseGmsPlaceService>())
-        Log.d("binding", "binding")
         bindService(serviceIntent, mPlaceConnection, Context.BIND_AUTO_CREATE)
     }
 
@@ -102,49 +127,17 @@ public class MainActivity : BaseActivity(), NavigationDrawerFragment.NavigationD
         mBound = false
     }
 
-    override fun onNavigationDrawerItemSelected(position: Int) {
-        // update the main content by replacing fragments
-        val fragmentManager = getSupportFragmentManager()
-        fragmentManager.beginTransaction().replace(R.id.container, PlaceholderFragment.newInstance(position + 1)).commit()
-    }
-
-    public fun onSectionAttached(number: Int) {
-        when (number) {
-            1 -> mTitle = getString(R.string.title_section1)
-            2 -> mTitle = getString(R.string.title_section2)
-            3 -> mTitle = getString(R.string.title_section3)
-        }
-    }
-
-    public fun restoreActionBar() {
-        val actionBar = getSupportActionBar()
-        actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_STANDARD)
-        actionBar.setDisplayShowTitleEnabled(true)
-        if (mBound) {
-            Log.d("Bound", "for food")
-            val locationObservable = mPlaceService!!.getCurrentLocation("food")
-
-            locationObservable.take(1).subscribe(subscriber<GeocodedLocation>().onNext{
-                    actionBar.setTitle(it.getName())
-
-            })
-            locationObservable.subscribe(subscriber<GeocodedLocation>().onNext {
-                    Log.d("LocResult", "${it.getName().toString()} (${(it as GooglePlacesLocation).getLikelihood()}) ${it.getLocationTypes()}")
-            })
-        }
-        actionBar.setTitle(mTitle)
-    }
 
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
-        if (!mNavigationDrawerFragment!!.isDrawerOpen()) {
+        /*if (!mNavigationDrawerFragment!!.isDrawerOpen()) {
             // Only show items in the action bar relevant to this screen
             // if the drawer is not showing. Otherwise, let the drawer
             // decide what to show in the action bar.
             getMenuInflater().inflate(R.menu.main, menu)
             restoreActionBar()
             return true
-        }
+        }*/
         return super<BaseActivity>.onCreateOptionsMenu(menu)
     }
 
@@ -160,42 +153,6 @@ public class MainActivity : BaseActivity(), NavigationDrawerFragment.NavigationD
         }
 
         return super<BaseActivity>.onOptionsItemSelected(item)
-    }
-
-    /**
-     * A placeholder fragment containing a simple view.
-     */
-    public class PlaceholderFragment : Fragment() {
-
-        override fun onCreateView(inflater: LayoutInflater?, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-            val rootView = inflater!!.inflate(R.layout.fragment_main, container, false)
-            return rootView
-        }
-
-        override fun onAttach(activity: Activity?) {
-            super.onAttach(activity)
-            (activity as MainActivity).onSectionAttached(getArguments().getInt(ARG_SECTION_NUMBER))
-        }
-
-        companion object {
-            /**
-             * The fragment argument representing the section number for this
-             * fragment.
-             */
-            private val ARG_SECTION_NUMBER = "section_number"
-
-            /**
-             * Returns a new instance of this fragment for the given section
-             * number.
-             */
-            public fun newInstance(sectionNumber: Int): PlaceholderFragment {
-                val fragment = PlaceholderFragment()
-                val args = Bundle()
-                args.putInt(ARG_SECTION_NUMBER, sectionNumber)
-                fragment.setArguments(args)
-                return fragment
-            }
-        }
     }
 
     companion object {

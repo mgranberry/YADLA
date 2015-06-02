@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <group android:checkableBehavior="single">
+        <item
+            android:id="@+id/nav_home"
+            android:title="Home" />
+        <item
+            android:id="@+id/nav_statistics"
+            android:title="Statistics" />
+        <item
+            android:id="@+id/nav_meals"
+            android:title="Meals" />
+        <item
+            android:id="@+id/nav_places"
+            android:title="Places" />
+    </group>
+
+    <item android:title="Sub items">
+        <menu>
+            <item
+                android:title="Sub item 1"
+                android:checked="true"/>
+            <item
+                android:title="Sub item 2" />
+        </menu>
+    </item>
+
+</menu>

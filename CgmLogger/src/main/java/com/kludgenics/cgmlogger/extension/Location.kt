@@ -28,8 +28,6 @@ private fun cumulativeDensityFunction(x: Double, mean: Double, sigma: Double): D
 public fun Location.probabilityWithin(neighbor: Location) : Double {
     val sigma = this.getAccuracy().toDouble()
     val distance = this.distanceTo(neighbor).toDouble()
-    Log.d("moo", "$sigma $distance ${cumulativeDensityFunction((-1.0 * distance).toDouble(), 0.0, sigma.toDouble())}" )
-    val p = Path()
     return 1 - (cumulativeDensityFunction(distance, 0.0, sigma) - cumulativeDensityFunction(-distance, 0.0, sigma))
 }
 

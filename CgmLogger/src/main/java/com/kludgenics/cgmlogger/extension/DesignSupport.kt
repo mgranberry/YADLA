@@ -44,16 +44,6 @@ fun View.snackbar(text: Int, duration: Int = Snackbar.LENGTH_SHORT, init: Snackb
     return snack
 }
 
-        /*fun Activity.drawerLayout(init: DrawerLayout.() -> Unit = {}) =
-                __dslAddView({DrawerLayout(it)}, init, this)
-
-        fun Context.drawerLayout(init: DrawerLayout.() -> Unit = {}) =
-                __dslAddView({DrawerLayout(it)}, init, this)
-
-        // Only if you use android.support.v4
-        fun android.support.v4.app.Fragment.drawerLayout(init: DrawerLayout.() -> Unit = {}) =
-                __dslAddView({DrawerLayout(it)}, init, this)
-        */
 private object ViewCounter {
     private var viewCounter = AtomicInteger(1)
     public fun generateViewId(): Int {

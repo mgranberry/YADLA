@@ -44,6 +44,10 @@ android {
             minSdkVersion 15
         }
     }
+    packagingOptions {
+        exclude 'META-INF/LICENSE.txt'
+        exclude 'META-INF/NOTICE.txt'
+    }
     lintOptions {
         abortOnError false
     }
@@ -83,6 +87,7 @@ dependencies {
     compile 'com.google.code.gson:gson:2.3.1'
     compile 'io.realm:realm-android:0.80.3'
     compile 'org.jetbrains.anko:anko:0.6.2-15s'
+    compile 'net.danlew:android.joda:2.8.0'
     //compile 'io.reactivex:rxkotlin:0.21.0'
     compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
 }

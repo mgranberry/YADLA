@@ -41,6 +41,8 @@
 -dontwarn org.codehaus.mojo.animal_sniffer.IgnoreJRERequirement
 -dontwarn android.webkit.WebView
 -dontwarn com.squareup.okhttp.internal.huc.HttpsURLConnectionImpl
+-dontwarn org.joda.convert.FromString
+-dontwarn org.joda.convert.ToString
 -keep public class * extends android.app.Activity
 -keep public class * extends android.app.Application
 -keep public class * extends android.app.Service

@@ -14,6 +14,7 @@ import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.google.gson.internal.bind.DateTypeAdapter
 import com.kludgenics.cgmlogger.app.R
+import com.kludgenics.cgmlogger.app.util.DateTimeConverter
 import com.kludgenics.cgmlogger.model.glucose.BloodGlucoseRecord
 import com.kludgenics.cgmlogger.model.location.places.GooglePlacesApi
 import com.kludgenics.cgmlogger.model.nightscout.CalibrationEntry
@@ -22,6 +23,8 @@ import com.kludgenics.cgmlogger.model.nightscout.NightscoutApiEndpoint
 import com.kludgenics.cgmlogger.model.nightscout.NightscoutApiEntry
 import io.realm.Realm
 import org.jetbrains.anko.*
+import org.joda.time.DateTime
+import org.joda.time.DateTimeComparator
 import retrofit.RestAdapter
 import retrofit.RetrofitError
 import retrofit.converter.GsonConverter
@@ -79,10 +82,17 @@ public class TaskService : GcmTaskService(), AnkoLogger {
                     .build()
         }
 
-        public fun scheduleNightscoutTreatmentPeriodicSync(): PeriodicTask {
-            return PeriodicTask.Builder().setRequiredNetwork(Task.NETWORK_STATE_CONNECTED)
-                    .setPeriod(60 * 60)
-                    .setFlex(60 * 30)
+        public fun scheduleNightscoutTreatmentPeriodicSync(): OneoffTask {
+            /*return PeriodicTask.Builder().setRequiredNetwork(Task.NETWORK_STATE_CONNECTED)
+                    .setPeriod(1 * 60)
+                    .setFlex(10)
+                    .setPersisted(true)
+                    .setService(javaClass<TaskService>())
+                    .setUpdateCurrent(true)
+                    .setTag(TASK_SYNC_TREATMENTS)
+                    .build()*/
+            return OneoffTask.Builder().setRequiredNetwork(Task.NETWORK_STATE_CONNECTED)
+                    .setExecutionWindow(0, 30)
                     .setPersisted(true)
                     .setService(javaClass<TaskService>())
                     .setUpdateCurrent(true)
@@ -110,8 +120,10 @@ public class TaskService : GcmTaskService(), AnkoLogger {
 
     val gsonConverter: GsonConverter by Delegates.lazy {
         GsonConverter(GsonBuilder()
-            .setFieldNamingPolicy(FieldNamingPolicy.IDENTITY)
-            .create())
+                .registerTypeAdapter(javaClass<DateTime>(), DateTimeConverter())
+                .setFieldNamingPolicy(FieldNamingPolicy.IDENTITY)
+                .excludeFieldsWithoutExposeAnnotation()
+                .create())
     }
 
     var nightscoutEndpoint: NightscoutApiEndpoint? = null
@@ -136,7 +148,8 @@ public class TaskService : GcmTaskService(), AnkoLogger {
             TASK_SYNC_ENTRIES_FULL -> {
                 val count = 50000
                 info("Beginning full Nightscout entry sync")
-                syncEntries(count)
+                syncTreatments()
+                //syncEntries(count)
             }
             TASK_SYNC_ENTRIES_PERIODIC -> {
                 val count = 10
@@ -151,24 +164,32 @@ public class TaskService : GcmTaskService(), AnkoLogger {
     }
 
     private fun syncEntries(count: Int): Int {
-        val entries: List<NightscoutApiEntry>? = nightscoutEndpoint?.getEntries(count)
-        var realm: Realm = Realm.getInstance(ctx)
+        val entries = nightscoutEndpoint?.getEntries(count)
+        val realm: Realm = Realm.getInstance(ctx)
         realm.use {
-            realm.beginTransaction()
-            if (entries != null) {
-                entries.forEach {
-                    val ro = it.asRealmObject()
-                    when (ro) {
-                        is BloodGlucoseRecord -> {
-                            realm.copyToRealmOrUpdate(ro)
+            try {
+                realm.beginTransaction()
+                if (entries != null) {
+                    entries.forEach {
+                        val ro = it.asRealmObject()
+                        when (ro) {
+                            is BloodGlucoseRecord -> {
+                                realm.copyToRealmOrUpdate(ro)
+                            }
                         }
                     }
+                    info("Entry sync completed")
+                    realm.commitTransaction()
+                    return GcmNetworkManager.RESULT_SUCCESS
+                } else {
+                    info("Entry sync failed")
+                    realm.cancelTransaction()
+                    return GcmNetworkManager.RESULT_RESCHEDULE
                 }
-                realm.commitTransaction()
-                return GcmNetworkManager.RESULT_SUCCESS
-            } else {
+            } catch (t: RuntimeException) {
+                info("Entry sync failed: ${t}")
                 realm.cancelTransaction()
-                return GcmNetworkManager.RESULT_RESCHEDULE
+                return GcmNetworkManager.RESULT_FAILURE
             }
         }
     }
@@ -176,21 +197,28 @@ public class TaskService : GcmTaskService(), AnkoLogger {
 
 
     private fun syncTreatments(): Int {
-        val treatments = nightscoutEndpoint?.getTreatmentsObservable()
-        val realm = Realm.getInstance(this)
+        val treatments = nightscoutEndpoint?.getTreatments()
+        val realm: Realm = Realm.getInstance(ctx)
         realm.use {
-            val success = GcmNetworkManager.RESULT_SUCCESS.toSingletonObservable()
-            return if (treatments != null) {
+            try {
                 realm.beginTransaction()
-                treatments.flatMap { realm.copyToRealmOrUpdate(it); success }
-                        .doOnError { realm.cancelTransaction() }
-                        .doOnCompleted { info("success"); realm.commitTransaction() }
-                        .onErrorReturn { foo: Throwable -> info("failed: ${foo}"); GcmNetworkManager.RESULT_RESCHEDULE }
-                        .toBlocking()
-                        .lastOrDefault(GcmNetworkManager.RESULT_RESCHEDULE)
-            } else
-                GcmNetworkManager.RESULT_RESCHEDULE
-
+                if (treatments != null) {
+                    treatments.forEach {
+                        realm.copyToRealmOrUpdate(it.toTreatment())
+                    }
+                    info("Treatment ync completed")
+                    realm.commitTransaction()
+                    return GcmNetworkManager.RESULT_SUCCESS
+                } else {
+                    info("Treatment sync failed")
+                    realm.cancelTransaction()
+                    return GcmNetworkManager.RESULT_RESCHEDULE
+                }
+            } catch (t: RuntimeException) {
+                info("Treatment sync failed: ${t}")
+                realm.cancelTransaction()
+                return GcmNetworkManager.RESULT_FAILURE
+            }
         }
     }
 

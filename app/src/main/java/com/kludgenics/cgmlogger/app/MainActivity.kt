@@ -28,6 +28,8 @@ import com.kludgenics.cgmlogger.model.location.GeoApi
 import com.kludgenics.cgmlogger.model.location.data.GeocodedLocation
 import com.kludgenics.cgmlogger.model.location.data.Position
 import com.kludgenics.cgmlogger.model.location.places.GooglePlacesLocation
+import com.kludgenics.cgmlogger.model.nightscout.NightscoutApiTreatment
+import com.kludgenics.cgmlogger.model.treatment.Treatment
 import io.realm.Realm
 import org.jetbrains.anko.*
 import rx.lang.kotlin.subscriber
@@ -45,32 +47,21 @@ public class MainActivity : BaseActivity() {
         setupNavigationBar()
         setupActionBar()
 
-        val navView = find<NavigationView>(R.id.nav_view)
-
         val fab = find<FloatingActionButton>(R.id.fab)
         fab.onClick {
-            wtf("snackbaring")
-            it.snackbar("Hello World!", Snackbar.LENGTH_SHORT, {
-                setAction("Click") {
-                    Log.d("hello", "world")
-                }
-            })
-            wtf("snackbarred")
-            //Snackbar.make(it, "Goodbye world!", Snackbar.LENGTH_SHORT).show()
-            wtf("sb2")
-        }
+         }
         startService(intentFor<LocationIntentService>().setAction(LocationIntentService.ACTION_START_LOCATION_UPDATES))
         // Set up the drawer.
         val realm = Realm.getInstance(ctx)
         realm.use {
             val before = System.currentTimeMillis()
-            val res = realm.allObjects(javaClass<BloodGlucoseRecord>())
+            val res = realm.allObjects(javaClass<Treatment>())
             if (!res.isEmpty())
-                info("${res.last().getDate()} ${res.last().getValue()}")
+                info("${res.last().getEventType()} ${res.last().getEnteredBy()}")
             val after = System.currentTimeMillis()
 
             info("BG query took ${after - before} ms")
-            val acts = realm.allObjects(javaClass<PlayServicesActivity>()).toObservable()
+            val acts = realm.allObjects(javaClass<PlayServicesActivity>())
             acts.map {
                 it.getTime() to
                 when(it.getActivityId()) {

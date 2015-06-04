@@ -1,1 +1,1 @@
-include ':CgmLogger'
+include ':app'

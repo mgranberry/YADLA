@@ -1,0 +1,39 @@
+<resources>
+    <string name="app_name">CgmLogger</string>
+
+    <string name="title_section1">Section 1</string>
+    <string name="title_section2">Section 2</string>
+    <string name="title_section3">Section 3</string>
+
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+
+    <string name="action_example">Example action</string>
+
+    <string name="action_settings">Settings</string>
+    <string name="flickr_api_key">c4b6a207da7ffbf0b9e88ea5f42e8d04</string>
+    <string name="preferences">Preferences</string>
+    <string name="places">Places</string>
+    <string name="meals">Meals</string>
+    <string name="statistics">Statistics</string>
+    <string name="home">Home</string>
+    <string name="pref_header_nightscout">Nightscout</string>
+    <string name="pref_title_nightscout_enabled">Enable Nightscout</string>
+    <string name="nightscout_enable">nightscout_enabled</string>
+    <string name="pref_summary_nightscout_enabled">Enable polling for Nightscout data</string>
+    <string name="pref_title_nightscout_uri">Nightscout URL</string>
+    <string name="nightscout_uri">nightscout_url</string>
+    <string name="pref_dialog_nightscout_uri">nightscout_url</string>
+    <string name="pref_message_nightscout_uri">This should look like http://nightscout.example.com:1337</string>
+    <string name="pref_default_nightscout_uri">https://nightscout.azure.com:8121</string>
+    <string name="pref_header_location">Location</string>
+    <string name="location_category">location_category</string>
+    <string name="pref_title_location_enabled">Enable location updates</string>
+    <string name="location_enabled">location_enable</string>
+    <string name="pref_summary_location_enabled">Allow application to retrieve location information.</string>
+    <string name="pref_title_api_key">Nightscout API key</string>
+    <string name="api_key">api_key</string>
+    <string name="pref_dialog_api_key">Nightscout API Key</string>
+    <string name="pref_message_api_key">Enter your 12-digit API key here (API_SECRET in Nightscout config)</string>
+    <string name="pref_default_api_key">API_SECRET</string>
+</resources>

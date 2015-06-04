@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    <PreferenceCategory
+        android:title="@string/pref_header_nightscout"
+        android:key="nightscout_category">
+        <SwitchPreference
+            android:title="@string/pref_title_nightscout_enabled"
+            android:key="@string/nightscout_enable"
+            android:disableDependentsState="false"
+            android:summary="@string/pref_summary_nightscout_enabled" />
+        <EditTextPreference
+            android:dependency="@string/nightscout_enable"
+            android:title="@string/pref_title_nightscout_uri"
+            android:key="@string/nightscout_uri"
+            android:dialogTitle="@string/pref_dialog_nightscout_uri"
+            android:dialogMessage="@string/pref_message_nightscout_uri"
+            android:hint="@string/pref_default_nightscout_uri"
+            android:inputType="textUri"/>
+        <EditTextPreference
+            android:title="@string/pref_title_api_key"
+            android:key="@string/api_key"
+            android:dialogTitle="@string/pref_dialog_api_key"
+            android:dialogMessage="@string/pref_message_api_key"
+            android:hint="@string/pref_default_api_key" />
+    </PreferenceCategory>
+    <PreferenceCategory
+        android:title="@string/pref_header_location"
+        android:key="@string/location_category">
+        <SwitchPreference
+            android:title="@string/pref_title_location_enabled"
+            android:key="@string/location_enabled"
+            android:summary="@string/pref_summary_location_enabled" />
+    </PreferenceCategory>
+</PreferenceScreen>

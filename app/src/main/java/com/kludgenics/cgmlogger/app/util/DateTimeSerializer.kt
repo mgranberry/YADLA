@@ -39,7 +39,7 @@ import com.google.gson.JsonPrimitive
 import com.google.gson.JsonSerializationContext
 import com.google.gson.JsonSerializer
 
-public class DateTimeConverter : JsonSerializer<DateTime>, JsonDeserializer<DateTime> {
+public class DateTimeSerializer : JsonSerializer<DateTime>, JsonDeserializer<DateTime> {
 
     override fun serialize(src: DateTime?, typeOfSrc: Type, context: JsonSerializationContext?): JsonElement {
         val fmt = ISODateTimeFormat.dateTime()

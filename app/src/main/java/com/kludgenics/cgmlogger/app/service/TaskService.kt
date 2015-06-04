@@ -8,7 +8,7 @@ import com.google.android.gms.gcm.*
 import com.google.gson.FieldNamingPolicy
 import com.google.gson.GsonBuilder
 import com.kludgenics.cgmlogger.app.R
-import com.kludgenics.cgmlogger.app.util.DateTimeConverter
+import com.kludgenics.cgmlogger.app.util.DateTimeSerializer
 import com.kludgenics.cgmlogger.model.glucose.BloodGlucoseRecord
 import com.kludgenics.cgmlogger.model.nightscout.NightscoutApiEndpoint
 import com.kludgenics.cgmlogger.model.nightscout.NightscoutApiEntry
@@ -109,7 +109,7 @@ public class TaskService : GcmTaskService(), AnkoLogger {
 
     val gsonConverter: GsonConverter by Delegates.lazy {
         GsonConverter(GsonBuilder()
-                .registerTypeAdapter(javaClass<DateTime>(), DateTimeConverter())
+                .registerTypeAdapter(javaClass<DateTime>(), DateTimeSerializer())
                 .setFieldNamingPolicy(FieldNamingPolicy.IDENTITY)
                 .excludeFieldsWithoutExposeAnnotation()
                 .create())

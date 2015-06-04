@@ -12,7 +12,7 @@ import org.jetbrains.anko.*
  */
 public class LoggerPreferencesActivity : BaseActivity() {
     override val navigationId: Int
-        get() = R.id.nav_preferences
+        get() = R.id.nav_settings
 
     val preferencesListener = SharedPreferences.OnSharedPreferenceChangeListener {
         prefs, key ->

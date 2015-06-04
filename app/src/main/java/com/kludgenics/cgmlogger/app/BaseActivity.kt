@@ -24,7 +24,7 @@ public abstract class BaseActivity: AppCompatActivity(), AnkoLogger {
             R.id.nav_view -> true
             R.id.nav_places -> true
             R.id.nav_meals -> true
-            R.id.nav_preferences -> {
+            R.id.nav_settings -> {
                 startActivity<LoggerPreferencesActivity>()
                 true
             }

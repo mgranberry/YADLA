@@ -18,8 +18,8 @@
             android:title="@string/places"
             android:icon="@drawable/ic_place_black_24dp"/>
         <item
-            android:id="@+id/nav_preferences"
-            android:title="@string/preferences"
+            android:id="@+id/nav_settings"
+            android:title="@string/action_settings"
             android:icon="@drawable/ic_settings_black_24dp"/>
     </group>
 

@@ -1,7 +1,10 @@
 package com.kludgenics.cgmlogger.extension
 import android.util.ArrayMap
+import com.kludgenics.cgmlogger.model.glucose.BloodGlucose
+import com.kludgenics.cgmlogger.model.glucose.BloodGlucoseRecord
 import io.realm.*
 import io.realm.exceptions.RealmException
+import org.joda.time.DateTime
 import rx.Observable
 import rx.schedulers.Schedulers
 
@@ -63,5 +66,8 @@ inline fun <T: RealmObject> RealmQuery<T>.group(init: RealmQuery<T>.() -> RealmQ
     return this
 }
 
+inline var BloodGlucoseRecord.dateTime: DateTime
+    get() = DateTime(getDate())
+    set(dt: DateTime) = setDate(dt.toDate())
 
 data class UpdateResult<T: RealmObject>(val result: T, val changeMap: Map<String, String>)

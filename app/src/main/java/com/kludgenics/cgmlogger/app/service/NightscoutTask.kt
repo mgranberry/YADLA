@@ -19,36 +19,39 @@ import java.util.concurrent.Callable
 interface NightscoutTask: Callable<Int>, AnkoLogger {
     val nightscoutEndpoint: NightscoutApiEndpoint
     val init: NightscoutApiEndpoint.() -> List<Any>?
-    val realm: Realm
+    val ctx: Context
     val copy: Realm.(e: Any) -> Unit
 
     override fun call(): Int {
-        try {
-            val items = nightscoutEndpoint.init()
-            realm.beginTransaction()
-            if (items != null) {
-                items forEach {
-                    realm copy it
+        val realm = Realm.getInstance(ctx)
+        realm use {
+            try {
+                val items = nightscoutEndpoint.init()
+                realm.beginTransaction()
+                if (items != null) {
+                    items forEach {
+                        realm copy it
+                    }
+                    info("sync completed")
+                    realm.commitTransaction()
+                    return GcmNetworkManager.RESULT_SUCCESS
+                } else {
+                    info("sync failed")
+                    realm.cancelTransaction()
+                    return GcmNetworkManager.RESULT_RESCHEDULE
                 }
-                info("sync completed")
-                realm.commitTransaction()
-                return GcmNetworkManager.RESULT_SUCCESS
-            } else {
-                info("sync failed")
-                realm.cancelTransaction()
-                return GcmNetworkManager.RESULT_RESCHEDULE
+            } catch (e: RetrofitError) {
+                return when (e.getKind()) {
+                    RetrofitError.Kind.CONVERSION -> GcmNetworkManager.RESULT_FAILURE
+                    RetrofitError.Kind.HTTP -> GcmNetworkManager.RESULT_FAILURE
+                    RetrofitError.Kind.NETWORK -> GcmNetworkManager.RESULT_RESCHEDULE
+                    RetrofitError.Kind.UNEXPECTED -> throw(e)
+                    else -> GcmNetworkManager.RESULT_FAILURE
+                }
+            } catch (t: JsonParseException) {
+                error("sync failed: ${t}")
+                return GcmNetworkManager.RESULT_FAILURE
             }
-        } catch (e: RetrofitError) {
-            return when (e.getKind()) {
-                RetrofitError.Kind.CONVERSION -> GcmNetworkManager.RESULT_FAILURE
-                RetrofitError.Kind.HTTP -> GcmNetworkManager.RESULT_FAILURE
-                RetrofitError.Kind.NETWORK -> GcmNetworkManager.RESULT_RESCHEDULE
-                RetrofitError.Kind.UNEXPECTED -> throw(e)
-                else -> GcmNetworkManager.RESULT_FAILURE
-            }
-        } catch (t: JsonParseException) {
-            error("sync failed: ${t}")
-            return GcmNetworkManager.RESULT_FAILURE
         }
     }
 }

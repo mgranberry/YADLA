@@ -38,8 +38,6 @@ public class TaskService : GcmTaskService(), AnkoLogger {
         private val ENTRY_SYNC_PERIOD: Long = 60 * 30
         private val ENTRY_SYNC_FLEX: Long = 60 * 10
 
-
-
         public fun cancelNightscoutTasks(context: Context) {
             Log.i ("TaskService", "Nightscout task cancellation requested by ${context}")
             val networkManager = GcmNetworkManager.getInstance(context)
@@ -51,14 +49,15 @@ public class TaskService : GcmTaskService(), AnkoLogger {
         public fun scheduleNightscoutPeriodicTasks(context: Context) {
             Log.i ("TaskService", "Periodic Nightscout sync requested by ${context}")
             val networkManager = GcmNetworkManager.getInstance(context)
-            networkManager.schedule(scheduleNightscoutTreatmentPeriodicSync())
-            networkManager.schedule(scheduleNightscoutEntriesPeriodicSync())
+            networkManager.schedule(createPeriodicTreatmentTask())
+            networkManager.schedule(createPeriodicEntryTask())
         }
 
         public fun scheduleNightscoutEntriesFullSync(context: Context) {
             Log.i ("TaskService", "Full sync requested by ${context}")
             val networkManager = GcmNetworkManager.getInstance(context)
-            return networkManager.schedule(OneoffTask.Builder().setRequiredNetwork(Task.NETWORK_STATE_CONNECTED)
+            return networkManager.schedule(OneoffTask.Builder()
+                    .setRequiredNetwork(Task.NETWORK_STATE_CONNECTED)
                     .setExecutionWindow(0, 30)
                     .setPersisted(true)
                     .setService(javaClass<TaskService>())
@@ -67,7 +66,7 @@ public class TaskService : GcmTaskService(), AnkoLogger {
                     .build())
         }
 
-        public fun scheduleNightscoutEntriesPeriodicSync(): PeriodicTask {
+        public fun createPeriodicEntryTask(): PeriodicTask {
             return PeriodicTask.Builder().setRequiredNetwork(Task.NETWORK_STATE_CONNECTED)
                     .setPeriod(ENTRY_SYNC_PERIOD)
                     .setFlex(ENTRY_SYNC_FLEX)
@@ -78,7 +77,7 @@ public class TaskService : GcmTaskService(), AnkoLogger {
                     .build()
         }
 
-        public fun scheduleNightscoutTreatmentPeriodicSync(): PeriodicTask {
+        public fun createPeriodicTreatmentTask(): PeriodicTask {
             return PeriodicTask.Builder().setRequiredNetwork(Task.NETWORK_STATE_CONNECTED)
                     .setPeriod(TREATMENT_SYNC_PERIOD)
                     .setFlex(TREATMENT_SYNC_FLEX)
@@ -116,6 +115,17 @@ public class TaskService : GcmTaskService(), AnkoLogger {
     }
 
     val tasks: MutableMap<String, NightscoutTask> = ArrayMap()
+
+    override fun onInitializeTasks() {
+        super<GcmTaskService>.onInitializeTasks()
+        info("initializing tasks")
+        val resources = getResources()
+        if (prefs.getBoolean(resources.getString(R.string.nightscout_enable), false)  &&
+                !(prefs.getString(resources.getString(R.string.nightscout_uri), "").isBlank())) {
+            scheduleNightscoutPeriodicTasks(this)
+        } else
+            cancelNightscoutTasks(this)
+    }
 
     override fun onRunTask(taskParams: TaskParams): Int {
         if (tasks.isEmpty())

@@ -32,8 +32,10 @@ import com.kludgenics.cgmlogger.model.nightscout.NightscoutApiTreatment
 import com.kludgenics.cgmlogger.model.treatment.Treatment
 import io.realm.Realm
 import org.jetbrains.anko.*
+import org.joda.time.DateTime
 import rx.lang.kotlin.subscriber
 import rx.lang.kotlin.toObservable
+import java.util.*
 import kotlin.properties.Delegates
 
 public class MainActivity : BaseActivity() {
@@ -55,9 +57,11 @@ public class MainActivity : BaseActivity() {
         val realm = Realm.getInstance(ctx)
         realm.use {
             val before = System.currentTimeMillis()
-            val res = realm.allObjects(javaClass<Treatment>())
-            if (!res.isEmpty())
-                info("${res.last().getEventType()} ${res.last().getEnteredBy()}")
+            val res = realm.where(javaClass<BloodGlucoseRecord>())
+                    .greaterThan("date", DateTime().minusDays(1).toDate())
+                    .findAllSorted("date", false)
+            if (res != null)
+                info("${res.first().getValue()} ${res.first().getDate()} ${res.first().getType()}")
             val after = System.currentTimeMillis()
 
             info("BG query took ${after - before} ms")

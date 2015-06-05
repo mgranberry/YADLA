@@ -26,7 +26,8 @@ public class LoggerPreferencesActivity : BaseActivity() {
             }
             else -> null
         }
-        if (nightscoutPrefs is Pair<Boolean, String>) {
+        if (nightscoutPrefs is Pair<Boolean, String> && nightscoutPrefs.first == true &&
+                !nightscoutPrefs.second.isNullOrBlank()) {
             TaskService.scheduleNightscoutPeriodicTasks(this)
             TaskService.scheduleNightscoutEntriesFullSync(this)
         } else

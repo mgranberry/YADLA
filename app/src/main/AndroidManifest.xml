@@ -28,7 +28,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".LoggerPreferencesActivity"
+        <activity android:name=".SettingsActivity"
             android:theme="@style/Theme.AppCompat.Light"
             android:parentActivityName=".MainActivity" >
         <!-- Parent activity meta-data to support API level 7+ -->

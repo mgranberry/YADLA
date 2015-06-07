@@ -41,6 +41,8 @@ interface NightscoutTask: Callable<Int>, AnkoLogger {
                     return GcmNetworkManager.RESULT_RESCHEDULE
                 }
             } catch (e: RetrofitError) {
+                error("Retrofit Error: ${e}")
+                e.printStackTrace()
                 return when (e.getKind()) {
                     RetrofitError.Kind.CONVERSION -> GcmNetworkManager.RESULT_FAILURE
                     RetrofitError.Kind.HTTP -> GcmNetworkManager.RESULT_FAILURE

@@ -110,7 +110,7 @@ public class LocationIntentService : IntentService("location"), GoogleApiClient.
                 info("Received location: ${location}")
 
                 realm.create<Position> {
-                    this.setTime(Date(System.currentTimeMillis() - (SystemClock.elapsedRealtimeNanos() - location.getElapsedRealtimeNanos())/1000000))
+                    this.setTime(System.currentTimeMillis() - (SystemClock.elapsedRealtimeNanos() - location.getElapsedRealtimeNanos())/1000000)
                     this.setAccuracy(location.getAccuracy())
                     this.setLatitude(location.getLatitude())
                     this.setLongitude(location.getLongitude())

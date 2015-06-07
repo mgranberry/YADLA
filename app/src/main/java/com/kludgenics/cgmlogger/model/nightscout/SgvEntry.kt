@@ -15,7 +15,7 @@ public class SgvEntry() : BloodGlucose, NightscoutEntry {
     Expose
     private var device: String = ""
     Expose
-    private var date: Date = Date()
+    private var date: Long = 0
     Expose
     public var sgv: Int = 0
     Expose
@@ -29,7 +29,7 @@ public class SgvEntry() : BloodGlucose, NightscoutEntry {
     Expose
     public var noise: Int = 0
 
-    public constructor(id: String, device: String, date: Date, sgv: Int, direction: String, filtered: Int, unfiltered: Int, rssi: Int, noise: Int) : this() {
+    public constructor(id: String, device: String, date: Long, sgv: Int, direction: String, filtered: Int, unfiltered: Int, rssi: Int, noise: Int) : this() {
         this.id = id
         this.device = device
         this.date = date
@@ -61,7 +61,7 @@ public class SgvEntry() : BloodGlucose, NightscoutEntry {
         return device
     }
 
-    override fun getDate(): Date {
+    override fun getDate(): Long {
         return date
     }
 

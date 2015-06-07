@@ -1,6 +1,7 @@
 package com.kludgenics.cgmlogger.model.glucose;
 
 import io.realm.RealmObject;
+import io.realm.annotations.Index;
 import io.realm.annotations.PrimaryKey;
 
 import org.jetbrains.annotations.NotNull;
@@ -12,7 +13,7 @@ import java.util.Date;
  */
 public class BloodGlucoseRecord extends RealmObject implements BloodGlucose {
     private double value;
-    private Date date;
+    private long date;
     private String type;
     private String unit;
     @PrimaryKey
@@ -22,7 +23,7 @@ public class BloodGlucoseRecord extends RealmObject implements BloodGlucose {
         super();
     }
 
-    public BloodGlucoseRecord(String id, double value, Date date, String type, String unit) {
+    public BloodGlucoseRecord(String id, double value, long date, String type, String unit) {
         this.id = id;
         this.value = value;
         this.date = date;
@@ -43,13 +44,12 @@ public class BloodGlucoseRecord extends RealmObject implements BloodGlucose {
         this.value = value;
     }
 
-    @NotNull
     @Override
-    public Date getDate() {
+    public long getDate() {
         return date;
     }
 
-    public void setDate(@NotNull Date date) {
+    public void setDate(long date) {
         this.date = date;
     }
 

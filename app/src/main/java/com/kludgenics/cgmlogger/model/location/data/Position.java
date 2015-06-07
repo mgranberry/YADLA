@@ -13,7 +13,7 @@ public class Position extends RealmObject {
     private double latitude;
     private double longitude;
     private float accuracy;
-    private Date time;
+    private long time;
     @Ignore
     Location location;
 
@@ -22,7 +22,7 @@ public class Position extends RealmObject {
         location.setLatitude(getLatitude());
         location.setLongitude(getLongitude());
         location.setAccuracy(getAccuracy());
-        location.setTime(getTime().getTime());
+        location.setTime(getTime());
         return location;
     }
 
@@ -39,7 +39,7 @@ public class Position extends RealmObject {
         this.latitude = latitude;
         this.longitude = longitude;
         this.accuracy = accuracy;
-        this.time = new Date(time);
+        this.time = time;
     }
 
     public Position(double latitude, double longitude) {
@@ -94,11 +94,11 @@ public class Position extends RealmObject {
         this.accuracy = accuracy;
     }
 
-    public Date getTime() {
+    public long getTime() {
         return time;
     }
 
-    public void setTime(Date time) {
+    public void setTime(long time) {
         this.time = time;
     }
 

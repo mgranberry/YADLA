@@ -7,6 +7,7 @@ import io.realm.exceptions.RealmException
 import org.joda.time.DateTime
 import rx.Observable
 import rx.schedulers.Schedulers
+import java.util.*
 
 
 fun Realm.transaction (init: Realm.() -> Unit) {
@@ -66,8 +67,12 @@ inline fun <T: RealmObject> RealmQuery<T>.group(init: RealmQuery<T>.() -> RealmQ
     return this
 }
 
+inline var BloodGlucoseRecord.date: Date
+    get() = Date(getDate())
+    set(d: Date) = setDate(d.getTime())
+
 inline var BloodGlucoseRecord.dateTime: DateTime
     get() = DateTime(getDate())
-    set(dt: DateTime) = setDate(dt.toDate())
+    set(dt: DateTime) = setDate(dt.getMillis())
 
 data class UpdateResult<T: RealmObject>(val result: T, val changeMap: Map<String, String>)

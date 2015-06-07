@@ -43,6 +43,7 @@
 -dontwarn com.squareup.okhttp.internal.huc.HttpsURLConnectionImpl
 -dontwarn org.joda.convert.FromString
 -dontwarn org.joda.convert.ToString
+-dontwarn com.squareup.okhttp.**
 -keep public class * extends android.app.Activity
 -keep public class * extends android.app.Application
 -keep public class * extends android.app.Service
@@ -51,7 +52,7 @@
 -keep public class * extends android.app.backup.BackupAgentHelper
 -keep public class * extends android.preference.Preference
 -keep public class com.android.vending.licensing.ILicensingService
-
+-keep class com.github.mikephil.charting.** { *; }
 -keepclasseswithmembernames class * {
     native <methods>;
 }

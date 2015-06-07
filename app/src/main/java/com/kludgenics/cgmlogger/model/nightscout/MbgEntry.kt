@@ -4,6 +4,7 @@ import com.google.gson.annotations.Expose
 import com.google.gson.annotations.SerializedName
 import com.kludgenics.cgmlogger.model.glucose.BloodGlucose
 import java.util.Date
+import kotlin.properties.Delegates
 
 /**
  * Created by matthiasgranberry on 5/24/15.
@@ -18,9 +19,9 @@ public class MbgEntry() : BloodGlucose, NightscoutEntry {
     Expose
     private var mbg: Int = 0
     Expose
-    private var date: Date = Date()
+    private var date: Long = 0
 
-    public constructor(id: String, device: String, date: Date, mbg: Int) : this() {
+    public constructor(id: String, device: String, date: Long, mbg: Int) : this() {
         this.id = id
         this.device = device
         this.mbg = mbg
@@ -39,7 +40,7 @@ public class MbgEntry() : BloodGlucose, NightscoutEntry {
         return device
     }
 
-    override fun getDate(): Date {
+    override fun getDate(): Long {
         return date
     }
 

@@ -1,41 +1,18 @@
 package com.kludgenics.cgmlogger.app
 
-import android.app.Activity
-import android.content.ComponentName
-import android.content.Context
-import android.content.Intent
-import android.content.ServiceConnection
 import android.os.Bundle
-import android.os.IBinder
 import android.support.design.widget.CoordinatorLayout
 import android.support.design.widget.FloatingActionButton
-import android.support.design.widget.NavigationView
-import android.support.design.widget.Snackbar
-import android.support.v4.app.Fragment
-import android.support.v4.widget.DrawerLayout
-import android.support.v7.app.ActionBar
-import android.support.v7.widget.Toolbar
-import android.util.Log
-import android.view.*
-import android.widget.FrameLayout
+import android.view.Menu
+import android.view.MenuItem
 import com.google.android.gms.location.DetectedActivity
-import com.kludgenics.cgmlogger.app.service.BaseGmsPlaceService
 import com.kludgenics.cgmlogger.app.service.LocationIntentService
-import com.kludgenics.cgmlogger.extension.*
+import com.kludgenics.cgmlogger.extension.snackbar
 import com.kludgenics.cgmlogger.model.activity.PlayServicesActivity
 import com.kludgenics.cgmlogger.model.glucose.BloodGlucoseRecord
-import com.kludgenics.cgmlogger.model.location.GeoApi
-import com.kludgenics.cgmlogger.model.location.data.GeocodedLocation
-import com.kludgenics.cgmlogger.model.location.data.Position
-import com.kludgenics.cgmlogger.model.location.places.GooglePlacesLocation
-import com.kludgenics.cgmlogger.model.nightscout.NightscoutApiTreatment
-import com.kludgenics.cgmlogger.model.treatment.Treatment
 import io.realm.Realm
 import org.jetbrains.anko.*
 import org.joda.time.DateTime
-import rx.lang.kotlin.subscriber
-import rx.lang.kotlin.toObservable
-import java.util.*
 import kotlin.properties.Delegates
 
 public class MainActivity : BaseActivity() {
@@ -56,15 +33,19 @@ public class MainActivity : BaseActivity() {
         // Set up the drawer.
         val realm = Realm.getInstance(ctx)
         realm.use {
-            val before = System.currentTimeMillis()
-            val res = realm.where(javaClass<BloodGlucoseRecord>())
-                    .greaterThan("date", DateTime().minusDays(1).toDate())
-                    .findAllSorted("date", false)
-            if (res != null)
-                info("${res.first().getValue()} ${res.first().getDate()} ${res.first().getType()}")
-            val after = System.currentTimeMillis()
-
-            info("BG query took ${after - before} ms")
+            for (i in 0..5) {
+                val before = System.currentTimeMillis()
+                val res = realm.where(javaClass<BloodGlucoseRecord>())
+                        .greaterThan("date", DateTime().minusDays(30-i).getMillis())
+                        .lessThan("date", DateTime().minusDays(29-i).getMillis())
+                        .findAllSorted("date", false)
+                if (res.isNotEmpty()) {
+                    val c = res.last()
+                    info("${c.getValue()} ${DateTime(c.getDate())} ${c.getType()}")
+                    val after = System.currentTimeMillis()
+                    info("BG query took ${after - before} ms")
+                }
+            }
             val acts = realm.allObjects(javaClass<PlayServicesActivity>())
             acts.map {
                 it.getTime() to

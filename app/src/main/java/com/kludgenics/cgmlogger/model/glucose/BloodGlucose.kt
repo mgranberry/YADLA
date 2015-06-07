@@ -11,7 +11,7 @@ import kotlin.properties.Delegates
 public interface BloodGlucose {
     public fun getId(): String
     public fun getValue(): Double
-    public fun getDate(): Date
+    public fun getDate(): Long
     public fun getType(): String
     public fun getUnit(): String
 

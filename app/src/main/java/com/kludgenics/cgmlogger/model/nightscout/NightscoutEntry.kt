@@ -10,5 +10,5 @@ public interface NightscoutEntry {
 
     public fun getDevice(): String
 
-    public fun getDate(): Date
+    public fun getDate(): Long
 }

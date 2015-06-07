@@ -10,7 +10,7 @@ import org.jetbrains.anko.*
 /**
  * Created by matthiasgranberry on 6/2/15.
  */
-public class LoggerPreferencesActivity : BaseActivity() {
+public class SettingsActivity : BaseActivity() {
     override val navigationId: Int
         get() = R.id.nav_settings
 
@@ -26,12 +26,14 @@ public class LoggerPreferencesActivity : BaseActivity() {
             }
             else -> null
         }
-        if (nightscoutPrefs is Pair<Boolean, String> && nightscoutPrefs.first == true &&
-                !nightscoutPrefs.second.isNullOrBlank()) {
-            TaskService.scheduleNightscoutPeriodicTasks(this)
-            TaskService.scheduleNightscoutEntriesFullSync(this)
-        } else
-            TaskService.cancelNightscoutTasks(this)
+        if (nightscoutPrefs is Pair<Boolean, String>) {
+            if (nightscoutPrefs.first == true && !nightscoutPrefs.second.isNullOrBlank()) {
+                TaskService.scheduleNightscoutPeriodicTasks(this)
+                TaskService.scheduleNightscoutEntriesFullSync(this)
+            }
+            else
+                TaskService.cancelNightscoutTasks(this)
+        }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {

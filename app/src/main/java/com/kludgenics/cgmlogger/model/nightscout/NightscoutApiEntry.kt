@@ -55,15 +55,15 @@ public class NightscoutApiEntry : NightscoutEntry {
     }
 
     public fun asCalibration(): CalibrationEntry {
-        return CalibrationEntry(id, device, Date(date), slope, intercept.toLong(), scale)
+        return CalibrationEntry(id, device, date, slope, intercept.toLong(), scale)
     }
 
     public fun asMbg(): MbgEntry {
-        return MbgEntry(id, device, Date(date), mbg.toInt())
+        return MbgEntry(id, device, date, mbg.toInt())
     }
 
     public fun asSgv(): SgvEntry {
-        return SgvEntry(id, device, Date(date), sgv.toInt(), direction, filtered.toInt(), unfiltered.toInt(), rssi.toInt(), noise.toInt())
+        return SgvEntry(id, device, date, sgv.toInt(), direction, filtered.toInt(), unfiltered.toInt(), rssi.toInt(), noise.toInt())
     }
 
     override fun getId(): String {
@@ -74,8 +74,8 @@ public class NightscoutApiEntry : NightscoutEntry {
         return device
     }
 
-    override fun getDate(): Date {
-        return Date(date)
+    override fun getDate(): Long {
+        return date
     }
 
     companion object Type {

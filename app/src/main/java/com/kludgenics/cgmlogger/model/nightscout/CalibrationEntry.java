@@ -21,7 +21,7 @@ public class CalibrationEntry extends RealmObject implements NightscoutEntry {
     @Expose
     private String device;
     @Expose
-    private Date date;
+    private long date;
     @Expose
     private double slope;
     @Expose
@@ -33,7 +33,7 @@ public class CalibrationEntry extends RealmObject implements NightscoutEntry {
         super();
     }
 
-    public CalibrationEntry(String id, String device, Date date, double slope, long intercept, double scale) {
+    public CalibrationEntry(String id, String device, long date, double slope, long intercept, double scale) {
         super();
         this.id = id;
         this.device = device;
@@ -63,13 +63,12 @@ public class CalibrationEntry extends RealmObject implements NightscoutEntry {
         this.device = device;
     }
 
-    @NotNull
     @Override
-    public Date getDate() {
+    public long getDate() {
         return date;
     }
 
-    public void setDate(Date date) {
+    public void setDate(long date) {
         this.date = date;
     }
 

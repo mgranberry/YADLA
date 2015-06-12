@@ -2,7 +2,7 @@ package com.kludgenics.cgmlogger.model.location
 
 import com.kludgenics.cgmlogger.model.location.places.AutoCompleteResult
 import com.kludgenics.cgmlogger.model.location.data.GeocodedLocation
-import com.kludgenics.cgmlogger.model.location.data.Position
+import com.kludgenics.cgmlogger.model.location.Position
 import rx.Observable
 
 /**

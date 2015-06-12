@@ -46,6 +46,8 @@ inline fun <reified T: RealmObject> Realm.where(init: RealmQuery<T>.() -> RealmQ
     return where(javaClass<T>()).init()
 }
 
+
+
 inline fun <reified T: RealmObject> Realm.deleteAll() {
     transaction {
         val results = where(javaClass<T>()).findAll()

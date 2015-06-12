@@ -1,10 +1,13 @@
-package com.kludgenics.cgmlogger.model.location.data;
+package com.kludgenics.cgmlogger.model.location;
 
 import android.location.Location;
+
+import io.realm.RealmList;
 import io.realm.RealmObject;
 import io.realm.annotations.Ignore;
 
 import java.util.Date;
+import java.util.List;
 
 /**
  * Created by matthiasgranberry on 5/11/15.
@@ -14,6 +17,8 @@ public class Position extends RealmObject {
     private double longitude;
     private float accuracy;
     private long time;
+    RealmList<PlaceData> potentialPlaces;
+
     @Ignore
     Location location;
 

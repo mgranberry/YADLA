@@ -17,7 +17,7 @@ import com.kludgenics.cgmlogger.model.location.GeoApi
 import com.kludgenics.cgmlogger.model.location.places.AutoCompleteResult
 import com.kludgenics.cgmlogger.model.location.data.GeocodedLocation
 import com.kludgenics.cgmlogger.model.location.places.GooglePlacesLocation
-import com.kludgenics.cgmlogger.model.location.data.Position
+import com.kludgenics.cgmlogger.model.location.Position
 import com.kludgenics.cgmlogger.extension.probabilityWithin
 import retrofit.RestAdapter
 import retrofit.converter.GsonConverter

@@ -8,6 +8,7 @@ import com.kludgenics.cgmlogger.model.nightscout.NightscoutApiTreatment
 import io.realm.Realm
 import org.jetbrains.anko.AnkoLogger
 import org.jetbrains.anko.ctx
+import org.joda.time.DateTime
 import retrofit.RetrofitError
 import java.io.Closeable
 import java.util.concurrent.Callable
@@ -21,6 +22,7 @@ interface NightscoutTask: Callable<Int>, AnkoLogger {
     val init: NightscoutApiEndpoint.() -> List<Any>?
     val ctx: Context
     val copy: Realm.(e: Any) -> Unit
+    val postprocess: Realm.(l: Any) -> Unit
 
     override fun call(): Int {
         val realm = Realm.getInstance(ctx)
@@ -34,6 +36,8 @@ interface NightscoutTask: Callable<Int>, AnkoLogger {
                     }
                     info("sync completed")
                     realm.commitTransaction()
+                    realm.beginTransaction()
+                    realm.postprocess(items)
                     return GcmNetworkManager.RESULT_SUCCESS
                 } else {
                     info("sync failed")

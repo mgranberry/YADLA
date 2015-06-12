@@ -3,7 +3,7 @@ package com.kludgenics.cgmlogger.model.location.places;
 import com.google.android.gms.location.places.Place;
 import com.google.android.gms.maps.model.LatLng;
 import com.kludgenics.cgmlogger.model.location.data.GeocodedLocation;
-import com.kludgenics.cgmlogger.model.location.data.Position;
+import com.kludgenics.cgmlogger.model.location.Position;
 
 import java.util.List;
 

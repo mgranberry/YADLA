@@ -1,6 +1,7 @@
 package com.kludgenics.cgmlogger.app.service
 
 import android.content.Context
+import android.util.Log
 import com.kludgenics.cgmlogger.model.glucose.BgPostprocesser
 import com.kludgenics.cgmlogger.model.nightscout.NightscoutApiEndpoint
 import com.kludgenics.cgmlogger.model.nightscout.NightscoutApiEntry
@@ -24,8 +25,14 @@ class NightscoutEntryTask(override val ctx: Context,
 
     override val copy: Realm.(Any) -> Unit
         get() = fun (it: Any) {
-            if (it is NightscoutApiEntry)
-                copyToRealmOrUpdate(it.asRealmObject())
+            if (it is NightscoutApiEntry) {
+                val ro = it.asRealmObject()
+                if (ro != null)
+                    copyToRealmOrUpdate(it.asRealmObject())
+                else {
+                    Log.d("NightscoutEntryTask", "unsupported entry: ${it}, ${it.getType()}")
+                }
+            }
         }
 
 

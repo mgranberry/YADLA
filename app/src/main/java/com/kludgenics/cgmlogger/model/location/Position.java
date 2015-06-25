@@ -17,7 +17,7 @@ public class Position extends RealmObject {
     private double longitude;
     private float accuracy;
     private long time;
-    RealmList<PlaceData> potentialPlaces;
+    private RealmList<PlaceData> potentialPlaces;
 
     @Ignore
     Location location;
@@ -105,6 +105,14 @@ public class Position extends RealmObject {
 
     public void setTime(long time) {
         this.time = time;
+    }
+
+    public RealmList<PlaceData> getPotentialPlaces() {
+        return potentialPlaces;
+    }
+
+    public void setPotentialPlaces(RealmList<PlaceData> potentialPlaces) {
+        this.potentialPlaces = potentialPlaces;
     }
 
 

@@ -20,7 +20,7 @@ object BgPostprocesser {
         }.findAllSorted("date", RealmResults.SORT_ORDER_ASCENDING)
         val entriesByDay = bgEntries.groupBy { DateTime(it.getDate()).withTimeAtStartOfDay() }
         entriesByDay.forEach {
-            realm.create<BgByDay>{
+            realm.createInsideTransaction<BgByDay>{
                 setDay(it.getKey().getMillis())
                 val bgList = getBgRecords()
                 bgList.clear()

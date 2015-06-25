@@ -50,7 +50,7 @@ public class NightscoutApiEntry : NightscoutEntry {
             SGV -> BloodGlucoseRecord(asSgv())
             MBG -> BloodGlucoseRecord(asMbg())
             CAL -> asCalibration()
-            else -> null
+            else -> BloodGlucoseRecord(asSgv())
         }
     }
 

@@ -33,6 +33,12 @@ inline fun <reified T: io.realm.RealmObject> Realm.create(init: T.() -> Unit): T
     return realmObject
 }
 
+inline fun <reified T: io.realm.RealmObject> Realm.createInsideTransaction(init: T.() -> Unit): T {
+    val realmObject = createObject(javaClass<T>())
+    realmObject.init()
+    return realmObject
+}
+
 inline fun <reified T: RealmObject> Realm.update(key: String, value: String, f: (it: T, change: MutableMap<String, String>) -> Unit): UpdateResult<T> {
     beginTransaction()
     val realmObject = where(javaClass<T>()).equalTo(key, value).findFirst()

@@ -13,6 +13,9 @@ public interface NightscoutApiEndpoint {
     @GET("/api/v1/entries.json")
     List<NightscoutApiEntry> getEntries(@Query("count") int count);
 
+    @GET("/api/v1/entries/sgv.json")
+    List<SgvEntry> getSgvEntries(@Query("count") int count);
+
     @GET("/api/v1/entries.json")
     Observable<List<NightscoutApiEntry>> getEntriesObservable(@Query("count") int count);
 

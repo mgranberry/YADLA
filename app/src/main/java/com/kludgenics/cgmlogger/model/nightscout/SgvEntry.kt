@@ -8,7 +8,7 @@ import java.util.Date
 /**
  * Created by matthiasgranberry on 5/21/15.
  */
-public class SgvEntry() : BloodGlucose, NightscoutEntry {
+public open class SgvEntry() : BloodGlucose, NightscoutEntry {
     Expose
     SerializedName("_id")
     private var id: String = ""

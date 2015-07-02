@@ -3,10 +3,13 @@ package com.kludgenics.cgmlogger.app.service
 import android.content.Context
 import android.util.Log
 import com.kludgenics.cgmlogger.model.glucose.BgPostprocesser
+import com.kludgenics.cgmlogger.model.glucose.BloodGlucoseRecord
 import com.kludgenics.cgmlogger.model.nightscout.NightscoutApiEndpoint
 import com.kludgenics.cgmlogger.model.nightscout.NightscoutApiEntry
 import com.kludgenics.cgmlogger.model.nightscout.NightscoutApiTreatment
+import com.kludgenics.cgmlogger.model.nightscout.SgvEntry
 import io.realm.Realm
+import org.jetbrains.anko.AnkoLogger
 import org.joda.time.DateTime
 import kotlin.properties.Delegates
 
@@ -16,34 +19,26 @@ import kotlin.properties.Delegates
 
 class NightscoutEntryTask(override val ctx: Context,
                           override val nightscoutEndpoint: NightscoutApiEndpoint,
-                          val count: Int = 10): NightscoutTask {
+                          val count: Int = 10): NightscoutTask, AnkoLogger {
 
-    override val init: NightscoutApiEndpoint.() -> List<NightscoutApiEntry>
-        get() = fun (): List<NightscoutApiEntry> {
-            return getEntries(count)
+    override val init: NightscoutApiEndpoint.() -> List<SgvEntry>
+        get() = fun (): List<SgvEntry> {
+            return getSgvEntries(count)
         }
 
     override val copy: Realm.(Any) -> Unit
         get() = fun (it: Any) {
-            if (it is NightscoutApiEntry) {
-                val ro = it.asRealmObject()
-                if (ro != null)
-                    copyToRealmOrUpdate(it.asRealmObject())
-                else {
-                    Log.d("NightscoutEntryTask", "unsupported entry: ${it}, ${it.getType()}")
-                }
+            if (it is SgvEntry) {
+                copyToRealmOrUpdate(BloodGlucoseRecord(it))
             }
         }
 
-
-    override val postprocess: Realm.(Any) -> Unit
-        get() = fun (l: Any) {
-            if (l is List<*>) {
-                val fi = l.first() as NightscoutApiEntry
-                val li = l.last() as NightscoutApiEntry
-                BgPostprocesser.groupByDay(this, DateTime(li.getDate()), DateTime(fi.getDate()))
-
-            }
-        }
-
+    override fun postprocess (realm: Realm, l: List<*>) {
+        debug("Postprocessing ${l}")
+        val fi = l.first() as SgvEntry
+        val li = l.last() as SgvEntry
+        debug("Beginning daily grouping")
+        BgPostprocesser.groupByDay(realm, DateTime(li.getDate()), DateTime(fi.getDate()))
+        debug("Finished daily grouping")
+    }
 }

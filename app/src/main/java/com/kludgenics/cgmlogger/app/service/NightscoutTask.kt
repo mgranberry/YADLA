@@ -22,7 +22,7 @@ interface NightscoutTask: Callable<Int>, AnkoLogger {
     val init: NightscoutApiEndpoint.() -> List<Any>?
     val ctx: Context
     val copy: Realm.(e: Any) -> Unit
-    val postprocess: Realm.(l: Any) -> Unit
+    fun postprocess(realm: Realm, l: List<*>): Unit
 
     override fun call(): Int {
         val realm = Realm.getInstance(ctx)
@@ -37,7 +37,10 @@ interface NightscoutTask: Callable<Int>, AnkoLogger {
                     info("sync completed")
                     realm.commitTransaction()
                     realm.beginTransaction()
-                    realm.postprocess(items)
+                    info("ps")
+                    postprocess(realm, items)
+                    realm.commitTransaction()
+                    info("pe")
                     return GcmNetworkManager.RESULT_SUCCESS
                 } else {
                     info("sync failed")

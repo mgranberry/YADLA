@@ -16,8 +16,8 @@ import kotlin.properties.Delegates
 
 class NightscoutTreatmentTask(override val ctx: Context,
                           override val nightscoutEndpoint: NightscoutApiEndpoint): NightscoutTask {
-    override val postprocess: Realm.(Any) -> Unit
-        get() = {}
+    override fun postprocess(realm: Realm, l: List<*>) {
+    }
 
     override val init: NightscoutApiEndpoint.() -> List<NightscoutApiTreatment>
         get() = fun (): List<NightscoutApiTreatment> {

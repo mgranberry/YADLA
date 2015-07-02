@@ -17,6 +17,7 @@
             android:hint="@string/pref_default_nightscout_uri"
             android:inputType="textUri"/>
         <EditTextPreference
+            android:dependency="@string/nightscout_enable"
             android:title="@string/pref_title_api_key"
             android:key="@string/api_key"
             android:dialogTitle="@string/pref_dialog_api_key"

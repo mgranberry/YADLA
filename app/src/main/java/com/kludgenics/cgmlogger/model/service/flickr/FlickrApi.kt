@@ -16,12 +16,12 @@ public abstract class FlickrSearch(private val client: OkClient): AnkoLogger {
         private val API_KEY = "c4b6a207da7ffbf0b9e88ea5f42e8d04"
     }
 
-    private data class SearchResult(val photos: SearchPhotos)
-    private data class SearchPhotos(val photo: List<SearchPhotoResult>)
-    private data class SearchPhotoResult(val id: String, val secret: String)
-    private data class PhotoInfoResult(val photo: PhotoInfo)
-    private data class PhotoInfo(val id: String, val farm: Int, val server: String, val secret: String, val owner: OwnerInfo)
-    private data class OwnerInfo(val nsid: String, val realname: String)
+    public data class SearchResult(val photos: SearchPhotos)
+    public data class SearchPhotos(val photo: List<SearchPhotoResult>)
+    public data class SearchPhotoResult(val id: String, val secret: String)
+    public data class PhotoInfoResult(val photo: PhotoInfo)
+    public data class PhotoInfo(val id: String, val farm: Int, val server: String, val secret: String, val owner: OwnerInfo)
+    public data class OwnerInfo(val nsid: String, val realname: String)
     public data class Photo(val photoId: String, val photoUri: String, val ownerName: String, val attributionUri: String) {
         constructor (info: PhotoInfo): this(info.id,
                 "https://farm${info.farm}.staticflickr.com/${info.server}/${info.id}_${info.secret}.jpg",

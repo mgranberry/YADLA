@@ -23,7 +23,7 @@ object BgPostprocesser {
             greaterThanOrEqualTo("date", start.withTimeAtStartOfDay().getMillis())
             lessThanOrEqualTo("date", end.withTimeAtStartOfDay().plusDays(1).getMillis())
         }.findAllSorted("date", RealmResults.SORT_ORDER_ASCENDING)
-        val entriesByDay = bgEntries.groupBy { DateTime(it.getDate()).withTimeAtStartOfDay() }
+        val entriesByDay = bgEntries.groupBy { it.dateTime.withTimeAtStartOfDay() }
         entriesByDay.forEach {
             val dailyValues = realm.where<BgByDay> { equalTo("day", it.getKey().getMillis()) }
                     .findFirst() ?: realm.createInsideTransaction<BgByDay>{

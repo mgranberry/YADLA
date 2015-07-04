@@ -29,7 +29,8 @@ class NightscoutEntryTask(override val ctx: Context,
     override val copy: Realm.(Any) -> Unit
         get() = fun (it: Any) {
             if (it is SgvEntry && it.sgv >= 39) {
-                copyToRealmOrUpdate(BloodGlucoseRecord(it))
+                copyToRealmOrUpdate(BloodGlucoseRecord(value=it.getValue(), date=it.getDate(),
+                        type=it.getType(), unit=it.getUnit(), id=it.getId()))
             }
         }
 

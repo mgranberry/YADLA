@@ -13,7 +13,7 @@ import java.util.Date
 public class NightscoutApiEntry : NightscoutEntry {
     Expose
     SerializedName("_id")
-    private var id: String = ""
+    private val id: String = ""
     Expose
     private val slope: Double = 0.0
     Expose
@@ -45,27 +45,6 @@ public class NightscoutApiEntry : NightscoutEntry {
         return type
     }
 
-    public fun asRealmObject(): RealmObject? {
-        return when (type) {
-            SGV -> BloodGlucoseRecord(asSgv())
-            MBG -> BloodGlucoseRecord(asMbg())
-            CAL -> asCalibration()
-            else -> BloodGlucoseRecord(asSgv())
-        }
-    }
-
-    public fun asCalibration(): CalibrationEntry {
-        return CalibrationEntry(id, device, date, slope, intercept.toLong(), scale)
-    }
-
-    public fun asMbg(): MbgEntry {
-        return MbgEntry(id, device, date, mbg.toInt())
-    }
-
-    public fun asSgv(): SgvEntry {
-        return SgvEntry(id, device, date, sgv.toInt(), direction, filtered.toInt(), unfiltered.toInt(), rssi.toInt(), noise.toInt())
-    }
-
     override fun getId(): String {
         return id
     }
@@ -78,10 +57,5 @@ public class NightscoutApiEntry : NightscoutEntry {
         return date
     }
 
-    companion object Type {
-        val SGV = "sgv"
-        val MBG = "mbg"
-        val CAL = "cal"
-    }
 
 }

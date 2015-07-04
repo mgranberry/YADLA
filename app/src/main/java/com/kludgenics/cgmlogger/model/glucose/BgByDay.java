@@ -1,11 +1,5 @@
 package com.kludgenics.cgmlogger.model.glucose;
 
-import org.joda.time.DateMidnight;
-import org.joda.time.DateTime;
-
-import java.util.List;
-
-import io.realm.Realm;
 import io.realm.RealmList;
 import io.realm.RealmObject;
 import io.realm.annotations.PrimaryKey;

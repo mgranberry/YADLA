@@ -23,8 +23,6 @@ import retrofit.RestAdapter
 import retrofit.converter.GsonConverter
 import retrofit.http.GET
 import retrofit.http.Query
-import rx.lang.kotlin.deferredObservable
-import rx.lang.kotlin.toObservable
 import java.util.Date
 
 /**

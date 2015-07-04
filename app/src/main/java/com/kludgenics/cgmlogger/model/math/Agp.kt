@@ -1,6 +1,7 @@
 package com.kludgenics.cgmlogger.model.math
 
 import android.content.Context
+import com.kludgenics.cgmlogger.extension.dateTime
 import com.kludgenics.cgmlogger.extension.percentiles
 import com.kludgenics.cgmlogger.model.glucose.BloodGlucoseRecord
 import io.realm.Realm
@@ -29,7 +30,7 @@ class Agp(val ctx: Context) {
                     .lessThanOrEqualTo("date", timeAtStartOfDay.getMillis())
                     .findAll()
             if (res.isNotEmpty()) {
-                val dateBgPairs = res.map { DateTime(it.getDate()).minuteOfDay().get() / 30 to it.getValue() }
+                val dateBgPairs = res.map { it.dateTime.minuteOfDay().get() / 30 to it.value }
                 val map = TreeMap<Int, MutableList<Pair<Int, Double>>>()
                 val times = dateBgPairs.groupByTo (map, { it.first })
                 val tperc: List<Pair<Int, DoubleArray>> = times.map { it.getKey() to it.getValue().percentiles(percentileValues, { it.second }) }

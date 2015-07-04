@@ -3,21 +3,27 @@ package com.kludgenics.cgmlogger.app
 import android.os.Bundle
 import android.support.design.widget.CoordinatorLayout
 import android.support.design.widget.FloatingActionButton
+import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import com.google.android.gms.location.DetectedActivity
 import com.kludgenics.cgmlogger.app.service.LocationIntentService
+import com.kludgenics.cgmlogger.extension.percentiles
 import com.kludgenics.cgmlogger.extension.snackbar
 import com.kludgenics.cgmlogger.model.activity.PlayServicesActivity
 import com.kludgenics.cgmlogger.model.glucose.BloodGlucoseRecord
+import com.kludgenics.cgmlogger.model.math.Agp
+import com.kludgenics.cgmlogger.util.FileUtil
 import io.realm.Realm
 import org.jetbrains.anko.*
 import org.joda.time.DateTime
+import org.joda.time.LocalTime
+import java.io.File
+import java.util.*
 import kotlin.properties.Delegates
 
-public class MainActivity : BaseActivity() {
+public class MainActivity : BaseActivity(), AnkoLogger {
     override protected val navigationId = R.id.nav_home
-
     private val coordinator: CoordinatorLayout by Delegates.lazy { find<CoordinatorLayout>(R.id.main_content) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -31,35 +37,31 @@ public class MainActivity : BaseActivity() {
          }
         startService(intentFor<LocationIntentService>().setAction(LocationIntentService.ACTION_START_LOCATION_UPDATES))
         // Set up the drawer.
+
+        val agp = Agp(this).getAgp()
+        agp.forEach {
+            info(it.first)
+            it.second.forEachIndexed { i, d -> info("${Agp.percentiles[i]}: ${d}") }
+        }
         val realm = Realm.getInstance(ctx)
-        realm.use {
-            for (i in 0..5) {
-                val before = System.currentTimeMillis()
-                val res = realm.where(javaClass<BloodGlucoseRecord>())
-                        .greaterThan("date", DateTime().minusDays(30-i).getMillis())
-                        .lessThan("date", DateTime().minusDays(29-i).getMillis())
-                        .findAllSorted("date", false)
-                if (res.isNotEmpty()) {
-                    val c = res.last()
-                    info("${c.getValue()} ${DateTime(c.getDate())} ${c.getType()}")
-                    val after = System.currentTimeMillis()
-                    info("BG query took ${after - before} ms")
-                }
-            }
+         realm.use {
+            val f = File(realm.getPath())
+            FileUtil.copy(f, File("/sdcard/cgm.realm"))
+            Log.i("MainActivity", "Realm is at: ${realm.getPath()}")
             val acts = realm.allObjects(javaClass<PlayServicesActivity>())
             acts.map {
                 it.getTime() to
-                when(it.getActivityId()) {
-                    DetectedActivity.IN_VEHICLE -> "in_vehicle"
-                    DetectedActivity.ON_BICYCLE -> "on_bicycle"
-                    DetectedActivity.ON_FOOT -> "on_foot"
-                    DetectedActivity.RUNNING -> "running"
-                    DetectedActivity.STILL -> "still"
-                    DetectedActivity.TILTING -> "tilting"
-                    DetectedActivity.WALKING -> "walking"
-                    DetectedActivity.UNKNOWN -> "unknown"
-                    else -> "other"
-                }
+                        when (it.getActivityId()) {
+                            DetectedActivity.IN_VEHICLE -> "in_vehicle"
+                            DetectedActivity.ON_BICYCLE -> "on_bicycle"
+                            DetectedActivity.ON_FOOT -> "on_foot"
+                            DetectedActivity.RUNNING -> "running"
+                            DetectedActivity.STILL -> "still"
+                            DetectedActivity.TILTING -> "tilting"
+                            DetectedActivity.WALKING -> "walking"
+                            DetectedActivity.UNKNOWN -> "unknown"
+                            else -> "other"
+                        }
                 //info("Activity: ${activity}, ${it.getConfidence()}, ${it.getTime()}")
             }
         }

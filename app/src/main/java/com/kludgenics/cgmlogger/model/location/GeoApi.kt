@@ -3,17 +3,16 @@ package com.kludgenics.cgmlogger.model.location
 import com.kludgenics.cgmlogger.model.location.places.AutoCompleteResult
 import com.kludgenics.cgmlogger.model.location.data.GeocodedLocation
 import com.kludgenics.cgmlogger.model.location.Position
-import rx.Observable
 
 /**
  * Created by matthiasgranberry on 5/11/15.
  */
 public interface GeoApi {
-    public fun getCurrentLocation(): Observable<GeocodedLocation>
-    public fun getCurrentLocation(categories: String): Observable<GeocodedLocation>
-    public fun search(position: Position): Observable<GeocodedLocation>
-    public fun search(position: Position, categories: String?): Observable<GeocodedLocation>
-    public fun autoComplete(position: Position, query: String?): Observable<AutoCompleteResult>
-    public fun autoComplete(position: Position, query: String?, categories: String?): Observable<AutoCompleteResult>
-    public fun getInfo(id: String): Observable<GeocodedLocation>
+    public fun getCurrentLocation(): GeocodedLocation?
+    public fun getCurrentLocation(categories: String): GeocodedLocation?
+    public fun search(position: Position): GeocodedLocation?
+    public fun search(position: Position, categories: String?): GeocodedLocation?
+    public fun autoComplete(position: Position, query: String?): AutoCompleteResult?
+    public fun autoComplete(position: Position, query: String?, categories: String?): AutoCompleteResult?
+    public fun getInfo(id: String): GeocodedLocation?
 }

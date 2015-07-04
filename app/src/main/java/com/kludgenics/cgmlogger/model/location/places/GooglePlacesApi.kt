@@ -23,9 +23,6 @@ import retrofit.RestAdapter
 import retrofit.converter.GsonConverter
 import retrofit.http.GET
 import retrofit.http.Query
-import rx.Observable
-import rx.Subscriber
-import rx.functions.Func1
 import rx.lang.kotlin.deferredObservable
 import rx.lang.kotlin.toObservable
 import java.util.Date
@@ -33,6 +30,7 @@ import java.util.Date
 /**
  * Created by matthiasgranberry on 5/23/15.
  */
+/*
 class GooglePlacesApi(private val mClient: GoogleApiClient) : GeoApi {
     private val mGooglePlacesEndpoint: NearbySearchEndpoint
     init {
@@ -43,15 +41,15 @@ class GooglePlacesApi(private val mClient: GoogleApiClient) : GeoApi {
     fun handleBg(bg: BloodGlucose) {
       bg.asMgDl()
     }
-    override fun getCurrentLocation(): Observable<GeocodedLocation> {
+    override fun getCurrentLocation(): GeocodedLocation? {
         return getCurrentLocation("")
     }
 
-    override fun getCurrentLocation(categories: String): Observable<GeocodedLocation> {
+    override fun getCurrentLocation(categories: String): GeocodedLocation? {
         // (1/2)* erfc(0.0059709(-118.7)) - (1/2)* erfc(0.0059709(118.7))
         // erf ~= 1- (1/(1 + .278393*x + .230389*x*x + .000972*x*x*x + .078108*x*x*x*x)^4)
         if (!mClient.isConnected())
-            return Observable.empty()
+            return null
         if (categories == "" || LocationServices.FusedLocationApi.getLocationAvailability(mClient).isLocationAvailable() == false) {
             return deferredObservable {
                 Observable.create<GeocodedLocation>(object : Observable.OnSubscribe<GeocodedLocation> {
@@ -196,3 +194,4 @@ class GooglePlacesApi(private val mClient: GoogleApiClient) : GeoApi {
         }
     }
 }
+*/

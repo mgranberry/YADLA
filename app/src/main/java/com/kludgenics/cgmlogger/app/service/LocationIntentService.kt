@@ -18,7 +18,6 @@ import com.kludgenics.cgmlogger.extension.Geofence
 import com.kludgenics.cgmlogger.extension.GeofencingRequest
 import org.jetbrains.anko.*
 import com.kludgenics.cgmlogger.extension.*
-import com.kludgenics.cgmlogger.util.EventBus
 import io.realm.Realm
 import java.util.Date
 
@@ -62,11 +61,11 @@ public class LocationIntentService : IntentService("location"), GoogleApiClient.
     }
 
     override fun onConnectionFailed(p0: ConnectionResult) {
-        EventBus.get().onNext(p0)
+        //EventBus.get().onNext(p0)
     }
 
     override fun onResult(status: Status) {
-        EventBus.get().onNext(status)
+        //EventBus.get().onNext(status)
     }
 
     override fun onHandleIntent(intent: Intent?) {

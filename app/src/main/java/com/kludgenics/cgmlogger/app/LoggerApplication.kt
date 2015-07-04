@@ -5,7 +5,6 @@ import android.app.usage.UsageEvents
 import android.util.Log
 import com.kludgenics.cgmlogger.model.Migration
 
-import com.kludgenics.cgmlogger.util.EventBus
 import io.realm.Realm
 import io.realm.exceptions.RealmMigrationNeededException
 import net.danlew.android.joda.JodaTimeAndroid
@@ -32,6 +31,5 @@ public class LoggerApplication : Application() {
             Log.d("LogerApplication", "migrated")
 
         }
-        EventBus.get().onNext("Application started")
     }
 }

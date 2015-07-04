@@ -11,7 +11,7 @@ import com.google.android.gms.common.ConnectionResult
 import com.google.android.gms.common.api.GoogleApiClient
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.places.Places
-import com.kludgenics.cgmlogger.model.location.places.GooglePlacesApi
+//import com.kludgenics.cgmlogger.model.location.places.GooglePlacesApi
 import com.kludgenics.cgmlogger.model.location.GeoApi
 
 /**
@@ -52,8 +52,8 @@ public class BaseGmsPlaceService : Service(), GoogleApiClient.OnConnectionFailed
     }
 
     public inner class LocalBinder(private val client: GoogleApiClient) : Binder() {
-        public fun getService(): GeoApi {
-            return GooglePlacesApi(client)
+        public fun getService(): GeoApi? {
+            return null //GooglePlacesApi(client)
         }
     }
 

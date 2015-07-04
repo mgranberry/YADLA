@@ -5,8 +5,6 @@ import com.kludgenics.cgmlogger.model.glucose.BloodGlucoseRecord
 import io.realm.*
 import io.realm.exceptions.RealmException
 import org.joda.time.DateTime
-import rx.Observable
-import rx.schedulers.Schedulers
 import java.util.*
 
 

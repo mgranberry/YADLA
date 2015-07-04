@@ -59,7 +59,7 @@ android {
     }
     buildTypes {
         debug {
-            minifyEnabled true
+            minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
         release {
@@ -82,14 +82,12 @@ dependencies {
     compile 'com.google.android.gms:play-services-location:7.5.0'
     compile 'com.google.android.gms:play-services-gcm:7.5.0'
     compile 'com.squareup.retrofit:retrofit:1.9.0'
-    compile 'io.reactivex:rxjava:1.0.11'
     compile 'com.squareup.okhttp:okhttp:2.4.0'
     compile 'com.github.PhilJay:MPAndroidChart:v2.1.0'
     compile 'com.squareup.okhttp:okhttp-urlconnection:2.4.0'
     compile 'com.google.code.gson:gson:2.3.1'
-    compile 'io.realm:realm-android:0.80.3'
+    compile 'io.realm:realm-android:0.81.1'
     compile 'org.jetbrains.anko:anko:0.6.2-15s'
     compile 'net.danlew:android.joda:2.8.0'
-    //compile 'io.reactivex:rxkotlin:0.21.0'
     compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
 }

@@ -7,6 +7,11 @@ import android.util.Log
 import com.google.android.gms.gcm.*
 import com.google.gson.FieldNamingPolicy
 import com.google.gson.GsonBuilder
+import com.google.gson.TypeAdapter
+import com.google.gson.stream
+import com.google.gson.stream.JsonReader
+import com.google.gson.stream.JsonToken
+import com.google.gson.stream.JsonWriter
 import com.kludgenics.cgmlogger.app.R
 import com.kludgenics.cgmlogger.app.util.DateTimeSerializer
 import com.kludgenics.cgmlogger.model.glucose.BloodGlucoseRecord
@@ -108,6 +113,7 @@ public class TaskService : GcmTaskService(), AnkoLogger {
 
     val gsonConverter: GsonConverter by Delegates.lazy {
         GsonConverter(GsonBuilder()
+                .registerTypeAdapter(javaClass<Int>(), IntegerTypeAdapter() )
                 .registerTypeAdapter(javaClass<DateTime>(), DateTimeSerializer())
                 .setFieldNamingPolicy(FieldNamingPolicy.IDENTITY)
                 .excludeFieldsWithoutExposeAnnotation()
@@ -174,6 +180,29 @@ public class TaskService : GcmTaskService(), AnkoLogger {
         info ("onDestroy()")
         tasks.clear()
         super<GcmTaskService>.onDestroy()
+    }
+
+    public class IntegerTypeAdapter: TypeAdapter<Int>() {
+
+        override fun write(writer: JsonWriter, value: Int?) {
+            if (value == null) {
+                writer.nullValue();
+                return;
+            }
+            writer.value(value);
+        }
+
+        override fun read(reader: JsonReader): Int? {
+            reader.peek()
+            return when (reader.peek()) {
+                JsonToken.NUMBER -> {
+                    val value = reader.nextDouble()
+                    value.toInt()
+                }
+                else -> null
+            }
+        }
+
     }
 }
 

@@ -1,5 +1,8 @@
 package com.kludgenics.cgmlogger.model.math
 
+import android.graphics.Canvas
+import android.graphics.Paint
+import android.graphics.Path
 import io.realm.RealmObject
 import io.realm.annotations.Ignore
 import io.realm.annotations.RealmClass
@@ -30,8 +33,7 @@ public val CachedDatePeriodAgp.svg: String
     get() =
             """
 <?xml version="1.0" encoding="utf-8" standalone="no"?>
-<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
-  "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
 <svg height="${svgHeight}pt" version="1.1" viewBox="0 0 240 360" width="${svgWidth}pt" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
     <g id="agp">
         <path d="${outer}" fill="#2d95c2"/>

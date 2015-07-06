@@ -41,7 +41,7 @@ public class MainActivity : BaseActivity(), AnkoLogger {
         startService(intentFor<LocationIntentService>().setAction(LocationIntentService.ACTION_START_LOCATION_UPDATES))
         // Set up the drawer.
 
-        val agp = DailyAgp(Period.days(90))
+        val agp = DailyAgp(Period.days(7))
         try {
             val ps = agp.pathStrings
             ps.forEach {

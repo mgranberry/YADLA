@@ -6,6 +6,7 @@ import android.util.Log
 import com.kludgenics.cgmlogger.model.Migration
 
 import io.realm.Realm
+import io.realm.RealmConfiguration
 import io.realm.exceptions.RealmMigrationNeededException
 import net.danlew.android.joda.JodaTimeAndroid
 
@@ -20,8 +21,9 @@ public class LoggerApplication : Application() {
         try {
             // should throw as migration is required
             Log.d("LoggerApplication", "trying realm for migration")
-
-            Realm.getInstance(this).close()
+            val configuration = RealmConfiguration.Builder(this).build()
+            Realm.setDefaultConfiguration(configuration)
+            Realm.getDefaultInstance().close()
 
             Log.d("LoggerApplication", "succeeded")
 

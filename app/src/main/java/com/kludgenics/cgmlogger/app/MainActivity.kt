@@ -12,12 +12,15 @@ import com.kludgenics.cgmlogger.extension.percentiles
 import com.kludgenics.cgmlogger.extension.snackbar
 import com.kludgenics.cgmlogger.model.activity.PlayServicesActivity
 import com.kludgenics.cgmlogger.model.glucose.BloodGlucoseRecord
-import com.kludgenics.cgmlogger.model.math.Agp
+import com.kludgenics.cgmlogger.model.math.CachedDatePeriodAgp
+import com.kludgenics.cgmlogger.model.math.svg
+import com.kludgenics.cgmlogger.model.math.DailyAgp
 import com.kludgenics.cgmlogger.util.FileUtil
 import io.realm.Realm
 import org.jetbrains.anko.*
 import org.joda.time.DateTime
 import org.joda.time.LocalTime
+import org.joda.time.Period
 import java.io.File
 import java.util.*
 import kotlin.properties.Delegates
@@ -34,17 +37,24 @@ public class MainActivity : BaseActivity(), AnkoLogger {
 
         val fab = find<FloatingActionButton>(R.id.fab)
         fab.onClick {
-         }
+        }
         startService(intentFor<LocationIntentService>().setAction(LocationIntentService.ACTION_START_LOCATION_UPDATES))
         // Set up the drawer.
 
-        val agp = Agp(this).getAgp()
-        agp.forEach {
-            info(it.first)
-            it.second.forEachIndexed { i, d -> info("${Agp.percentiles[i]}: ${d}") }
+        val agp = DailyAgp(Period.days(90))
+        try {
+            val ps = agp.pathStrings
+            ps.forEach {
+                Log.i("MainActivity", it)
+            }
+
+            val c = CachedDatePeriodAgp(ps[0], ps[1], ps[2])
+            Log.i("SVG", c.svg)
+        } catch (e: ArrayIndexOutOfBoundsException) {
+
         }
         val realm = Realm.getInstance(ctx)
-         realm.use {
+        realm.use {
             val f = File(realm.getPath())
             FileUtil.copy(f, File("/sdcard/cgm.realm"))
             Log.i("MainActivity", "Realm is at: ${realm.getPath()}")

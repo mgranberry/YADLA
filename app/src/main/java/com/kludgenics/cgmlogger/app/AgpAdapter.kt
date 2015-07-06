@@ -5,7 +5,7 @@ import android.support.v7.widget.RecyclerView
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
-import com.kludgenics.cgmlogger.app.view.ChartView
+import com.kludgenics.cgmlogger.app.view.AgpChartView
 import io.realm.Realm
 import org.jetbrains.anko.*
 import com.kludgenics.cgmlogger.app.R

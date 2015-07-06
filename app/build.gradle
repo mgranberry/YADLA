@@ -39,7 +39,7 @@ android {
     }
     productFlavors {
         dev {
-            minSdkVersion 15
+            minSdkVersion 21
         }
         prod {
             minSdkVersion 15
@@ -59,7 +59,7 @@ android {
     }
     buildTypes {
         debug {
-            minifyEnabled false
+            minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
         release {

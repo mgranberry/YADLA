@@ -42,12 +42,16 @@
 
     </android.support.design.widget.AppBarLayout>
 
-    <android.support.v4.view.ViewPager
+    <!--<android.support.v4.view.ViewPager
         android:id="@+id/viewpager"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         app:layout_behavior="@string/appbar_scrolling_view_behavior" />
-
+-->
+    <com.kludgenics.cgmlogger.app.view.AgpChartView
+        android:id="@+id/agp"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"/>
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/fab"
         android:layout_width="wrap_content"

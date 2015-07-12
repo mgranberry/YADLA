@@ -1,4 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="window_background">#FFF5F5F5</color>
+    <color name="low_line">#ff0000</color>
+    <color name="target_line">#00aa00</color>
+    <color name="high_line">#f1f100</color>
+    <color name="percentile_outer">#2d95c2</color>
+    <color name="percentile_inner">#005882</color>
+    <color name="percentile_median">#bce6ff</color>
 </resources>

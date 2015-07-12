@@ -8,13 +8,15 @@ import android.view.Menu
 import android.view.MenuItem
 import com.google.android.gms.location.DetectedActivity
 import com.kludgenics.cgmlogger.app.service.LocationIntentService
+import com.kludgenics.cgmlogger.app.view.AgpChartView
 import com.kludgenics.cgmlogger.extension.percentiles
 import com.kludgenics.cgmlogger.extension.snackbar
 import com.kludgenics.cgmlogger.model.activity.PlayServicesActivity
 import com.kludgenics.cgmlogger.model.glucose.BloodGlucoseRecord
-import com.kludgenics.cgmlogger.model.math.CachedDatePeriodAgp
-import com.kludgenics.cgmlogger.model.math.svg
-import com.kludgenics.cgmlogger.model.math.DailyAgp
+import com.kludgenics.cgmlogger.model.math.agp.AgpUtil
+import com.kludgenics.cgmlogger.model.math.agp.CachedDatePeriodAgp
+import com.kludgenics.cgmlogger.model.math.agp.svg
+import com.kludgenics.cgmlogger.model.math.agp.DailyAgp
 import com.kludgenics.cgmlogger.util.FileUtil
 import io.realm.Realm
 import org.jetbrains.anko.*
@@ -40,24 +42,16 @@ public class MainActivity : BaseActivity(), AnkoLogger {
         }
         startService(intentFor<LocationIntentService>().setAction(LocationIntentService.ACTION_START_LOCATION_UPDATES))
         // Set up the drawer.
-
-        val agp = DailyAgp(Period.days(7))
-        try {
-            val ps = agp.pathStrings
-            ps.forEach {
-                Log.i("MainActivity", it)
-            }
-
-            val c = CachedDatePeriodAgp(ps[0], ps[1], ps[2])
-            Log.i("SVG", c.svg)
-        } catch (e: ArrayIndexOutOfBoundsException) {
-
-        }
+        val agpView = find<AgpChartView>(R.id.agp)
+        //val agp = DailyAgp(period=Period.days(90))
         val realm = Realm.getInstance(ctx)
         realm.use {
-            val f = File(realm.getPath())
-            FileUtil.copy(f, File("/sdcard/cgm.realm"))
-            Log.i("MainActivity", "Realm is at: ${realm.getPath()}")
+
+            val agp2 = AgpUtil.getLatestCached(this, realm, Period.days(120))
+            Log.i("SVG", agp2!!.svg)
+            agpView.outerPathString = agp2.outer
+            agpView.innerPathString = agp2.inner
+            agpView.medianPathString = agp2.median
             val acts = realm.allObjects(javaClass<PlayServicesActivity>())
             acts.map {
                 it.getTime() to

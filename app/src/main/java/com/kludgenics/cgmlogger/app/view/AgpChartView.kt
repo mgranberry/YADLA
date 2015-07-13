@@ -20,6 +20,7 @@ public class AgpChartView(context: Context, attrs: AttributeSet?, defStyle: Int)
         animatePath(propertyMetadata.name, previous, current)
         outerPath = PathParser.createPathFromPathData(current)
         outerPath.transform(scaleMatrix)
+        maybeRequestLayout()
         invalidate()
     })
 
@@ -28,6 +29,7 @@ public class AgpChartView(context: Context, attrs: AttributeSet?, defStyle: Int)
         animatePath(propertyMetadata.name, previous, current)
         innerPath = PathParser.createPathFromPathData(current)
         innerPath.transform(scaleMatrix)
+        maybeRequestLayout()
         invalidate()
     })
 
@@ -36,6 +38,7 @@ public class AgpChartView(context: Context, attrs: AttributeSet?, defStyle: Int)
         animatePath(propertyMetadata.name, previous, current)
         medianPath = PathParser.createPathFromPathData(current)
         medianPath.transform(scaleMatrix)
+        maybeRequestLayout()
         invalidate()
     })
 
@@ -80,6 +83,7 @@ public class AgpChartView(context: Context, attrs: AttributeSet?, defStyle: Int)
                 targetPath = Path()
             bgLine(targetPath!!, current.toFloat())
         }
+
         invalidate()
     })
 
@@ -89,6 +93,7 @@ public class AgpChartView(context: Context, attrs: AttributeSet?, defStyle: Int)
         path.moveTo(0f, y)
         path.lineTo(DailyAgp.SPEC_WIDTH, y)
         path.transform(scaleMatrix)
+        maybeRequestLayout()
     }
 
     private fun animatePath(name: String, previous: String, current: String) {
@@ -108,12 +113,9 @@ public class AgpChartView(context: Context, attrs: AttributeSet?, defStyle: Int)
     private val cornerEffect by Delegates.lazy { CornerPathEffect(dp2px(20)) }
     private val scaleMatrix: Matrix = Matrix()
 
-    override fun getSuggestedMinimumHeight(): Int {
-        return super<View>.getSuggestedMinimumHeight()
-    }
-
-    override fun getSuggestedMinimumWidth(): Int {
-        return super<View>.getSuggestedMinimumWidth()
+    private fun maybeRequestLayout() {
+        if (!isInLayout())
+            requestLayout()
     }
 
     private fun calculateBounds(width: Float, height: Float, scaled: Boolean = false): RectF {

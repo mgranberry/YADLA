@@ -32,7 +32,8 @@ android {
 
     defaultConfig {
         applicationId "com.kludgenics.cgmlogger.app"
-        minSdkVersion 15
+  //      minSdkVersion 15
+        minSdkVersion 21
         targetSdkVersion 22
         versionCode 1
         versionName "1.0"
@@ -41,9 +42,9 @@ android {
         dev {
             minSdkVersion 21
         }
-        prod {
-            minSdkVersion 15
-        }
+       // prod {
+       //     minSdkVersion 15
+       // }
     }
     packagingOptions {
         exclude 'META-INF/LICENSE.txt'

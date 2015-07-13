@@ -26,7 +26,7 @@ public class DailyAgp(val dateTime: DateTime = DateTime(), val period: Period = 
     }
 
     companion object {
-        val SPEC_HEIGHT = 360.0f
+        val SPEC_HEIGHT = 400.0f
         val SPEC_WIDTH = 240.0f
         val STANDARD_PERCENTILES: DoubleArray = doubleArrayOf(10.0, 90.0, 25.0, 75.0, 50.0)
     }

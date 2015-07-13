@@ -61,7 +61,7 @@ public class LocationIntentService : IntentService("location"), GoogleApiClient.
     }
 
     override fun onConnectionFailed(p0: ConnectionResult) {
-        //EventBus.get().onNext(p0)
+        info("connection failed: ${p0}")
     }
 
     override fun onResult(status: Status) {
@@ -69,7 +69,16 @@ public class LocationIntentService : IntentService("location"), GoogleApiClient.
     }
 
     override fun onHandleIntent(intent: Intent?) {
-
+        if (client == null) {
+            client = GoogleApiClient.Builder(ctx)
+                    .addConnectionCallbacks(this)
+                    .addOnConnectionFailedListener(this)
+                    .addApi(LocationServices.API)
+                    .addApi(ActivityRecognition.API)
+                    .build()
+        }
+        if ((client != null) && !client!!.isConnected())
+            client!!.blockingConnect()
         when (intent?.getAction()) {
             ACTION_LOCATION_UPDATE -> {
                 if (LocationResult.hasResult(intent)) {

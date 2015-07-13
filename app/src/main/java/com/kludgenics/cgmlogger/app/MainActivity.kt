@@ -47,7 +47,7 @@ public class MainActivity : BaseActivity(), AnkoLogger {
         val realm = Realm.getInstance(ctx)
         realm.use {
 
-            val agp2 = AgpUtil.getLatestCached(this, realm, Period.days(120))
+            val agp2 = AgpUtil.getLatestCached(this, realm, Period.days(7))
             Log.i("SVG", agp2!!.svg)
             agpView.outerPathString = agp2.outer
             agpView.innerPathString = agp2.inner

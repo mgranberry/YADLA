@@ -65,9 +65,15 @@ public object AgpUtil: AnkoLogger {
             info("Storing cached AGP")
             val ro = realm.create<CachedDatePeriodAgp> {
                 this.dateTime = dateTime
-                this.outer = currentAgp.pathStrings[0]
-                this.inner = currentAgp.pathStrings[1]
-                this.median = currentAgp.pathStrings[2]
+                if (currentAgp.percentiles.size() >= 5) {
+                    this.outer = currentAgp.pathStrings[0]
+                    this.inner = currentAgp.pathStrings[1]
+                    this.median = currentAgp.pathStrings[2]
+                } else {
+                    this.outer = ""
+                    this.inner = ""
+                    this.median = ""
+                }
                 this.period = period.getDays()
             }
             info("Querying cached AGPs")
@@ -95,13 +101,13 @@ public val CachedDatePeriodAgp.svg: String
             """
 <?xml version="1.0" encoding="utf-8" standalone="no"?>
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
-<svg height="${svgHeight}pt" version="1.1" viewBox="0 0 240 360" width="${svgWidth}pt" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<svg height="${svgHeight}pt" version="1.1" viewBox="0 0 240 400" width="${svgWidth}pt" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
     <g id="agp">
         <path d="${outer}" fill="#2d95c2"/>
         <path d="${inner}" fill="#005882"/>
         <path d="${median}" stroke="#bce6ff" fill-opacity="0.0" stroke-with="3"/>
-        <line x1="0" y1="200" y2="200" x2="360" stroke="yellow"/>
-        <line x1="0" y1="280" y2="280" x2="360" stroke="red"/>
+        <line x1="0" y1="220" y2="220" x2="360" stroke="yellow"/>
+        <line x1="0" y1="320" y2="320" x2="360" stroke="red"/>
     </g>
 </svg>
 """

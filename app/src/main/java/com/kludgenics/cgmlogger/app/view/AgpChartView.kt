@@ -99,13 +99,13 @@ public class AgpChartView(context: Context, attrs: AttributeSet?, defStyle: Int)
     private val innerPaint: Paint by Delegates.lazy { initializePaint(R.color.percentile_inner) }
     private val medianPaint: Paint by Delegates.lazy { initializePaint(R.color.percentile_median,
             stroke = true) }
-    private val highPaint: Paint by Delegates.lazy { initializePaint(R.color.high_line, stroke = true,
+    private val highPaint: Paint by Delegates.lazy { initializePaint(R.color.high_line, stroke = true, strokeWidth = dp2px(2),
             pathEffect = DashPathEffect(floatArrayOf(dp2px(10), dp2px(20)), 0f)) }
-    private val lowPaint: Paint by Delegates.lazy { initializePaint(R.color.low_line, stroke = true,
+    private val lowPaint: Paint by Delegates.lazy { initializePaint(R.color.low_line, stroke = true, strokeWidth = dp2px(2),
             pathEffect = DashPathEffect(floatArrayOf(dp2px(10), dp2px(20)), 0f)) }
-    private val targetPaint: Paint by Delegates.lazy { initializePaint(R.color.target_line, stroke = true,
+    private val targetPaint: Paint by Delegates.lazy { initializePaint(R.color.target_line, stroke = true, strokeWidth = dp2px(2),
             pathEffect = DashPathEffect(floatArrayOf(dp2px(10), dp2px(20)), 0f)) }
-    private val cornerEffect by Delegates.lazy { CornerPathEffect(dp2px(1)) }
+    private val cornerEffect by Delegates.lazy { CornerPathEffect(dp2px(20)) }
     private val scaleMatrix: Matrix = Matrix()
 
     override fun getSuggestedMinimumHeight(): Int {
@@ -116,21 +116,22 @@ public class AgpChartView(context: Context, attrs: AttributeSet?, defStyle: Int)
         return super<View>.getSuggestedMinimumWidth()
     }
 
-    private fun calculateBounds(width: Float, height: Float): RectF {
+    private fun calculateBounds(width: Float, height: Float, scaled: Boolean = false): RectF {
         val bounds = RectF()
         val measurePath = PathParser.createPathFromPathData(outerPathString)
+        if (scaled) {
+            val sx = width / DailyAgp.SPEC_WIDTH
+            val sy = height / DailyAgp.SPEC_HEIGHT
 
-        val sx = width / DailyAgp.SPEC_WIDTH
-        val sy = height / DailyAgp.SPEC_HEIGHT
-
-        val matrix = Matrix()
-        matrix.setScale(sx, sy)
-        measurePath.transform(matrix)
+            val matrix = Matrix()
+            matrix.setScale(sx, sy)
+            measurePath.transform(matrix)
+        }
         measurePath.computeBounds(bounds, false)
         return bounds
     }
 
-   /*override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+   override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         val widthType = View.MeasureSpec.getMode(widthMeasureSpec)
         val widthMeasureVal = View.MeasureSpec.getSize(widthMeasureSpec)
         val heightType = View.MeasureSpec.getMode(heightMeasureSpec)
@@ -138,7 +139,7 @@ public class AgpChartView(context: Context, attrs: AttributeSet?, defStyle: Int)
 
         val paddingHorizontal = paddingLeft + paddingRight
         val paddingVertical = paddingTop + paddingBottom
-        val bounds = calculateBounds(widthMeasureVal.toFloat(), heightMeasureVal.toFloat())
+        val bounds = calculateBounds(widthMeasureVal.toFloat(), heightMeasureVal.toFloat(), true)
 
         info("bounds: l:${bounds.left}, t:${bounds.top}, r:${bounds.right}, b:${bounds.bottom}")
         val width = when(widthType) {
@@ -161,23 +162,18 @@ public class AgpChartView(context: Context, attrs: AttributeSet?, defStyle: Int)
 
         //super<View>.onMeasure(View.MeasureSpec.makeMeasureSpec(width, widthType),
         //        View.MeasureSpec.makeMeasureSpec(height, heightType)
-    }*/
+    }
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         super<View>.onSizeChanged(w, h, oldw, oldh)
         val width = w.toFloat() - paddingLeft - paddingRight
         val height = h.toFloat() - paddingTop - paddingBottom
         val bounds = calculateBounds(width, height)
-        info ("padding: ($paddingLeft $paddingTop $paddingRight $paddingBottom")
-        info ("calcs l: ${bounds.left}, t: ${bounds.top}, r: ${bounds.right}, b: ${bounds.bottom}} ")
-        info ("calcs w: $width, h: $height, spec_w: ${DailyAgp.SPEC_WIDTH}, spec:h: ${DailyAgp.SPEC_HEIGHT}")
-        //val sx = width * (width / (bounds.right - bounds.left)) / DailyAgp.SPEC_WIDTH
-        //val sy = height * (height / (bounds.bottom - bounds.top)) / DailyAgp.SPEC_HEIGHT
-        val sx = width / DailyAgp.SPEC_WIDTH
-        val sy = height / DailyAgp.SPEC_HEIGHT
-        info ("val ${sx} = ${width} * (${width} / (${bounds.right} - ${bounds.left})) / ${DailyAgp.SPEC_WIDTH}")
-        info ("Matrix scale: $sx, $sy")
-        scaleMatrix.setScale(sx, sy)
+
+        scaleMatrix.setRectToRect(bounds, RectF(paddingLeft.toFloat(), paddingTop.toFloat(),
+                w.toFloat() - paddingRight, h.toFloat() - paddingBottom), Matrix.ScaleToFit.FILL)
+
+        info(scaleMatrix)
         //scaleMatrix.postTranslate(-bounds.left, -bounds.top*1.5f)
         outerPathString = outerPathString
         innerPathString = innerPathString

@@ -52,11 +52,18 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical">
-        <ImageView
+        <com.kludgenics.cgmlogger.app.view.AgpChartView
+            android:id="@+id/agp7"
+            android:background="#ffaaff"
             android:layout_width="match_parent"
-            android:layout_height="200dp" />
-    <com.kludgenics.cgmlogger.app.view.AgpChartView
-        android:id="@+id/agp"
+            android:layout_height="wrap_content"/>
+        <com.kludgenics.cgmlogger.app.view.AgpChartView
+        android:id="@+id/agp30"
+        android:background="#ffaaff"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"/>
+        <com.kludgenics.cgmlogger.app.view.AgpChartView
+        android:id="@+id/agp90"
         android:background="#ffaaff"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"/>

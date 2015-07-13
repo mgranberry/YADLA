@@ -18,6 +18,7 @@ import com.kludgenics.cgmlogger.model.math.agp.CachedDatePeriodAgp
 import com.kludgenics.cgmlogger.model.math.agp.svg
 import com.kludgenics.cgmlogger.model.math.agp.DailyAgp
 import com.kludgenics.cgmlogger.util.FileUtil
+import com.kludgenics.cgmlogger.app.R
 import io.realm.Realm
 import org.jetbrains.anko.*
 import org.joda.time.DateTime
@@ -42,34 +43,24 @@ public class MainActivity : BaseActivity(), AnkoLogger {
         }
         startService(intentFor<LocationIntentService>().setAction(LocationIntentService.ACTION_START_LOCATION_UPDATES))
         // Set up the drawer.
-        val agpView = find<AgpChartView>(R.id.agp)
-        //val agp = DailyAgp(period=Period.days(90))
-        val realm = Realm.getInstance(ctx)
-        realm.use {
+        val viewPeriodArray = arrayOf(R.id.agp7 to 90, R.id.agp30 to 3,R.id.agp90 to 7)
+        for ((id, period) in viewPeriodArray) {
 
-            val agp2 = AgpUtil.getLatestCached(this, realm, Period.days(7))
-            Log.i("SVG", agp2!!.svg)
-            agpView.outerPathString = agp2.outer
-            agpView.innerPathString = agp2.inner
-            agpView.medianPathString = agp2.median
-            val acts = realm.allObjects(javaClass<PlayServicesActivity>())
-            acts.map {
-                it.getTime() to
-                        when (it.getActivityId()) {
-                            DetectedActivity.IN_VEHICLE -> "in_vehicle"
-                            DetectedActivity.ON_BICYCLE -> "on_bicycle"
-                            DetectedActivity.ON_FOOT -> "on_foot"
-                            DetectedActivity.RUNNING -> "running"
-                            DetectedActivity.STILL -> "still"
-                            DetectedActivity.TILTING -> "tilting"
-                            DetectedActivity.WALKING -> "walking"
-                            DetectedActivity.UNKNOWN -> "unknown"
-                            else -> "other"
-                        }
-                //info("Activity: ${activity}, ${it.getConfidence()}, ${it.getTime()}")
+            val agpView = find<AgpChartView>(id)
+            //val agp = DailyAgp(period=Period.days(90))
+            val realm = Realm.getInstance(ctx)
+            realm.use {
+
+                val agp = AgpUtil.getLatestCached(this, realm, Period.days(period))
+                Log.i("SVG", agp!!.svg)
+                agpView.outerPathString = agp.outer
+                agpView.innerPathString = agp.inner
+                agpView.medianPathString = agp.median
             }
         }
     }
+
+
 
     override fun onStart() {
         super<BaseActivity>.onStart()

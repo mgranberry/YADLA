@@ -9,8 +9,7 @@ import android.view.MenuItem
 import com.google.android.gms.location.DetectedActivity
 import com.kludgenics.cgmlogger.app.service.LocationIntentService
 import com.kludgenics.cgmlogger.app.view.AgpChartView
-import com.kludgenics.cgmlogger.extension.percentiles
-import com.kludgenics.cgmlogger.extension.snackbar
+import com.kludgenics.cgmlogger.extension.*
 import com.kludgenics.cgmlogger.model.activity.PlayServicesActivity
 import com.kludgenics.cgmlogger.model.glucose.BloodGlucoseRecord
 import com.kludgenics.cgmlogger.model.math.agp.AgpUtil
@@ -19,6 +18,7 @@ import com.kludgenics.cgmlogger.model.math.agp.svg
 import com.kludgenics.cgmlogger.model.math.agp.DailyAgp
 import com.kludgenics.cgmlogger.util.FileUtil
 import com.kludgenics.cgmlogger.app.R
+import com.kludgenics.cgmlogger.model.math.bgi.BgiUtil
 import io.realm.Realm
 import org.jetbrains.anko.*
 import org.joda.time.DateTime
@@ -43,7 +43,20 @@ public class MainActivity : BaseActivity(), AnkoLogger {
         }
         startService(intentFor<LocationIntentService>().setAction(LocationIntentService.ACTION_START_LOCATION_UPDATES))
         // Set up the drawer.
-        val viewPeriodArray = arrayOf(R.id.agp7 to 90, R.id.agp30 to 3,R.id.agp90 to 7)
+
+        val r = Realm.getDefaultInstance()
+        r.use {
+            info("pre-adrr")
+            val adrr = BgiUtil.adrr(
+                    r.where<BloodGlucoseRecord>{
+                        between("date", DateTime().withTimeAtStartOfDay().minusDays(30).getMillis(),
+                                DateTime().withTimeAtStartOfDay().getMillis())
+                    }.findAll())
+            info(adrr)
+            val adrr_risk = BgiUtil.adrr_risk(adrr)
+            info("ADRR risk: $adrr (${adrr_risk})")
+        }
+        val viewPeriodArray = arrayOf(R.id.agp7 to 90, R.id.agp30 to 4,R.id.agp90 to 7)
         for ((id, period) in viewPeriodArray) {
 
             val agpView = find<AgpChartView>(id)
@@ -64,7 +77,6 @@ public class MainActivity : BaseActivity(), AnkoLogger {
 
     override fun onStart() {
         super<BaseActivity>.onStart()
-        coordinator.snackbar("Hello, World")
     }
 
     override fun onStop() {

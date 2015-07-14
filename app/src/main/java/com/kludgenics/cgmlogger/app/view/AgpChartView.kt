@@ -136,9 +136,7 @@ public class AgpChartView(context: Context, attrs: AttributeSet?, defStyle: Int)
 
         val paddingHorizontal = paddingLeft + paddingRight
         val paddingVertical = paddingTop + paddingBottom
-        val bounds = calculateBounds(widthMeasureVal.toFloat(), heightMeasureVal.toFloat(), true)
-
-        info("bounds: l:${bounds.left}, t:${bounds.top}, r:${bounds.right}, b:${bounds.bottom}")
+        val bounds = calculateBounds(widthMeasureVal.toFloat(), heightMeasureVal.toFloat(), false)
         val width = when(widthType) {
             View.MeasureSpec.UNSPECIFIED,
             View.MeasureSpec.AT_MOST,
@@ -155,10 +153,6 @@ public class AgpChartView(context: Context, attrs: AttributeSet?, defStyle: Int)
             else -> heightMeasureVal
         }
         setMeasuredDimension(width, height)
-        info ("onMeasure: $widthMeasureVal/$widthType, $heightMeasureVal/$heightType ($width, $height)")
-
-        //super<View>.onMeasure(View.MeasureSpec.makeMeasureSpec(width, widthType),
-        //        View.MeasureSpec.makeMeasureSpec(height, heightType)
     }
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
@@ -172,8 +166,7 @@ public class AgpChartView(context: Context, attrs: AttributeSet?, defStyle: Int)
         scaleMatrix.setRectToRect(bbox, RectF(paddingLeft.toFloat(), paddingTop.toFloat(),
                 w.toFloat() - paddingRight, h.toFloat() - paddingBottom), Matrix.ScaleToFit.FILL)
 
-        info(scaleMatrix)
-        //scaleMatrix.postTranslate(-bounds.left, -bounds.top*1.5f)
+        // this is ugly. Reapply scale/transform matrices
         outerPathString = outerPathString
         innerPathString = innerPathString
         medianPathString = medianPathString
@@ -205,8 +198,6 @@ public class AgpChartView(context: Context, attrs: AttributeSet?, defStyle: Int)
 
     override fun onDraw(canvas: Canvas) {
         super<View>.onDraw(canvas)
-        //canvas.translate(paddingLeft.toFloat(), paddingTop.toFloat())
-        //canvas.translate(bounds.left, bounds.bottom - bounds.top)
         canvas.drawPath(outerPath, outerPaint)
         canvas.drawPath(innerPath, innerPaint)
         canvas.drawPath(medianPath, medianPaint)

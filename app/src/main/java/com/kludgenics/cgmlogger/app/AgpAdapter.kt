@@ -36,10 +36,8 @@ public class AgpAdapter(val periods: Array<Period>): RecyclerView.Adapter<AgpAda
                 holder.chartView.innerPathString = inner
                 holder.chartView.medianPathString = median
                 holder.chartView.outerPathString = outer
-                //holder.chartView.requestLayout()
                 holder.chartView.invalidate()
                 notifyItemChanged(id)
-                //notifyDataSetChanged()
             }
         })
         val inner = agp.inner
@@ -50,7 +48,6 @@ public class AgpAdapter(val periods: Array<Period>): RecyclerView.Adapter<AgpAda
             holder.chartView.medianPathString = median
             holder.chartView.outerPathString = outer
             holder.chartView.invalidate()
-            holder.chartView.requestLayout()
         }
     }
 
@@ -59,6 +56,8 @@ public class AgpAdapter(val periods: Array<Period>): RecyclerView.Adapter<AgpAda
         var chart: AgpChartView? = null
         cardView.linearLayout {
             //padding = viewGroup.getContext().dip(16)
+            paddingHorizontal = viewGroup.getContext().dip(8)
+            paddingVertical = viewGroup.getContext().dip(5)
             chart = agpChartView().layoutParams(width=matchParent, height=wrapContent)
         }
         cardView.contentDescription = "Graph of blood glucose"

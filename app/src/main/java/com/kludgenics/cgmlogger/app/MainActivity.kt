@@ -45,7 +45,7 @@ public class MainActivity : BaseActivity(), AnkoLogger {
         startService(intentFor<LocationIntentService>().setAction(LocationIntentService.ACTION_START_LOCATION_UPDATES))
         /// / Set up the drawer.
 
-
+        /*
         val r = Realm.getDefaultInstance()
         r.use {
             info("pre-adrr")
@@ -57,7 +57,7 @@ public class MainActivity : BaseActivity(), AnkoLogger {
             info(adrr)
             val adrr_risk = BgiUtil.adrr_risk(adrr)
             info("ADRR risk: $adrr (${adrr_risk})")
-        }
+        }*/
         val recycler = find<RecyclerView>(R.id.recycler)
         recycler.setAdapter(AgpAdapter(arrayOf(Period.days(3), Period.days(7), Period.days(14),
                 Period.days(30), Period.days(60), Period.days(90))))

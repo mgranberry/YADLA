@@ -62,8 +62,6 @@ public class MainActivity : BaseActivity(), AnkoLogger {
         recycler.setAdapter(AgpAdapter(arrayOf(Period.days(3), Period.days(7), Period.days(14),
                 Period.days(30), Period.days(60), Period.days(90))))
         recycler.setLayoutManager(LinearLayoutManager(ctx))
-        info("rvfs: ${recycler.hasFixedSize()}")
-        recycler.setHasFixedSize(true)
     }
 
 

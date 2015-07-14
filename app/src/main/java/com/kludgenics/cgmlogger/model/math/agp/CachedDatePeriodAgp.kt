@@ -14,6 +14,7 @@ import java.util.*
 import com.kludgenics.cgmlogger.extension.*
 import org.jetbrains.anko.*
 import java.util.concurrent.Executors
+import java.util.concurrent.Future
 
 /**
  * Created by matthiasgranberry on 7/5/15.
@@ -33,7 +34,7 @@ import java.util.concurrent.Executors
 public object AgpUtil: AnkoLogger {
     val executor = Executors.newScheduledThreadPool(1)
     fun getLatestCached(context: Context, realm: Realm, period: Period,
-                        updated: ((CachedDatePeriodAgp)->Unit)? = null,
+                        updated: ((Future<CachedDatePeriodAgp>)->Unit)? = null,
                         dateTime: DateTime = DateTime().withTimeAtStartOfDay()): CachedDatePeriodAgp {
         info("$period Querying cache")
         val result = realm.where<CachedDatePeriodAgp> {
@@ -42,16 +43,21 @@ public object AgpUtil: AnkoLogger {
 
         return if (result == null) {
             info("$period Result not cached, returning dummy")
-            context.asyncResult(executor) {
-                calculateAndCacheAgp(dateTime, period, updated)
+            val f = context.asyncResult(executor) {
+                calculateAndCacheAgp(dateTime, period)
             }
-            CachedDatePeriodAgp(date=dateTime.toDate(),period=period.getDays())
-
+            context.asyncResult(executor) {
+                updated?.invoke(f)
+            }
+            CachedDatePeriodAgp(date = dateTime.toDate(), period = period.getDays())
         } else if (result.dateTime != dateTime) {
             info("Result cached, but stale.  Calculating in background.")
             context.asyncResult(executor) {
                 info("starting bg")
-                calculateAndCacheAgp(dateTime, period, updated)
+                val f = context.asyncResult(executor) {
+                    calculateAndCacheAgp(dateTime, period)
+                }
+                updated?.invoke(f)
                 info("ending bg")
             }
             result
@@ -61,7 +67,7 @@ public object AgpUtil: AnkoLogger {
         }
     }
 
-    private fun calculateAndCacheAgp(dateTime: DateTime, period: Period, updated: ((CachedDatePeriodAgp)->Unit)? = null) {
+    private fun calculateAndCacheAgp(dateTime: DateTime, period: Period): CachedDatePeriodAgp {
         info ("$period Calculating agp: ${dateTime}, ${period}")
         val currentAgp = DailyAgp(dateTime, period)
         val realm = Realm.getDefaultInstance()
@@ -81,8 +87,9 @@ public object AgpUtil: AnkoLogger {
                 this.period = period.getDays()
             }
             info("$period Calculation completed")
-            updated?.invoke(ro)
         }
+        return CachedDatePeriodAgp(currentAgp.pathStrings[0], currentAgp.pathStrings[1],
+                currentAgp.pathStrings[2], date=dateTime.toDate(), period=period.getDays())
     }
 }
 public var CachedDatePeriodAgp.dateTime: DateTime

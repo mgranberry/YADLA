@@ -42,32 +42,12 @@
 
     </android.support.design.widget.AppBarLayout>
 
-    <!--<android.support.v4.view.ViewPager
-        android:id="@+id/viewpager"
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/recycler"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         app:layout_behavior="@string/appbar_scrolling_view_behavior" />
--->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical">
-        <com.kludgenics.cgmlogger.app.view.AgpChartView
-            android:id="@+id/agp7"
-            android:background="#ffaaff"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"/>
-        <com.kludgenics.cgmlogger.app.view.AgpChartView
-        android:id="@+id/agp30"
-        android:background="#ffaaff"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"/>
-        <com.kludgenics.cgmlogger.app.view.AgpChartView
-        android:id="@+id/agp90"
-        android:background="#ffaaff"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"/>
-    </LinearLayout>
+
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/fab"
         android:layout_width="wrap_content"

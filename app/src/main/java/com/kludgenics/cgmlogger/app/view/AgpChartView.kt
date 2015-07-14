@@ -2,8 +2,10 @@ package com.kludgenics.cgmlogger.app.view
 
 import android.content.Context
 import android.graphics.*
+import android.support.design.widget.AppBarLayout
 import android.util.AttributeSet
 import android.view.View
+import android.view.ViewManager
 import com.kludgenics.cgmlogger.app.R
 import com.kludgenics.cgmlogger.app.util.PathParser
 import com.kludgenics.cgmlogger.model.math.agp.DailyAgp
@@ -15,13 +17,15 @@ public class AgpChartView(context: Context, attrs: AttributeSet?, defStyle: Int)
     public constructor(context: Context, attrs: AttributeSet?) : this(context, attrs, 0) {
     }
 
+    public constructor(context: Context): this(context, null, 0) {
+    }
+
     var outerPathString: String by Delegates.observable("", {
         propertyMetadata: PropertyMetadata, previous: String, current: String ->
         animatePath(propertyMetadata.name, previous, current)
         outerPath = PathParser.createPathFromPathData(current)
         outerPath.transform(scaleMatrix)
         maybeRequestLayout()
-        invalidate()
     })
 
     var innerPathString: String by Delegates.observable("", {
@@ -29,8 +33,6 @@ public class AgpChartView(context: Context, attrs: AttributeSet?, defStyle: Int)
         animatePath(propertyMetadata.name, previous, current)
         innerPath = PathParser.createPathFromPathData(current)
         innerPath.transform(scaleMatrix)
-        maybeRequestLayout()
-        invalidate()
     })
 
     var medianPathString: String by Delegates.observable("", {
@@ -38,8 +40,6 @@ public class AgpChartView(context: Context, attrs: AttributeSet?, defStyle: Int)
         animatePath(propertyMetadata.name, previous, current)
         medianPath = PathParser.createPathFromPathData(current)
         medianPath.transform(scaleMatrix)
-        maybeRequestLayout()
-        invalidate()
     })
 
     var outerPath: Path = Path()
@@ -50,7 +50,7 @@ public class AgpChartView(context: Context, attrs: AttributeSet?, defStyle: Int)
     var highPath: Path? = null
     var targetPath: Path? = null
 
-    var lowLine: Int by Delegates.observable(0, {
+    var lowLine: Int by Delegates.observable(80, {
         propertyMetadata: PropertyMetadata, previous: Int, current: Int ->
         if (current == 0)
             lowPath = null
@@ -59,10 +59,9 @@ public class AgpChartView(context: Context, attrs: AttributeSet?, defStyle: Int)
                 lowPath = Path()
             bgLine(lowPath!!, current.toFloat())
         }
-        invalidate()
     })
 
-    var highLine: Int by Delegates.observable(0, {
+    var highLine: Int by Delegates.observable(180, {
         propertyMetadata: PropertyMetadata, previous: Int, current: Int ->
         if (current == 0)
             highPath = null
@@ -71,10 +70,9 @@ public class AgpChartView(context: Context, attrs: AttributeSet?, defStyle: Int)
                 highPath = Path()
             bgLine(highPath!!, current.toFloat())
         }
-        invalidate()
     })
 
-    var targetLine: Int by Delegates.observable(0, {
+    var targetLine: Int by Delegates.observable(110, {
         propertyMetadata: PropertyMetadata, previous: Int, current: Int ->
         if (current == 0)
             targetPath = null
@@ -83,8 +81,6 @@ public class AgpChartView(context: Context, attrs: AttributeSet?, defStyle: Int)
                 targetPath = Path()
             bgLine(targetPath!!, current.toFloat())
         }
-
-        invalidate()
     })
 
     private fun bgLine(path: Path, gl: Float) {
@@ -114,8 +110,7 @@ public class AgpChartView(context: Context, attrs: AttributeSet?, defStyle: Int)
     private val scaleMatrix: Matrix = Matrix()
 
     private fun maybeRequestLayout() {
-        if (!isInLayout())
-            requestLayout()
+        requestLayout()
     }
 
     private fun calculateBounds(width: Float, height: Float, scaled: Boolean = false): RectF {
@@ -152,11 +147,11 @@ public class AgpChartView(context: Context, attrs: AttributeSet?, defStyle: Int)
         }
         val height = when(heightType) {
             View.MeasureSpec.UNSPECIFIED ->
-                    paddingVertical + Math.abs(bounds.bottom - bounds.top).toInt()
+                    paddingVertical + getContext().dip(Math.max(highLine - lowLine, (bounds.bottom - bounds.top).toInt())).toInt()
             View.MeasureSpec.EXACTLY ->
                     heightMeasureVal
             View.MeasureSpec.AT_MOST ->
-                    Math.min(heightMeasureVal, paddingVertical + Math.abs(bounds.bottom - bounds.top).toInt())
+                    Math.min(heightMeasureVal, paddingVertical + getContext().dip(bounds.bottom - bounds.top))
             else -> heightMeasureVal
         }
         setMeasuredDimension(width, height)
@@ -171,8 +166,10 @@ public class AgpChartView(context: Context, attrs: AttributeSet?, defStyle: Int)
         val width = w.toFloat() - paddingLeft - paddingRight
         val height = h.toFloat() - paddingTop - paddingBottom
         val bounds = calculateBounds(width, height)
-
-        scaleMatrix.setRectToRect(bounds, RectF(paddingLeft.toFloat(), paddingTop.toFloat(),
+        val bbox = RectF(bounds.left, Math.min(DailyAgp.SPEC_HEIGHT - highLine, if (bounds.top != 0f) bounds.top else Float.MAX_VALUE),
+                Math.max(bounds.right, DailyAgp.SPEC_WIDTH), Math.max(DailyAgp.SPEC_HEIGHT - lowLine, bounds.bottom))
+        info("bounds: $bounds, hbox:$bbox")
+        scaleMatrix.setRectToRect(bbox, RectF(paddingLeft.toFloat(), paddingTop.toFloat(),
                 w.toFloat() - paddingRight, h.toFloat() - paddingBottom), Matrix.ScaleToFit.FILL)
 
         info(scaleMatrix)
@@ -180,9 +177,9 @@ public class AgpChartView(context: Context, attrs: AttributeSet?, defStyle: Int)
         outerPathString = outerPathString
         innerPathString = innerPathString
         medianPathString = medianPathString
-        lowLine = 80
-        highLine = 180
-        targetLine = 110
+        lowLine = lowLine
+        highLine = highLine
+        targetLine = targetLine
     }
 
 
@@ -221,3 +218,6 @@ public class AgpChartView(context: Context, attrs: AttributeSet?, defStyle: Int)
             canvas.drawPath(targetPath, targetPaint)
     }
 }
+
+fun ViewManager.agpChartView(init: AgpChartView.() -> Unit = {}) =
+        __dslAddView({ AgpChartView(it) }, init, this)

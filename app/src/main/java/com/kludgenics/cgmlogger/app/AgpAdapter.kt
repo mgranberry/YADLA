@@ -97,32 +97,33 @@ public class AgpAdapter(val periods: Array<Period>): RecyclerView.Adapter<AgpAda
         var chart: AgpChartView? = null
         var textView: TextView? = null
         val card: CardView = CardView(ctx)
-        with(card) {
-            setCardBackgroundColor(ctx.getResources().getColor(R.color.cardview_light_background))
-            contentDescription = "Graph of blood glucose"
-            setRadius(ctx.dip(5).toFloat())
-            frameLayout {
-                paddingHorizontal = ctx.dip(8)
-                paddingVertical = ctx.dip(5)
-                chart = agpChartView {}.layoutParams(width = matchParent, height = wrapContent)
-                textView = textView {
-                    gravity = Gravity.CENTER
-                    textSize = ctx.sp(8).toFloat()
-                    textColor = Color.BLACK
-                    backgroundResource = R.color.cardview_light_background
-                    background.setAlpha(128)
-                }.layoutParams(width = wrapContent, height = wrapContent) {
-                    gravity = (Gravity.TOP or Gravity.CENTER_HORIZONTAL)
+        with(ctx) {
+            with(card) {
+                setCardBackgroundColor(resources!!.getColor(R.color.cardview_light_background))
+                contentDescription = "Graph of blood glucose"
+                setRadius(dip(5).toFloat())
+                frameLayout {
+                    paddingHorizontal = dip(8)
+                    paddingVertical = dip(5)
+                    chart = agpChartView {}.layoutParams(width = matchParent, height = wrapContent)
+                    textView = textView {
+                        gravity = Gravity.CENTER
+                        textSize = sp(8).toFloat()
+                        textColor = Color.BLACK
+                        backgroundResource = R.color.cardview_light_background
+                        background.setAlpha(128)
+                    }.layoutParams(width = wrapContent, height = wrapContent) {
+                        gravity = (Gravity.TOP or Gravity.CENTER_HORIZONTAL)
+                    }
                 }
             }
+            card.layoutParams = ViewGroup.MarginLayoutParams(matchParent, wrapContent)
+            with(card.layoutParams as ViewGroup.MarginLayoutParams) {
+                bottomMargin = dip(15)
+                leftMargin = dip(15)
+                rightMargin = dip(15)
+            }
         }
-        card.layoutParams = ViewGroup.MarginLayoutParams(matchParent, wrapContent)
-        with(card.layoutParams as ViewGroup.MarginLayoutParams) {
-            bottomMargin = ctx.dip(15)
-            leftMargin = ctx.dip(15)
-            rightMargin = ctx.dip(15)
-        }
-
         return ViewHolder(card, chart!!, textView)
     }
 

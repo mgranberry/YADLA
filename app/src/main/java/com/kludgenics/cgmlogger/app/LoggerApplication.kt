@@ -30,12 +30,12 @@ public class LoggerApplication : Application() {
             Realm.getDefaultInstance().close()
             // delete old cache entries for testing
 
-            /*val arr = Realm.getDefaultInstance()
+            val arr = Realm.getDefaultInstance()
             arr.beginTransaction()
             arr.where(javaClass<CachedDatePeriodAgp>()).findAll().clear()
             arr.commitTransaction()
             arr.close()
-*/
+
 
             async {
                 val realm = Realm.getDefaultInstance()

@@ -30,14 +30,14 @@ public class LoggerApplication : Application() {
             Realm.getDefaultInstance().close()
             // delete old cache entries for testing
 
-            val arr = Realm.getDefaultInstance()
+            /*val arr = Realm.getDefaultInstance()
             arr.beginTransaction()
             arr.where(javaClass<CachedDatePeriodAgp>()).findAll().clear()
             arr.commitTransaction()
             arr.close()
+*/
 
-
-            val r = async {
+            async {
                 val realm = Realm.getDefaultInstance()
                 realm.use {
                     var toFile = File("/sdcard/cgm.realm")

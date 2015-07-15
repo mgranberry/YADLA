@@ -101,18 +101,18 @@ public class AgpAdapter(val periods: Array<Period>): RecyclerView.Adapter<AgpAda
             setCardBackgroundColor(ctx.getResources().getColor(R.color.cardview_light_background))
             contentDescription = "Graph of blood glucose"
             setRadius(ctx.dip(5).toFloat())
-            linearLayout {
-                verticalLayout {
-                    //padding = viewGroup.getContext().dip(16)
-                    paddingHorizontal = ctx.dip(8)
-                    paddingVertical = ctx.dip(5)
-                    textView = textView {
-                        textSize = ctx.sp(8).toFloat()
-                        textColor = Color.BLACK
-                    }.layoutParams(width = matchParent, height = wrapContent) {
-                        gravity = Gravity.CENTER
-                    }
-                    chart = agpChartView {}.layoutParams(width = matchParent, height = wrapContent)
+            frameLayout {
+                paddingHorizontal = ctx.dip(8)
+                paddingVertical = ctx.dip(5)
+                chart = agpChartView {}.layoutParams(width = matchParent, height = wrapContent)
+                textView = textView {
+                    gravity = Gravity.CENTER
+                    textSize = ctx.sp(8).toFloat()
+                    textColor = Color.BLACK
+                    backgroundResource = R.color.cardview_light_background
+                    background.setAlpha(128)
+                }.layoutParams(width = wrapContent, height = wrapContent) {
+                    gravity = (Gravity.TOP or Gravity.CENTER_HORIZONTAL)
                 }
             }
         }

@@ -43,16 +43,16 @@ public object AgpUtil: AnkoLogger {
 
         return if (result == null) {
             info("$period Result not cached, returning dummy")
-            val f = context.asyncResult(executor) {
-                calculateAndCacheAgp(dateTime, period)
-            }
-            context.asyncResult(executor) {
+            context.async {
+                val f = context.asyncResult(executor) {
+                    calculateAndCacheAgp(dateTime, period)
+                }
                 updated?.invoke(f)
             }
             CachedDatePeriodAgp(date = dateTime.toDate(), period = period.getDays())
         } else if (result.dateTime != dateTime) {
             info("Result cached, but stale.  Calculating in background.")
-            context.asyncResult(executor) {
+            context.async {
                 info("starting bg")
                 val f = context.asyncResult(executor) {
                     calculateAndCacheAgp(dateTime, period)

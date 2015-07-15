@@ -44,6 +44,7 @@
 -dontwarn org.joda.convert.FromString
 -dontwarn org.joda.convert.ToString
 -dontwarn com.squareup.okhttp.**
+-keep class com.kludgenics.cgmlogger.app.** { *; }
 -keep public class * extends android.app.Activity
 -keep public class * extends android.app.Application
 -keep public class * extends android.app.Service
@@ -53,6 +54,7 @@
 -keep public class * extends android.preference.Preference
 -keep public class com.android.vending.licensing.ILicensingService
 -keep class com.github.mikephil.charting.** { *; }
+-keep class com.kludgenics.cgmlogger.app.AgpAdapter$onCreateViewHolder$card$1$1
 -keepclasseswithmembernames class * {
     native <methods>;
 }

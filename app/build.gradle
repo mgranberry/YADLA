@@ -38,14 +38,6 @@ android {
         versionCode 1
         versionName "1.0"
     }
-    productFlavors {
-        dev {
-            minSdkVersion 21
-        }
-       // prod {
-       //     minSdkVersion 15
-       // }
-    }
     packagingOptions {
         exclude 'META-INF/LICENSE.txt'
         exclude 'META-INF/NOTICE.txt'
@@ -53,20 +45,9 @@ android {
     lintOptions {
         abortOnError false
     }
-
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_6
         targetCompatibility JavaVersion.VERSION_1_6
-    }
-    buildTypes {
-        debug {
-            minifyEnabled true
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
-        }
-        release {
-            minifyEnabled true
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
-        }
     }
 }
 

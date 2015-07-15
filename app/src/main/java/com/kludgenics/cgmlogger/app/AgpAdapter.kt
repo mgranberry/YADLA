@@ -1,10 +1,13 @@
 package com.kludgenics.cgmlogger.app
 
+import android.graphics.Color
 import android.support.v7.widget.CardView
 import android.support.v7.widget.RecyclerView
+import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
+import android.widget.LinearLayout
 import android.widget.TextView
 import com.kludgenics.cgmlogger.app.view.*
 import io.realm.Realm
@@ -18,6 +21,8 @@ import java.util.concurrent.ExecutionException
 import java.util.concurrent.Future
 import java.util.concurrent.TimeUnit
 import kotlin.properties.Delegates
+import com.kludgenics.cgmlogger.extension.*
+import com.kludgenics.cgmlogger.model.math.agp.dateTime
 
 /**
  * Created by matthiasgranberry on 5/31/15.
@@ -30,27 +35,36 @@ public class AgpAdapter(val periods: Array<Period>): RecyclerView.Adapter<AgpAda
 
     class ViewHolder(public val agpView: View,
                      public val chartView: AgpChartView,
+                     public val textView: TextView? = null,
                      public var agpFuture: Future<CachedDatePeriodAgp>? = null): RecyclerView.ViewHolder(agpView) {
     }
 
     override fun onBindViewHolder(holder: ViewHolder, id: Int) {
         val agp = AgpUtil.getLatestCached(holder.agpView.getContext(), realm, periods[id], {
             holder.agpFuture = it
-            if (!it.isCancelled()) { // don't update the wrong view
+            if (!it.isCancelled() && it == holder.agpFuture) { // don't update the wrong view
                 try {
-                    val agp = it.get(20, TimeUnit.SECONDS)
-                    val inner = agp.inner
-                    val median = agp.median
-                    val outer = agp.outer
-                    if (!it.isCancelled()) {
-                        holder.chartView.innerPathString = inner
-                        holder.chartView.medianPathString = median
-                        holder.chartView.outerPathString = outer
-                        holder.chartView.invalidate()
-                        notifyItemChanged(id)
+                    val agp = holder.agpFuture?.get(20, TimeUnit.SECONDS)
+                    val inner = agp?.inner
+                    val median = agp?.median
+                    val outer = agp?.outer
+                    val end = agp?.dateTime
+                    val days = agp?.period
+                    if (!it.isCancelled() && it == holder.agpFuture && holder.getAdapterPosition() >= 0) {
+                        holder.chartView.getContext().uiThread {
+                            holder.chartView.innerPathString = inner ?: ""
+                            holder.chartView.medianPathString = median ?: ""
+                            holder.chartView.outerPathString = outer ?: ""
+                            holder.chartView.invalidate()
+                            holder.textView?.text = "$days-day AGP"
+                            notifyItemChanged(holder.getLayoutPosition())
+                            info("notifyItemChanged(${holder?.getAdapterPosition()}) (${holder.getItemId()} ${agp?.date} ${agp?.period})")
+                        }
                     }
                 } catch (c: CancellationException) {
+                    info("future cancelled for ${periods[id]}")
                 } catch (e: InterruptedException) {
+                    info("future interrupted for ${periods[id]}")
                 } catch (e: ExecutionException) {
                     error("Error in agp callback: ${e}")
                     error("${e.getStackTraceString()}")
@@ -60,33 +74,56 @@ public class AgpAdapter(val periods: Array<Period>): RecyclerView.Adapter<AgpAda
         val inner = agp.inner
         val median = agp.median
         val outer = agp.outer
+        val end = agp.dateTime
+        val days = agp.period
         holder.agpView.getContext().uiThread {
             holder.chartView.innerPathString = inner
             holder.chartView.medianPathString = median
             holder.chartView.outerPathString = outer
             holder.chartView.invalidate()
+            holder.textView?.text = "$days-day AGP"
+
         }
     }
 
-    override fun onViewRecycled(holder: ViewHolder?) {
+    override fun onViewRecycled(holder: ViewHolder) {
         super<RecyclerView.Adapter>.onViewRecycled(holder)
-        val af = holder?.agpFuture
-        holder?.agpFuture = null
-        af?.cancel(false)
+        holder.agpFuture?.cancel(true)
+        holder.agpFuture = null
     }
 
     override fun onCreateViewHolder(viewGroup: ViewGroup, viewType: Int): ViewHolder {
-        val cardView = CardView(viewGroup.getContext())
+        val ctx = viewGroup.getContext()
         var chart: AgpChartView? = null
-        cardView.linearLayout {
-            //padding = viewGroup.getContext().dip(16)
-            paddingHorizontal = viewGroup.getContext().dip(8)
-            paddingVertical = viewGroup.getContext().dip(5)
-            chart = agpChartView().layoutParams(width=matchParent, height=wrapContent)
+        var textView: TextView? = null
+        val card: CardView = CardView(ctx)
+        with(card) {
+            setCardBackgroundColor(ctx.getResources().getColor(R.color.cardview_light_background))
+            contentDescription = "Graph of blood glucose"
+            setRadius(ctx.dip(5).toFloat())
+            linearLayout {
+                verticalLayout {
+                    //padding = viewGroup.getContext().dip(16)
+                    paddingHorizontal = ctx.dip(8)
+                    paddingVertical = ctx.dip(5)
+                    textView = textView {
+                        textSize = ctx.sp(8).toFloat()
+                        textColor = Color.BLACK
+                    }.layoutParams(width = matchParent, height = wrapContent) {
+                        gravity = Gravity.CENTER
+                    }
+                    chart = agpChartView {}.layoutParams(width = matchParent, height = wrapContent)
+                }
+            }
         }
-        cardView.contentDescription = "Graph of blood glucose"
+        card.layoutParams = ViewGroup.MarginLayoutParams(matchParent, wrapContent)
+        with(card.layoutParams as ViewGroup.MarginLayoutParams) {
+            bottomMargin = ctx.dip(15)
+            leftMargin = ctx.dip(15)
+            rightMargin = ctx.dip(15)
+        }
 
-        return ViewHolder(cardView, chart!!)
+        return ViewHolder(card, chart!!, textView)
     }
 
     override fun getItemCount(): Int {

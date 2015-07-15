@@ -4,10 +4,14 @@ import android.app.Activity
 import android.content.Context
 import android.support.design.widget.*
 import android.support.v4.widget.DrawerLayout
+import android.support.v7.widget.CardView
 import android.view.View
 import android.view.ViewManager
 import org.jetbrains.anko.__dslAddView
 import java.util.concurrent.atomic.AtomicInteger
+
+fun ViewManager.cardView(init: CardView.() -> Unit = {}) =
+        __dslAddView({ CardView(it) }, init, this)
 
 fun ViewManager.appBarLayout(init: AppBarLayout.() -> Unit = {}) =
         __dslAddView({ AppBarLayout(it) }, init, this)

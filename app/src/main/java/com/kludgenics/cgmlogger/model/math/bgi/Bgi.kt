@@ -1,9 +1,12 @@
 package com.kludgenics.cgmlogger.model.math.bgi
 
 import android.util.Log
+import com.kludgenics.cgmlogger.extension.dateTime
 import com.kludgenics.cgmlogger.model.glucose.BloodGlucoseRecord
 import io.realm.RealmList
 import org.joda.time.DateTime
+import java.util
+import java.util.*
 
 /**
  * Calculate various risk indices for blood glucose values
@@ -13,11 +16,25 @@ import org.joda.time.DateTime
 
 object BgiUtil {
 
-    val ADRR_RISK = sortedMapOf(20.0 to "Low",
+    val ADRR_RISK = sortedMapOf(
+            20.0 to "Low",
             30.0 to "Moderate (low)",
             40.0 to "Moderate (high)",
             50.0 to "High",
             500.0 to "Very high")
+
+    /*  LBGI, Minimal (LBGI ≤1.1), Low (1.1 <LBGI ≤2.5), Moderate (2.5 < LBGI ≤5), and High (LBGI >5.0)18;
+        HBGI, Low (HBGI ≤4.5), Moderate (4.5 <HBGI ≤9.0), and High (HBGI >9.0)
+     */
+    val LBGI_RISK = sortedMapOf(
+            1.1 to "Minimal",
+            2.5 to "Low",
+            5.0 to "Moderate",
+            500.0 to "High")
+    val HBGI_RISK = sortedMapOf(
+            4.5 to "Low",
+            9.0 to "Moderate",
+            500.0 to "High")
 
     private fun rf(bg: Double): Double {
         return 1.509 * (Math.pow(Math.log(bg), 1.084) - 5.381)
@@ -41,8 +58,14 @@ object BgiUtil {
         return records.map { rh(it.value) }.average()
     }
 
+    fun bgRiskIndices(records: List<BloodGlucoseRecord>): Pair<Double, Double> {
+        val rlRh = records.map { rl(it.value) to rh(it.value)}
+        return rlRh.map { it.first }.average() to rlRh.map { it.second }.average()
+    }
+
     fun bgri(records: List<BloodGlucoseRecord>): Double {
-        return lbgi(records) + hbgi(records)
+        val (lbgi, hbgi) = bgRiskIndices(records)
+        return lbgi + hbgi
     }
 
     /**
@@ -52,16 +75,25 @@ object BgiUtil {
     fun adrr(records: List<BloodGlucoseRecord>): Double {
         val grouped = records.groupBy { DateTime(it.date).withTimeAtStartOfDay() }
         return grouped.filter { it.getValue().size() > 0 }.map {
-            val minBg = it.getValue().map { it.value }.min()!! // cannot be null
-            val maxBg = it.getValue().map { it.value }.max()!! // cannot be null
+            val bgValues = it.getValue().map { it.value }
+            val minBg = bgValues.min()!! // cannot be null
+            val maxBg = bgValues.max()!! // cannot be null
             rl(minBg) + rh(maxBg)
         }.average()
     }
 
+    fun bgRiByTimeBucket(records: List<BloodGlucoseRecord>): Array<FloatArray> {
+        val sortedMap = sortedMapOf<Int, MutableList<BloodGlucoseRecord>>()
+        records.groupByTo(sortedMap) { it.dateTime.minuteOfDay().get() / 30}
+        return sortedMap.map {
+            val (lbgi, hbgi) = bgRiskIndices(it.getValue())
+            floatArrayOf(-lbgi.toFloat(), hbgi.toFloat())
+        }.toTypedArray()
+    }
 
-    fun adrr_risk(adrr: Double) : String {
-        val key = ADRR_RISK.tailMap(adrr).firstKey()
-        return ADRR_RISK.getOrElse(key, {ADRR_RISK[ADRR_RISK.lastKey()]})!!
+    fun evaluateRisk(map: SortedMap<Double, String>, value: Double) : String {
+        val key = map.tailMap(value).firstKey()
+        return map.getOrElse(key, {map[map.lastKey()]})!!
     }
 
 }

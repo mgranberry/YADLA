@@ -1,5 +1,8 @@
 buildscript {
     ext.kotlin_version = '0.12.213'
+    ext.realm_version = '0.81.1'
+    ext.play_services_version = '7.5.0'
+    ext.android_support_version = '22.2.0'
     repositories {
         jcenter()
     }
@@ -53,23 +56,23 @@ android {
 
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
-    compile 'com.android.support:recyclerview-v7:22.2.0'
-    compile 'com.android.support:gridlayout-v7:22.2.0'
-    compile 'com.android.support:cardview-v7:22.2.0'
-    compile 'com.android.support:appcompat-v7:22.2.0'
-    compile 'com.android.support:support-annotations:22.2.0'
-    compile 'com.android.support:design:22.2.0'
-    compile 'com.android.support:support-v13:22.2.0'
-    compile 'com.google.android.gms:play-services-identity:7.5.0'
-    compile 'com.google.android.gms:play-services-location:7.5.0'
-    compile 'com.google.android.gms:play-services-gcm:7.5.0'
+    compile "com.android.support:recyclerview-v7:$android_support_version"
+    compile "com.android.support:gridlayout-v7:$android_support_version"
+    compile "com.android.support:cardview-v7:$android_support_version"
+    compile "com.android.support:appcompat-v7:$android_support_version"
+    compile "com.android.support:support-annotations:$android_support_version"
+    compile "com.android.support:design:$android_support_version"
+    compile "com.android.support:support-v13:$android_support_version"
+    compile "com.google.android.gms:play-services-identity:$play_services_version"
+    compile "com.google.android.gms:play-services-location:$play_services_version"
+    compile "com.google.android.gms:play-services-gcm:$play_services_version"
     compile 'com.squareup.retrofit:retrofit:1.9.0'
     compile 'com.squareup.okhttp:okhttp:2.4.0'
     compile 'com.github.PhilJay:MPAndroidChart:v2.1.0'
     compile 'com.squareup.okhttp:okhttp-urlconnection:2.4.0'
     compile 'com.google.code.gson:gson:2.3.1'
-    compile 'io.realm:realm-android:0.81.1'
-    kapt 'io.realm:realm-android:0.81.1'
+    compile "io.realm:realm-android:$realm_version"
+    kapt "io.realm:realm-android:$realm_version"
     compile 'org.jetbrains.anko:anko:0.6.2-15s'
     compile 'net.danlew:android.joda:2.8.0'
     compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"

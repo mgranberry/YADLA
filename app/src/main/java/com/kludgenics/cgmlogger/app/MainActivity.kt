@@ -49,15 +49,19 @@ public class MainActivity : BaseActivity(), AnkoLogger {
         val r = Realm.getDefaultInstance()
         r.use {
             info("pre-adrr")
-            val adrr = BgiUtil.adrr(
-                    r.where<BloodGlucoseRecord>{
-                        between("date", DateTime().withTimeAtStartOfDay().minusDays(30).getMillis(),
-                                DateTime().withTimeAtStartOfDay().getMillis())
-                    }.findAll())
-            info(adrr)
-            val adrr_risk = BgiUtil.adrr_risk(adrr)
+            val bgList = r.where<BloodGlucoseRecord>{
+                between("date", DateTime().withTimeAtStartOfDay().minusDays(14).getMillis(),
+                        DateTime().withTimeAtStartOfDay().getMillis())
+            }.findAll()
+            info("${bgList.size()} records")
+            val adrr = BgiUtil.adrr(bgList)
+            val adrr_risk = BgiUtil.evaluateRisk(BgiUtil.ADRR_RISK, adrr)
             info("ADRR risk: $adrr (${adrr_risk})")
-        }*/
+            val (lbgi, hbgi) = BgiUtil.bgRiskIndices(bgList)
+            info ("LBGI: $lbgi (${BgiUtil.evaluateRisk(BgiUtil.LBGI_RISK, lbgi)}) HBGI: $hbgi (${BgiUtil.evaluateRisk(BgiUtil.HBGI_RISK, hbgi)})")
+            info("BGRI: ${BgiUtil.bgri(bgList)}")
+        }
+        */
         val recycler = find<RecyclerView>(R.id.recycler)
         recycler.setAdapter(AgpAdapter(arrayOf(Period.days(3), Period.days(7), Period.days(14),
                 Period.days(30), Period.days(60), Period.days(90))))

@@ -45,6 +45,7 @@ public class MainActivity : BaseActivity(), AnkoLogger {
         startService(intentFor<LocationIntentService>().setAction(LocationIntentService.ACTION_START_LOCATION_UPDATES))
         /// / Set up the drawer.
 
+        info ("ts: ${DateTime().toDateTimeISO()}")
         /*
         val r = Realm.getDefaultInstance()
         r.use {

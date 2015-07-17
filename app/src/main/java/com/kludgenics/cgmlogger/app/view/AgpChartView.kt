@@ -15,7 +15,13 @@ import org.joda.time.Period
 import kotlin.properties.Delegates
 
 public class AgpChartView(context: Context, attrs: AttributeSet?, defStyle: Int) : ChartXAxis,
-        AnkoLogger, View(context, attrs, defStyle) {
+        AnkoLogger, BgChartView(context, attrs, defStyle) {
+
+    public constructor(context: Context, attrs: AttributeSet?) : this(context, attrs, 0) {
+    }
+
+    public constructor(context: Context): this(context, null, 0) {
+    }
 
     override var xProgression = (0 .. DailyAgp.SPEC_WIDTH.toInt() step 10)
 
@@ -23,11 +29,11 @@ public class AgpChartView(context: Context, attrs: AttributeSet?, defStyle: Int)
     override var showXAxis = true
     override var xAxisOffset: Float by Delegates.notNull()
     override val xAxisTextSize: Float by Delegates.lazy {
-        context.dip(10f).toFloat()
+        dip(10)
     }
 
     override val xAxisPaint: Paint by Delegates.lazy {
-        initializePaint(color=Color.BLACK, stroke = true, strokeWidth = context.dip(2f).toFloat(), init={setAlpha(127)})
+        initializePaint(color=Color.BLACK, stroke = true, strokeWidth = dip(2), init={setAlpha(127)})
     }
 
     override val xAxisLabelPaint: Paint by Delegates.lazy {
@@ -39,7 +45,7 @@ public class AgpChartView(context: Context, attrs: AttributeSet?, defStyle: Int)
     }
 
     override val xAxisTickHeight: Float by Delegates.lazy {
-        context.dip(5f).toFloat()
+        dip(5)
     }
 
     override fun getXValue(xValue: Int): Float {
@@ -51,125 +57,74 @@ public class AgpChartView(context: Context, attrs: AttributeSet?, defStyle: Int)
         return "${hours}"
     }
 
-    public constructor(context: Context, attrs: AttributeSet?) : this(context, attrs, 0) {
-    }
-
-    public constructor(context: Context): this(context, null, 0) {
+    fun updatePath(previous: Array<PathParser.PathDataNode>?, current: Array<PathParser.PathDataNode>,
+                   untransformed: Path, dst: Path) {
+        if (previous != current) {
+            untransformed.rewind()
+            PathParser.PathDataNode.nodesToPath(current, untransformed)
+        }
+        untransformed.transform(scaleMatrix, dst)
     }
 
     var outerPathData: Array<PathParser.PathDataNode> by Delegates.observable(emptyArray(), {
         propertyMetadata, previous, current ->
-        outerPath.rewind()
-        PathParser.PathDataNode.nodesToPath(current, outerPath)
-        outerPath.transform(scaleMatrix)
-        maybeRequestLayout()
+        updatePath(previous, current, outerPathUntransformed, outerPath)
     })
 
-    var outerPathString: String by Delegates.observable("", {
-        propertyMetadata: PropertyMetadata, previous: String, current: String ->
-        outerPathData = PathParser.createNodesFromPathData(current)
-    })
+    var outerPathString: String
+        get() = throw UnsupportedOperationException("not defined")
+        set(value) {
+            outerPathData = PathParser.createNodesFromPathData(value)
+        }
 
     var innerPathData: Array<PathParser.PathDataNode> by Delegates.observable(emptyArray(), {
         propertyMetadata, previous, current ->
-        innerPath.rewind()
-        PathParser.PathDataNode.nodesToPath(current, innerPath)
-        innerPath.transform(scaleMatrix)
-        maybeRequestLayout()
+        updatePath(previous, current, innerPathUntransformed, innerPath)
     })
 
-    var innerPathString: String by Delegates.observable("", {
-        propertyMetadata: PropertyMetadata, previous: String, current: String ->
-        innerPathData = PathParser.createNodesFromPathData(current)
-    })
+    var innerPathString: String
+        get() = throw UnsupportedOperationException("not defined")
+        set(value) {
+        innerPathData = PathParser.createNodesFromPathData(value)
+    }
 
     var medianPathData: Array<PathParser.PathDataNode> by Delegates.observable(emptyArray(), {
         propertyMetadata, previous, current ->
-        medianPath.rewind()
-        PathParser.PathDataNode.nodesToPath(current, medianPath)
-        medianPath.transform(scaleMatrix)
-        maybeRequestLayout()
+        updatePath(previous, current, medianPathUntransformed, medianPath)
     })
 
-    var medianPathString: String by Delegates.observable("", {
-        propertyMetadata: PropertyMetadata, previous: String, current: String ->
-        medianPathData = PathParser.createNodesFromPathData(current)
-    })
-
-    var outerPath: Path = Path()
-    var innerPath: Path = Path()
-    var medianPath: Path = Path()
-
-    var lowPath: Path? = null
-    var highPath: Path? = null
-    var targetPath: Path? = null
-
-    var lowLine: Int by Delegates.observable(80, {
-        propertyMetadata: PropertyMetadata, previous: Int, current: Int ->
-        if (current == 0)
-            lowPath = null
-        else {
-            if (lowPath == null)
-                lowPath = Path()
-            bgLine(lowPath!!, current.toFloat())
+    var medianPathString: String
+        get() = throw UnsupportedOperationException("not defined")
+        set(value) {
+            medianPathData = PathParser.createNodesFromPathData(value)
         }
-    })
 
-    var highLine: Int by Delegates.observable(180, {
-        propertyMetadata: PropertyMetadata, previous: Int, current: Int ->
-        if (current == 0)
-            highPath = null
-        else {
-            if (highPath == null)
-                highPath = Path()
-            bgLine(highPath!!, current.toFloat())
-        }
-    })
-
-    var targetLine: Int by Delegates.observable(110, {
-        propertyMetadata: PropertyMetadata, previous: Int, current: Int ->
-        if (current == 0)
-            targetPath = null
-        else {
-            if (targetPath == null)
-                targetPath = Path()
-            bgLine(targetPath!!, current.toFloat())
-        }
-    })
-
-    private fun bgLine(path: Path, gl: Float) {
-        path.rewind()
-        val y: Float = (DailyAgp.SPEC_HEIGHT - gl)
-        path.moveTo(0f, y)
-        path.lineTo(DailyAgp.SPEC_WIDTH, y)
-        path.transform(scaleMatrix)
-        maybeRequestLayout()
-    }
+    val outerPathUntransformed = Path()
+    val outerPath = Path()
+    val innerPathUntransformed = Path()
+    val innerPath = Path()
+    val medianPathUntransformed = Path()
+    val medianPath = Path()
 
     private fun animatePath(name: String, previous: String, current: String) {
         //throw UnsupportedOperationException("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
-    private val outerPaint: Paint by Delegates.lazy { initializePaint(R.color.percentile_outer) }
-    private val innerPaint: Paint by Delegates.lazy { initializePaint(R.color.percentile_inner) }
+    private val outerPaint: Paint by Delegates.lazy { initializePaint(R.color.percentile_outer, pathEffect = cornerEffect) }
+    private val innerPaint: Paint by Delegates.lazy { initializePaint(R.color.percentile_inner, pathEffect = cornerEffect) }
     private val medianPaint: Paint by Delegates.lazy { initializePaint(R.color.percentile_median,
-            stroke = true) }
-    private val highPaint: Paint by Delegates.lazy { initializePaint(R.color.high_line, stroke = true, strokeWidth = dp2px(2),
-            pathEffect = DashPathEffect(floatArrayOf(dp2px(10), dp2px(20)), 0f)) }
-    private val lowPaint: Paint by Delegates.lazy { initializePaint(R.color.low_line, stroke = true, strokeWidth = dp2px(2),
-            pathEffect = DashPathEffect(floatArrayOf(dp2px(10), dp2px(20)), 0f)) }
-    private val targetPaint: Paint by Delegates.lazy { initializePaint(R.color.target_line, stroke = true, strokeWidth = dp2px(2),
-            pathEffect = DashPathEffect(floatArrayOf(dp2px(10), dp2px(20)), 0f)) }
-    private val cornerEffect by Delegates.lazy { CornerPathEffect(dp2px(20)) }
-    val scaleMatrix: Matrix = Matrix()
-
-    private fun maybeRequestLayout() {
-        requestLayout()
-    }
+            stroke = true, pathEffect = cornerEffect) }
+    private val highPaint: Paint by Delegates.lazy { initializePaint(R.color.high_line, stroke = true, strokeWidth = dip(2),
+            pathEffect = DashPathEffect(floatArrayOf(dip(10), dip(20)), 0f)) }
+    private val lowPaint: Paint by Delegates.lazy { initializePaint(R.color.low_line, stroke = true, strokeWidth = dip(2),
+            pathEffect = DashPathEffect(floatArrayOf(dip(10), dip(20)), 0f)) }
+    private val targetPaint: Paint by Delegates.lazy { initializePaint(R.color.target_line, stroke = true, strokeWidth = dip(2),
+            pathEffect = DashPathEffect(floatArrayOf(dip(10), dip(20)), 0f)) }
+    private val cornerEffect by Delegates.lazy { CornerPathEffect(dip(20)) }
 
     private fun calculateBounds(width: Float, height: Float, scaled: Boolean = false): RectF {
         val bounds = RectF()
-        val measurePath = PathParser.createPathFromPathData(outerPathString)
+        val measurePath = outerPathUntransformed
         if (scaled) {
             val sx = width / DailyAgp.SPEC_WIDTH
             val sy = height / DailyAgp.SPEC_HEIGHT
@@ -213,7 +168,7 @@ public class AgpChartView(context: Context, attrs: AttributeSet?, defStyle: Int)
     }
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
-        super<View>.onSizeChanged(w, h, oldw, oldh)
+        super<BgChartView>.onSizeChanged(w, h, oldw, oldh)
         val width = w.toFloat() - paddingLeft - paddingRight
         val height = h.toFloat() - paddingTop - paddingBottom
         val bounds = calculateBounds(width, height)
@@ -232,33 +187,8 @@ public class AgpChartView(context: Context, attrs: AttributeSet?, defStyle: Int)
         targetLine = targetLine
     }
 
-
-    private fun dp2px(dp: Int): Float {
-        val m = resources?.getDisplayMetrics()
-        return if (m != null) dp * m.densityDpi / 160f else Float.NaN
-    }
-
-    private fun initializePaint(colorResource: Int = 0, color: Int = Color.BLACK, stroke: Boolean = false,
-                                strokeWidth: Float = dp2px(3),
-                                pathEffect: PathEffect = cornerEffect, init: Paint.()->Unit = {}): Paint {
-        val paint = Paint()
-        paint.setColor(if (colorResource != 0)
-                    resources!!getColor(colorResource)
-                else
-                    color)
-        paint.setAntiAlias(true)
-        if (stroke) {
-            paint.setStyle(Paint.Style.STROKE)
-            paint.setStrokeWidth(strokeWidth)
-        } else
-            paint.setStyle(Paint.Style.FILL)
-        paint.setPathEffect(pathEffect)
-        paint.init()
-        return paint
-    }
-
     override fun onDraw(canvas: Canvas) {
-        super<View>.onDraw(canvas)
+        super<BgChartView>.onDraw(canvas)
         canvas.drawPath(outerPath, outerPaint)
         canvas.drawPath(innerPath, innerPaint)
         canvas.drawPath(medianPath, medianPaint)

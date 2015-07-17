@@ -55,9 +55,10 @@ public class AgpAdapter(val periods: Array<Period>): RecyclerView.Adapter<AgpAda
                     val days = agp?.period
                     if (!it.isCancelled() && it == holder.agpFuture && holder.getAdapterPosition() >= 0) {
                         holder.agpView.getContext().uiThread {
+                            holder.chartView?.outerPathString = outer ?: ""
                             holder.chartView?.innerPathString = inner ?: ""
                             holder.chartView?.medianPathString = median ?: ""
-                            holder.chartView?.outerPathString = outer ?: ""
+                            holder.chartView?.requestLayout()
                             holder.chartView?.invalidate()
                             holder.textView?.text = "$days-day AGP"
                             notifyItemChanged(holder.getLayoutPosition())
@@ -80,9 +81,10 @@ public class AgpAdapter(val periods: Array<Period>): RecyclerView.Adapter<AgpAda
         val end = agp.dateTime
         val days = agp.period
         holder.agpView!!.getContext().uiThread {
+            holder.chartView?.outerPathString = outer
             holder.chartView?.innerPathString = inner
             holder.chartView?.medianPathString = median
-            holder.chartView?.outerPathString = outer
+            holder.chartView?.requestLayout()
             holder.chartView?.invalidate()
             holder.textView?.text = "$days-day AGP"
 

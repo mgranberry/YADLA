@@ -36,19 +36,14 @@ import com.kludgenics.cgmlogger.model.math.bgi.BgiUtil
  */
 public class AgpAdapter(val periods: Array<Period>): RecyclerView.Adapter<AgpAdapter.ViewHolder>(), AnkoLogger {
 
-    val realm: Realm by Delegates.lazy() {
-        Realm.getDefaultInstance()
-    }
-
     data class ViewHolder(var agpView: CardView,
                           var chartView: AgpChartView? = null,
                           var textView: TextView? = null,
-                          var agpFuture: Future<CachedDatePeriodAgp>? = null,
-                          var riskView: BarChart? = null): RecyclerView.ViewHolder(agpView) {
+                          var agpFuture: Future<CachedDatePeriodAgp>? = null): RecyclerView.ViewHolder(agpView) {
     }
 
     override fun onBindViewHolder(holder: ViewHolder, id: Int) {
-        val agp = AgpUtil.getLatestCached(holder.agpView.getContext(), realm, periods[id], {
+        val agp = AgpUtil.getLatestCached(holder.agpView.getContext(), periods[id], {
             holder.agpFuture = it
             if (!it.isCancelled() && it == holder.agpFuture) { // don't update the wrong view
                 try {
@@ -90,26 +85,6 @@ public class AgpAdapter(val periods: Array<Period>): RecyclerView.Adapter<AgpAda
             holder.chartView?.outerPathString = outer
             holder.chartView?.invalidate()
             holder.textView?.text = "$days-day AGP"
-            info("About to calculate risk chart")
-            asyncResult() {
-                val r = Realm.getDefaultInstance()
-                r.use {
-                    info("calculating risk chart")
-                    val xValues = BgiUtil.bgRiByTimeBucket(r.where<BloodGlucoseRecord> {
-                        between("date", (end - Period.days(days)).getMillis(), end.getMillis())
-                    }.findAll()).mapIndexed { idx, values -> BarEntry (values, idx) }
-                    info("calculated risk chart")
-                    val labels = xValues.map { "" }
-                    val dataSet = BarDataSet(xValues, "BGRIs")
-                    dataSet.setDrawValues(false)
-                    dataSet.setBarSpacePercent(50f)
-                    dataSet.setAxisDependency(YAxis.AxisDependency.RIGHT);
-                    holder.riskView!!.setData(BarData(labels, dataSet))
-                    holder.riskView!!.invalidate()
-                    info("set riskView")
-                    notifyItemChanged(holder.getAdapterPosition())
-                }
-            }
 
         }
     }
@@ -143,30 +118,6 @@ public class AgpAdapter(val periods: Array<Period>): RecyclerView.Adapter<AgpAda
                             gravity = (Gravity.TOP or Gravity.CENTER_HORIZONTAL)
                         }
                     }
-                    holder.riskView = barChart {
-                        setDescription("")
-                        setDrawGridBackground(false)
-                        setPinchZoom(false)
-                        setDrawValuesForWholeStack(true)
-                        setDrawValueAboveBar(false)
-                        setDrawBarShadow(false)
-                        getAxisLeft().setEnabled(false)
-                        val yAxis = getAxisRight()
-                        with(yAxis) {
-                            setDrawAxisLine(false)
-                            setEnabled(false)
-                            setStartAtZero(false)
-                            setAxisMaxValue(10f)
-                            setAxisMinValue(-10f)
-                        }
-                        val xAxis = getXAxis()
-                        with(xAxis) {
-                            setDrawGridLines(false)
-                            setDrawAxisLine(true)
-                        }
-                        getLegend().setEnabled(false)
-                    }.layoutParams(width = matchParent, height = dip(150))
-
                 }
             }
             holder.agpView.layoutParams = ViewGroup.MarginLayoutParams(matchParent, wrapContent)

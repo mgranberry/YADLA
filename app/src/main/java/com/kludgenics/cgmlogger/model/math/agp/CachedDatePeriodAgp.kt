@@ -15,6 +15,7 @@ import com.kludgenics.cgmlogger.extension.*
 import org.jetbrains.anko.*
 import java.util.concurrent.Executors
 import java.util.concurrent.Future
+import kotlin.properties.Delegates
 
 /**
  * Created by matthiasgranberry on 7/5/15.
@@ -32,64 +33,63 @@ import java.util.concurrent.Future
 }
 
 public object AgpUtil: AnkoLogger {
-    val executor = Executors.newScheduledThreadPool(1)
-    fun getLatestCached(context: Context, realm: Realm, period: Period,
+    val executor = Executors.newSingleThreadScheduledExecutor()
+    fun getLatestCached(context: Context, period: Period,
                         updated: ((Future<CachedDatePeriodAgp>)->Unit)? = null,
                         dateTime: DateTime = DateTime().withTimeAtStartOfDay()): CachedDatePeriodAgp {
-        info("$period Querying cache")
-        val result = realm.where<CachedDatePeriodAgp> {
-            equalTo("period", period.getDays())
-        }.findAllSorted("date", false).firstOrNull()
+        val realm = Realm.getDefaultInstance()
+        realm.use {
+            info("$period Querying cache")
+            val result = realm.where<CachedDatePeriodAgp> {
+                equalTo("period", period.getDays())
+            }.findAllSorted("date", false).firstOrNull()
 
-        return if (result == null) {
-            info("$period Result not cached, returning dummy")
-            context.async {
-                val f = context.asyncResult(executor) {
-                    calculateAndCacheAgp(dateTime, period)
+            return if (result == null) {
+                info("$period Result not cached, returning dummy")
+                context.async() {
+                    info("$period Async executor executing")
+                    val f = context.asyncResult(executor) {
+                        calculateAndCacheAgp(dateTime, period)
+                    }
+                    updated?.invoke(f)
                 }
-                updated?.invoke(f)
-            }
-            CachedDatePeriodAgp(date = dateTime.toDate(), period = period.getDays())
-        } else if (result.dateTime != dateTime) {
-            info("Result cached, but stale.  Calculating in background.")
-            context.async {
-                info("starting bg")
-                val f = context.asyncResult(executor) {
-                    calculateAndCacheAgp(dateTime, period)
+                CachedDatePeriodAgp(date = dateTime.toDate(), period = period.getDays())
+            } else if (result.dateTime != dateTime) {
+                info("Result cached, but stale.  Calculating in background.")
+                context.async() {
+                    info("starting bg")
+                    val f = context.asyncResult(executor) {
+                        calculateAndCacheAgp(dateTime, period)
+                    }
+                    updated?.invoke(f)
+                    info("ending bg")
                 }
-                updated?.invoke(f)
-                info("ending bg")
+                CachedDatePeriodAgp(result.outer, result.inner, result.median, result.date, result.period)
+            } else {
+                info("Current result cache is valid.  Returning cache.")
+                CachedDatePeriodAgp(result.outer, result.inner, result.median, result.date, result.period)
             }
-            result
-        } else {
-            info("Current result cache is valid.  Returning cache.")
-            result
         }
     }
 
     private fun calculateAndCacheAgp(dateTime: DateTime, period: Period): CachedDatePeriodAgp {
         info ("$period Calculating agp: ${dateTime}, ${period}")
         val currentAgp = DailyAgp(dateTime, period)
+        info("$period Storing cached AGP")
+        val ro = CachedDatePeriodAgp(currentAgp.pathStrings[0], currentAgp.pathStrings[1],
+                currentAgp.pathStrings[2], date = dateTime.toDate(), period = period.getDays())
+        info("$period acquiring realm in caca")
         val realm = Realm.getDefaultInstance()
+        info("$period acquired realm")
         realm.use {
-            info("$period Storing cached AGP")
-            val ro = realm.create<CachedDatePeriodAgp> {
-                this.dateTime = dateTime
-                if (currentAgp.percentiles.size() >= 5) {
-                    this.outer = currentAgp.pathStrings[0]
-                    this.inner = currentAgp.pathStrings[1]
-                    this.median = currentAgp.pathStrings[2]
-                } else {
-                    this.outer = ""
-                    this.inner = ""
-                    this.median = ""
-                }
-                this.period = period.getDays()
-            }
+            info("$period beginning transaction")
+            realm.beginTransaction()
+            info("$period in transaction")
+            realm.copyToRealm(ro)
+            realm.commitTransaction()
             info("$period Calculation completed")
         }
-        return CachedDatePeriodAgp(currentAgp.pathStrings[0], currentAgp.pathStrings[1],
-                currentAgp.pathStrings[2], date=dateTime.toDate(), period=period.getDays())
+        return ro
     }
 }
 public var CachedDatePeriodAgp.dateTime: DateTime

@@ -8,11 +8,48 @@ import android.view.View
 import android.view.ViewManager
 import com.kludgenics.cgmlogger.app.R
 import com.kludgenics.cgmlogger.app.util.PathParser
+import com.kludgenics.cgmlogger.model.math.agp.CachedDatePeriodAgp
 import com.kludgenics.cgmlogger.model.math.agp.DailyAgp
 import org.jetbrains.anko.*
+import org.joda.time.Period
 import kotlin.properties.Delegates
 
-public class AgpChartView(context: Context, attrs: AttributeSet?, defStyle: Int) : AnkoLogger, View(context, attrs, defStyle) {
+public class AgpChartView(context: Context, attrs: AttributeSet?, defStyle: Int) : ChartXAxis,
+        AnkoLogger, View(context, attrs, defStyle) {
+
+    override var xProgression = (0 .. DailyAgp.SPEC_WIDTH.toInt() step 10)
+
+    override var xLabelPeriod = 2
+    override var showXAxis = true
+    override var xAxisOffset: Float by Delegates.notNull()
+    override val xAxisTextSize: Float by Delegates.lazy {
+        context.dip(10f).toFloat()
+    }
+
+    override val xAxisPaint: Paint by Delegates.lazy {
+        initializePaint(color=Color.BLACK, stroke = true, strokeWidth = context.dip(2f).toFloat(), init={setAlpha(127)})
+    }
+
+    override val xAxisLabelPaint: Paint by Delegates.lazy {
+        initializePaint(color=Color.BLACK, init={
+            setAlpha(127)
+            setTextSize(xAxisTextSize)
+            setTextAlign(Paint.Align.LEFT)
+        })
+    }
+
+    override val xAxisTickHeight: Float by Delegates.lazy {
+        context.dip(5f).toFloat()
+    }
+
+    override fun getXValue(xValue: Int): Float {
+        return paddingLeft + xValue.toFloat()/DailyAgp.SPEC_WIDTH * (getWidth() - paddingLeft - paddingRight)
+    }
+
+    override fun getXLabel(xValue: Int): String {
+        val hours = xValue.toInt() / 10
+        return "${hours}"
+    }
 
     public constructor(context: Context, attrs: AttributeSet?) : this(context, attrs, 0) {
     }
@@ -20,26 +57,43 @@ public class AgpChartView(context: Context, attrs: AttributeSet?, defStyle: Int)
     public constructor(context: Context): this(context, null, 0) {
     }
 
+    var outerPathData: Array<PathParser.PathDataNode> by Delegates.observable(emptyArray(), {
+        propertyMetadata, previous, current ->
+        outerPath.rewind()
+        PathParser.PathDataNode.nodesToPath(current, outerPath)
+        outerPath.transform(scaleMatrix)
+        maybeRequestLayout()
+    })
+
     var outerPathString: String by Delegates.observable("", {
         propertyMetadata: PropertyMetadata, previous: String, current: String ->
-        animatePath(propertyMetadata.name, previous, current)
-        outerPath = PathParser.createPathFromPathData(current)
-        outerPath.transform(scaleMatrix)
+        outerPathData = PathParser.createNodesFromPathData(current)
+    })
+
+    var innerPathData: Array<PathParser.PathDataNode> by Delegates.observable(emptyArray(), {
+        propertyMetadata, previous, current ->
+        innerPath.rewind()
+        PathParser.PathDataNode.nodesToPath(current, innerPath)
+        innerPath.transform(scaleMatrix)
         maybeRequestLayout()
     })
 
     var innerPathString: String by Delegates.observable("", {
         propertyMetadata: PropertyMetadata, previous: String, current: String ->
-        animatePath(propertyMetadata.name, previous, current)
-        innerPath = PathParser.createPathFromPathData(current)
-        innerPath.transform(scaleMatrix)
+        innerPathData = PathParser.createNodesFromPathData(current)
+    })
+
+    var medianPathData: Array<PathParser.PathDataNode> by Delegates.observable(emptyArray(), {
+        propertyMetadata, previous, current ->
+        medianPath.rewind()
+        PathParser.PathDataNode.nodesToPath(current, medianPath)
+        medianPath.transform(scaleMatrix)
+        maybeRequestLayout()
     })
 
     var medianPathString: String by Delegates.observable("", {
         propertyMetadata: PropertyMetadata, previous: String, current: String ->
-        animatePath(propertyMetadata.name, previous, current)
-        medianPath = PathParser.createPathFromPathData(current)
-        medianPath.transform(scaleMatrix)
+        medianPathData = PathParser.createNodesFromPathData(current)
     })
 
     var outerPath: Path = Path()
@@ -107,7 +161,7 @@ public class AgpChartView(context: Context, attrs: AttributeSet?, defStyle: Int)
     private val targetPaint: Paint by Delegates.lazy { initializePaint(R.color.target_line, stroke = true, strokeWidth = dp2px(2),
             pathEffect = DashPathEffect(floatArrayOf(dp2px(10), dp2px(20)), 0f)) }
     private val cornerEffect by Delegates.lazy { CornerPathEffect(dp2px(20)) }
-    private val scaleMatrix: Matrix = Matrix()
+    val scaleMatrix: Matrix = Matrix()
 
     private fun maybeRequestLayout() {
         requestLayout()
@@ -145,11 +199,14 @@ public class AgpChartView(context: Context, attrs: AttributeSet?, defStyle: Int)
         }
         val height = when(heightType) {
             View.MeasureSpec.UNSPECIFIED ->
-                    paddingVertical + getContext().dip(Math.max(highLine - lowLine, (bounds.bottom - bounds.top).toInt())).toInt()
+                    paddingVertical + getContext().dip(Math.max(highLine - lowLine +
+                            (if (showXAxis) xAxisTextSize + xAxisTickHeight else 0f).toInt(),
+                            (bounds.bottom - bounds.top  +
+                                    (if (showXAxis) xAxisTextSize + xAxisTickHeight else 0f).toInt()).toInt())).toInt()
             View.MeasureSpec.EXACTLY ->
                     heightMeasureVal
             View.MeasureSpec.AT_MOST ->
-                    Math.min(heightMeasureVal, paddingVertical + getContext().dip(bounds.bottom - bounds.top))
+                    Math.min(heightMeasureVal, (if (showXAxis) xAxisTextSize + xAxisTickHeight else 0f).toInt() + paddingVertical + getContext().dip(bounds.bottom - bounds.top))
             else -> heightMeasureVal
         }
         setMeasuredDimension(width, height)
@@ -164,12 +221,12 @@ public class AgpChartView(context: Context, attrs: AttributeSet?, defStyle: Int)
                 Math.max(bounds.right, DailyAgp.SPEC_WIDTH), Math.max(DailyAgp.SPEC_HEIGHT - lowLine, bounds.bottom))
         info("bounds: $bounds, hbox:$bbox")
         scaleMatrix.setRectToRect(bbox, RectF(paddingLeft.toFloat(), paddingTop.toFloat(),
-                w.toFloat() - paddingRight, h.toFloat() - paddingBottom), Matrix.ScaleToFit.FILL)
-
+                w.toFloat() - paddingRight, h.toFloat() - paddingBottom - if (showXAxis) xAxisTextSize + xAxisTickHeight else 0f), Matrix.ScaleToFit.FILL)
+        xAxisOffset = h.toFloat() - paddingBottom - xAxisTextSize - xAxisTickHeight
         // this is ugly. Reapply scale/transform matrices
-        outerPathString = outerPathString
-        innerPathString = innerPathString
-        medianPathString = medianPathString
+        outerPathData = outerPathData
+        innerPathData = innerPathData
+        medianPathData = medianPathData
         lowLine = lowLine
         highLine = highLine
         targetLine = targetLine
@@ -181,11 +238,14 @@ public class AgpChartView(context: Context, attrs: AttributeSet?, defStyle: Int)
         return if (m != null) dp * m.densityDpi / 160f else Float.NaN
     }
 
-    private fun initializePaint(colorResource: Int, stroke: Boolean = false,
+    private fun initializePaint(colorResource: Int = 0, color: Int = Color.BLACK, stroke: Boolean = false,
                                 strokeWidth: Float = dp2px(3),
-                                pathEffect: PathEffect = cornerEffect): Paint {
+                                pathEffect: PathEffect = cornerEffect, init: Paint.()->Unit = {}): Paint {
         val paint = Paint()
-        paint.setColor(resources!!getColor(colorResource))
+        paint.setColor(if (colorResource != 0)
+                    resources!!getColor(colorResource)
+                else
+                    color)
         paint.setAntiAlias(true)
         if (stroke) {
             paint.setStyle(Paint.Style.STROKE)
@@ -193,6 +253,7 @@ public class AgpChartView(context: Context, attrs: AttributeSet?, defStyle: Int)
         } else
             paint.setStyle(Paint.Style.FILL)
         paint.setPathEffect(pathEffect)
+        paint.init()
         return paint
     }
 
@@ -207,6 +268,7 @@ public class AgpChartView(context: Context, attrs: AttributeSet?, defStyle: Int)
             canvas.drawPath(highPath, highPaint)
         if (targetPath != null)
             canvas.drawPath(targetPath, targetPaint)
+        drawXAxis(canvas)
     }
 }
 

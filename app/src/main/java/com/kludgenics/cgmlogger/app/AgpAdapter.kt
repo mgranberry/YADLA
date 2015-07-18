@@ -81,6 +81,9 @@ public class AgpAdapter(val periods: Array<Period>): RecyclerView.Adapter<AgpAda
         val end = agp.dateTime
         val days = agp.period
         holder.agpView!!.getContext().uiThread {
+            holder.chartView?.lowLine = 80
+            holder.chartView?.highLine = 180
+            holder.chartView?.targetLine = 110
             holder.chartView?.outerPathString = outer
             holder.chartView?.innerPathString = inner
             holder.chartView?.medianPathString = median

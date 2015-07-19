@@ -30,6 +30,12 @@ import kotlin.properties.Delegates
     public var svgHeight: Float = DailyAgp.SPEC_HEIGHT
     @Ignore
     public var svgWidth: Float = DailyAgp.SPEC_WIDTH
+    @Ignore
+    public var target: Float = 100f
+    @Ignore
+    public var high: Float = 180f
+    @Ignore
+    public var low: Float = 80f
 }
 
 public object AgpUtil: AnkoLogger {
@@ -107,8 +113,10 @@ public val CachedDatePeriodAgp.svg: String
         <path d="${outer}" fill="#2d95c2"/>
         <path d="${inner}" fill="#005882"/>
         <path d="${median}" stroke="#bce6ff" fill-opacity="0.0" stroke-with="3"/>
-        <line x1="0" y1="220" y2="220" x2="360" stroke="yellow"/>
-        <line x1="0" y1="320" y2="320" x2="360" stroke="red"/>
+
+        <line x1="0" y1="${400 - target}" y2="${400 - target}" x2="360" stroke="green"/>
+        <line x1="0" y1="${400 - high}" y2="${400 - high}" x2="360" stroke="yellow"/>
+        <line x1="0" y1="${400 - low}" y2="${400 - low}" x2="360" stroke="red"/>
     </g>
 </svg>
 """

@@ -29,7 +29,7 @@ import kotlin.properties.Delegates
 import com.kludgenics.cgmlogger.extension.*
 import com.kludgenics.cgmlogger.model.glucose.BloodGlucoseRecord
 import com.kludgenics.cgmlogger.model.math.agp.dateTime
-import com.kludgenics.cgmlogger.model.math.bgi.BgiUtil
+import com.kludgenics.cgmlogger.model.math.bgi.Bgi
 
 /**
  * Created by matthiasgranberry on 5/31/15.
@@ -81,9 +81,6 @@ public class AgpAdapter(val periods: Array<Period>): RecyclerView.Adapter<AgpAda
         val end = agp.dateTime
         val days = agp.period
         holder.agpView!!.getContext().uiThread {
-            holder.chartView?.lowLine = 80
-            holder.chartView?.highLine = 180
-            holder.chartView?.targetLine = 110
             holder.chartView?.outerPathString = outer
             holder.chartView?.innerPathString = inner
             holder.chartView?.medianPathString = median
@@ -112,7 +109,11 @@ public class AgpAdapter(val periods: Array<Period>): RecyclerView.Adapter<AgpAda
                     frameLayout {
                         paddingHorizontal = dip(8)
                         paddingVertical = dip(5)
-                        holder.chartView = agpChartView {}.layoutParams(width = matchParent, height = wrapContent)
+                        holder.chartView = agpChartView {
+                            lowLine = 80
+                            targetLine = 110
+                            highLine = 180
+                        }.layoutParams(width = matchParent, height = wrapContent)
                         holder.textView = textView {
                             gravity = Gravity.CENTER
                             textSize = sp(6).toFloat()

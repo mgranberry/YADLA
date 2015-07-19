@@ -20,7 +20,7 @@ import com.kludgenics.cgmlogger.model.math.agp.svg
 import com.kludgenics.cgmlogger.model.math.agp.DailyAgp
 import com.kludgenics.cgmlogger.util.FileUtil
 import com.kludgenics.cgmlogger.app.R
-import com.kludgenics.cgmlogger.model.math.bgi.BgiUtil
+import com.kludgenics.cgmlogger.model.math.bgi.Bgi
 import io.realm.Realm
 import org.jetbrains.anko.*
 import org.joda.time.DateTime

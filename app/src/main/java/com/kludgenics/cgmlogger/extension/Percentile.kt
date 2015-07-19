@@ -14,12 +14,6 @@ public fun percentile (percentile: Double, x: List<Double>): Double {
             x[n - 1]
         else
             x[fh - 1] + (h - fh) * (x[fh] - x[fh - 1])
-    /*val i = n * percentile/100.0 + 0.5;
-    val k =i.toInt();
-    val f = i - k
-    Log.i("percentile", "percentiles: percentile: $percentile n:$n i:$i k:$k f:$f x:$x")
-    return (1 - f)*x[k] + if (f > 0.05) f*x[k+1] else 0.0;
-    */
 }
 
 inline public fun<T> Iterable<T>.percentiles(percentiles: DoubleArray, valueExtractor: (T) -> Double): DoubleArray {

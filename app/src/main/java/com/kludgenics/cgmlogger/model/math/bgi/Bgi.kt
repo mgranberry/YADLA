@@ -14,7 +14,7 @@ import java.util.*
  * These formulas expect mg/dL units.
  */
 
-object BgiUtil {
+object Bgi {
 
     val ADRR_RISK = sortedMapOf(
             20.0 to "Low",
@@ -82,13 +82,13 @@ object BgiUtil {
         }.average()
     }
 
-    fun bgRiByTimeBucket(records: List<BloodGlucoseRecord>): Array<FloatArray> {
+    fun bgRiByTimeBucket(records: List<BloodGlucoseRecord>): List<Pair<Int,FloatArray>> {
         val sortedMap = sortedMapOf<Int, MutableList<BloodGlucoseRecord>>()
         records.groupByTo(sortedMap) { it.dateTime.minuteOfDay().get() / 30}
         return sortedMap.map {
             val (lbgi, hbgi) = bgRiskIndices(it.getValue())
-            floatArrayOf(-lbgi.toFloat(), hbgi.toFloat())
-        }.toTypedArray()
+            it.getKey() to floatArrayOf(-lbgi.toFloat(), hbgi.toFloat())
+        }
     }
 
     fun evaluateRisk(map: SortedMap<Double, String>, value: Double) : String {

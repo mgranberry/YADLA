@@ -39,7 +39,6 @@ import kotlin.properties.Delegates
 }
 
 public object AgpUtil: AnkoLogger {
-    val executor = Executors.newSingleThreadScheduledExecutor()
     fun getLatestCached(context: Context, period: Period,
                         updated: ((Future<CachedDatePeriodAgp>)->Unit)? = null,
                         dateTime: DateTime = DateTime().withTimeAtStartOfDay()): CachedDatePeriodAgp {
@@ -54,7 +53,7 @@ public object AgpUtil: AnkoLogger {
                 info("$period Result not cached, returning dummy")
                 context.async() {
                     info("$period Async executor executing")
-                    val f = context.asyncResult(executor) {
+                    val f = context.asyncResult {
                         calculateAndCacheAgp(dateTime, period)
                     }
                     updated?.invoke(f)
@@ -64,7 +63,7 @@ public object AgpUtil: AnkoLogger {
                 info("Result cached, but stale.  Calculating in background.")
                 context.async() {
                     info("starting bg")
-                    val f = context.asyncResult(executor) {
+                    val f = context.asyncResult {
                         calculateAndCacheAgp(dateTime, period)
                     }
                     updated?.invoke(f)

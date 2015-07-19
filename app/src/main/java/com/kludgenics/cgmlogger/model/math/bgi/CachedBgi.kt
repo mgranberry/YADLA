@@ -39,24 +39,25 @@ public val CachedBgi.svg: String
     """
 <?xml version="1.0" encoding="utf-8" standalone="no"?>
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
-<svg height="${svgHeight}pt" version="1.1" viewBox="0 0 240 400" width="${svgWidth}pt" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<svg height="${svgHeight}pt" version="1.1" viewBox="0 0 ${BgiUtil.SPEC_WIDTH} ${BgiUtil.SPEC_HEIGHT}" width="${svgWidth}pt" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
     <g id="agp">
-        <path d="${hbg}" stroke="yellow"/>
-        <path d="${lbg}" stroke="red"/>
+        <path d="${hbg}" stroke="yellow" fill-opacity="25.0" fill="yellow" />
+        <path d="${lbg}" stroke="red" fill-opacity="25.0" fill="red"/>
  </g>
 </svg>
 """
 
 object BgiUtil: AnkoLogger {
-    val SPEC_HEIGHT=200f
-    val SPEC_WIDTH=240f
+    val SPEC_HEIGHT = 200f
+    val SPEC_WIDTH = 240f
 
-    fun getLatestCached (dateTime: DateTime, period: Period): CachedBgi? {
+    fun getLatestCached(dateTime: DateTime, period: Period): CachedBgi? {
         info("getting cache for ${dateTime} ${period}")
         val realm = Realm.getDefaultInstance()
-        if (period.getDays() != 1)
-            throw UnsupportedOperationException("Days > 1 not implemented yet")
         realm.use {
+
+            if (period.getDays() != 1)
+                throw UnsupportedOperationException("Days > 1 not implemented yet")
             info("querying cache")
             val result = realm.where<CachedBgi> {
                 equalTo("period", period.getDays())
@@ -64,8 +65,9 @@ object BgiUtil: AnkoLogger {
             }.findAll().firstOrNull()
             return if (result != null) {
                 info("cached BGIs found")
-                result
+                CachedBgi(result.hbg, result.lbg, result.lbgi, result.hbgi, result.adrr, result.percentile975, result.percentile025, result.date, result.period)
             } else {
+                info("No cache, calculating")
                 val bgDay = realm.where<BgByDay> {
                     equalTo("day", dateTime.withTimeAtStartOfDay().getMillis())
                 }.findAll().firstOrNull()
@@ -74,21 +76,23 @@ object BgiUtil: AnkoLogger {
                     val riskIndexes = Bgi.bgRiByTimeBucket(records)
                     val (lbgi, hbgi) = Bgi.bgRiskIndices(records)
                     val date = dateTime.withTimeAtStartOfDay().toDate()
-                    val hb = StringBuilder("M0,${SPEC_HEIGHT/2}L")
-                    val lb = StringBuilder("M0,${SPEC_HEIGHT/2}L")
+                    val hb = StringBuilder("M0,${SPEC_HEIGHT / 2}L")
+                    val lb = StringBuilder("M0,${SPEC_HEIGHT / 2}L")
                     riskIndexes.forEach {
                         index ->
                         val x = index.first * 5
                         val values = index.second
                         val lbg = values[0]
                         val hbg = values[1]
-                        lb.append(" ${x},${SPEC_HEIGHT/2 - lbg}")
-                        hb.append(" ${x},${SPEC_HEIGHT/2 + hbg}")
+                        lb.append(" ${x},${SPEC_HEIGHT / 2 - lbg}")
+                        hb.append(" ${x},${SPEC_HEIGHT / 2 - hbg}")
                     }
+                    info ("calculated, storing")
                     val cbgi = CachedBgi(hbg = hb.toString(), lbg = lb.toString(), lbgi = lbgi.toFloat(), hbgi = hbgi.toFloat(), date = date, period = period.getDays())
                     realm.beginTransaction()
                     realm.copyToRealm(cbgi)
                     realm.commitTransaction()
+                    info ("stored")
                     cbgi
                 } else
                     null

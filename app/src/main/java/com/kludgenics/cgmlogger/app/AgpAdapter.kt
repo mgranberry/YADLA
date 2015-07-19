@@ -34,7 +34,7 @@ import com.kludgenics.cgmlogger.model.math.bgi.Bgi
 /**
  * Created by matthiasgranberry on 5/31/15.
  */
-public class AgpAdapter(val periods: Array<Period>): RecyclerView.Adapter<AgpAdapter.ViewHolder>(), AnkoLogger {
+public class AgpAdapter(val periods: List<Period>): RecyclerView.Adapter<AgpAdapter.ViewHolder>(), AnkoLogger {
 
     data class ViewHolder(var agpView: CardView,
                           var chartView: AgpChartView? = null,

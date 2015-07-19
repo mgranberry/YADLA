@@ -21,6 +21,8 @@ import com.kludgenics.cgmlogger.model.math.agp.DailyAgp
 import com.kludgenics.cgmlogger.util.FileUtil
 import com.kludgenics.cgmlogger.app.R
 import com.kludgenics.cgmlogger.model.math.bgi.Bgi
+import com.kludgenics.cgmlogger.model.math.bgi.BgiUtil
+import com.kludgenics.cgmlogger.model.math.bgi.svg
 import io.realm.Realm
 import org.jetbrains.anko.*
 import org.joda.time.DateTime
@@ -45,24 +47,6 @@ public class MainActivity : BaseActivity(), AnkoLogger {
         startService(intentFor<LocationIntentService>().setAction(LocationIntentService.ACTION_START_LOCATION_UPDATES))
         /// / Set up the drawer.
 
-        info ("ts: ${DateTime().toDateTimeISO()}")
-        /*
-        val r = Realm.getDefaultInstance()
-        r.use {
-            info("pre-adrr")
-            val bgList = r.where<BloodGlucoseRecord>{
-                between("date", DateTime().withTimeAtStartOfDay().minusDays(14).getMillis(),
-                        DateTime().withTimeAtStartOfDay().getMillis())
-            }.findAll()
-            info("${bgList.size()} records")
-            val adrr = BgiUtil.adrr(bgList)
-            val adrr_risk = BgiUtil.evaluateRisk(BgiUtil.ADRR_RISK, adrr)
-            info("ADRR risk: $adrr (${adrr_risk})")
-            val (lbgi, hbgi) = BgiUtil.bgRiskIndices(bgList)
-            info ("LBGI: $lbgi (${BgiUtil.evaluateRisk(BgiUtil.LBGI_RISK, lbgi)}) HBGI: $hbgi (${BgiUtil.evaluateRisk(BgiUtil.HBGI_RISK, hbgi)})")
-            info("BGRI: ${BgiUtil.bgri(bgList)}")
-        }
-        */
         val recycler = find<RecyclerView>(R.id.recycler)
         recycler.setAdapter(AgpAdapter(arrayOf(Period.days(3), Period.days(7), Period.days(14),
                 Period.days(30), Period.days(60), Period.days(90))))

@@ -120,22 +120,14 @@ public class AgpChartView(context: Context, attrs: AttributeSet?, defStyle: Int)
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         super<AbstractBgChartView>.onSizeChanged(w, h, oldw, oldh)
         val bounds = computePathBounds()
-        val bbox = RectF(bounds.left, Math.min(DailyAgp.SPEC_HEIGHT - highLine, if (bounds.top != 0f) bounds.top else Float.MAX_VALUE),
-                Math.max(bounds.right, DailyAgp.SPEC_WIDTH), Math.max(DailyAgp.SPEC_HEIGHT - lowLine, bounds.bottom))
-        info("bounds: $bounds, hbox:$bbox")
-        scaleMatrix.setRectToRect(bbox, RectF(paddingLeft.toFloat(), paddingTop.toFloat(),
+        scaleMatrix.setRectToRect(bounds, RectF(paddingLeft.toFloat(), paddingTop.toFloat(),
                 w.toFloat() - paddingRight, h.toFloat() - paddingBottom - if (showXAxis) xAxisTextSize + xAxisTickHeight else 0f), Matrix.ScaleToFit.FILL)
         xAxisOffset = h.toFloat() - paddingBottom - xAxisTextSize - xAxisTickHeight
-        // this is ugly. Reapply scale/transform matrices
         boundedPaths.forEach { path -> path.invalidate() }
     }
 
     override fun onDraw(canvas: Canvas) {
         super<AbstractBgChartView>.onDraw(canvas)
-        boundedPaths.forEach {
-            path ->
-            canvas.drawPath(path.scaled, path.paint)
-        }
         drawXAxis(canvas)
     }
 }

@@ -4,6 +4,7 @@ import android.content.Context
 import android.graphics.*
 import android.util.AttributeSet
 import android.view.View
+import com.kludgenics.cgmlogger.app.util.PathParser
 import com.kludgenics.cgmlogger.model.math.agp.DailyAgp
 import org.jetbrains.anko.*
 /**
@@ -38,6 +39,15 @@ public abstract class AbstractChartView(context: Context, attrs: AttributeSet?, 
         return bounds
     }
 
+    protected fun updatePath(previous: Array<PathParser.PathDataNode>?, current: Array<PathParser.PathDataNode>,
+                             path: ScaledPaintedPath) {
+        if (previous != current) {
+            path.unscaled.rewind()
+            PathParser.PathDataNode.nodesToPath(current, path.unscaled)
+        }
+        path.invalidate()
+    }
+
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         val widthType = View.MeasureSpec.getMode(widthMeasureSpec)
         val widthMeasureVal = View.MeasureSpec.getSize(widthMeasureSpec)
@@ -64,6 +74,14 @@ public abstract class AbstractChartView(context: Context, attrs: AttributeSet?, 
         }
         info ("setMeasuredDimensions; ${width} ${height}")
         setMeasuredDimension(width, height)
+    }
+
+    override fun onDraw(canvas: Canvas) {
+        super<View>.onDraw(canvas)
+        boundedPaths.forEach {
+            path ->
+            canvas.drawPath(path.scaled, path.paint)
+        }
     }
 
     protected fun getVerticalDecoractionSize(): Float = 0f

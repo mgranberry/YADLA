@@ -31,15 +31,6 @@ public abstract class AbstractBgChartView(context: Context, attrs: AttributeSet?
     protected var highPath: ScaledPaintedPath? = null
     protected var targetPath: ScaledPaintedPath? = null
 
-    protected fun updatePath(previous: Array<PathParser.PathDataNode>?, current: Array<PathParser.PathDataNode>,
-                   path: ScaledPaintedPath) {
-        if (previous != current) {
-            path.unscaled.rewind()
-            PathParser.PathDataNode.nodesToPath(current, path.unscaled)
-        }
-        path.invalidate()
-    }
-
     public var lowLine: Int by Delegates.observable(80, {
         propertyMetadata: PropertyMetadata, previous: Int, current: Int ->
         info("setting lowLine to ${current}")

@@ -30,6 +30,8 @@ import com.kludgenics.cgmlogger.extension.*
 import com.kludgenics.cgmlogger.model.glucose.BloodGlucoseRecord
 import com.kludgenics.cgmlogger.model.math.agp.dateTime
 import com.kludgenics.cgmlogger.model.math.bgi.Bgi
+import com.kludgenics.cgmlogger.model.math.bgi.BgiUtil
+import org.joda.time.DateTime
 
 /**
  * Created by matthiasgranberry on 5/31/15.
@@ -39,10 +41,12 @@ public class AgpAdapter(val periods: List<Period>): RecyclerView.Adapter<AgpAdap
     data class ViewHolder(var agpView: CardView,
                           var chartView: AgpChartView? = null,
                           var textView: TextView? = null,
+                          var bgriView: BgRiChartView? = null,
                           var agpFuture: Future<CachedDatePeriodAgp>? = null): RecyclerView.ViewHolder(agpView) {
     }
 
     override fun onBindViewHolder(holder: ViewHolder, id: Int) {
+        //val bgri = BgiUtil.getLatestCached(DateTime(), periods[id])
         val agp = AgpUtil.getLatestCached(holder.agpView.getContext(), periods[id], {
             holder.agpFuture = it
             if (!it.isCancelled() && it == holder.agpFuture) { // don't update the wrong view
@@ -86,6 +90,11 @@ public class AgpAdapter(val periods: List<Period>): RecyclerView.Adapter<AgpAdap
             holder.chartView?.medianPathString = median
             holder.chartView?.requestLayout()
             holder.chartView?.invalidate()
+            /*with (holder.bgriView!!) {
+                hbgPathString = bgri!!.hbg
+                lbgPathString = bgri.lbg
+                invalidate()
+            }*/
             holder.textView?.text = "$days-day AGP"
 
         }
@@ -124,6 +133,11 @@ public class AgpAdapter(val periods: List<Period>): RecyclerView.Adapter<AgpAdap
                             gravity = (Gravity.TOP or Gravity.CENTER_HORIZONTAL)
                         }
                     }
+                    /* holder.bgriView = bgriChartView {
+                        hbgPathString = ""
+                        lbgPathString = ""
+                    }.layoutParams(width = matchParent, height = wrapContent)
+                    */
                 }
             }
             holder.agpView.layoutParams = ViewGroup.MarginLayoutParams(matchParent, wrapContent)

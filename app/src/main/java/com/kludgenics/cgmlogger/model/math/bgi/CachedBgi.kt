@@ -3,6 +3,7 @@ package com.kludgenics.cgmlogger.model.math.bgi
 import android.content.Context
 import com.kludgenics.cgmlogger.extension.where
 import com.kludgenics.cgmlogger.model.glucose.BgByDay
+import com.kludgenics.cgmlogger.model.glucose.BloodGlucoseRecord
 import com.kludgenics.cgmlogger.model.math.agp.CachedDatePeriodAgp
 import io.realm.Realm
 import io.realm.RealmObject
@@ -52,52 +53,48 @@ object BgiUtil: AnkoLogger {
     val SPEC_WIDTH = 240f
 
     fun getLatestCached(dateTime: DateTime, period: Period): CachedBgi? {
-        info("getting cache for ${dateTime} ${period}")
+        val start = dateTime.withTimeAtStartOfDay()
+        info("getting cache for! ${start} ${period}")
         val realm = Realm.getDefaultInstance()
         realm.use {
-
-            if (period.getDays() != 1)
-                throw UnsupportedOperationException("Days > 1 not implemented yet")
             info("querying cache")
             val result = realm.where<CachedBgi> {
                 equalTo("period", period.getDays())
-                equalTo("date", dateTime.toDate())
+                equalTo("date", start.toDate())
             }.findAll().firstOrNull()
             return if (result != null) {
                 info("cached BGIs found")
                 CachedBgi(result.hbg, result.lbg, result.lbgi, result.hbgi, result.adrr, result.percentile975, result.percentile025, result.date, result.period)
             } else {
                 info("No cache, calculating")
-                val bgDay = realm.where<BgByDay> {
-                    equalTo("day", dateTime.withTimeAtStartOfDay().getMillis())
-                }.findAll().firstOrNull()
-                if (bgDay != null) {
-                    val records = bgDay.getBgRecords()
-                    val riskIndexes = Bgi.bgRiByTimeBucket(records)
-                    val (lbgi, hbgi) = Bgi.bgRiskIndices(records)
-                    val date = dateTime.withTimeAtStartOfDay().toDate()
-                    val hb = StringBuilder("M0,${SPEC_HEIGHT / 2}L")
-                    val lb = StringBuilder("M0,${SPEC_HEIGHT / 2}L")
-                    riskIndexes.forEach {
-                        index ->
-                        val x = index.first * 5
-                        val values = index.second
-                        val lbg = values[0]
-                        val hbg = values[1]
-                        lb.append(" ${x},${SPEC_HEIGHT / 2 - lbg}")
-                        hb.append(" ${x},${SPEC_HEIGHT / 2 - hbg}")
-                    }
-                    info ("calculated, storing")
-                    val cbgi = CachedBgi(hbg = hb.toString(), lbg = lb.toString(), lbgi = lbgi.toFloat(), hbgi = hbgi.toFloat(), date = date, period = period.getDays())
-                    realm.beginTransaction()
-                    realm.copyToRealm(cbgi)
-                    realm.commitTransaction()
-                    info ("stored")
-                    cbgi
-                } else
-                    null
+                val records = realm.where<BloodGlucoseRecord> {
+                    greaterThanOrEqualTo("date", (start - period).getMillis())
+                    lessThanOrEqualTo("date", (start).getMillis())
+                }.findAll()
+                val riskIndexes = Bgi.bgRiByTimeBucket(records)
+                val (lbgi, hbgi) = Bgi.bgRiskIndices(records)
+                val date = start.withTimeAtStartOfDay().toDate()
+                val hb = StringBuilder("M0,${SPEC_HEIGHT / 2}L")
+                val lb = StringBuilder("M0,${SPEC_HEIGHT / 2}L")
+                riskIndexes.forEach {
+                    index ->
+                    val x = index.first * 5
+                    val values = index.second
+                    val lbg = values[0]
+                    val hbg = values[1]
+                    lb.append(" ${x},${SPEC_HEIGHT / 2 - lbg}")
+                    hb.append(" ${x},${SPEC_HEIGHT / 2 - hbg}")
+                }
+                lb.append("${SPEC_WIDTH},${SPEC_HEIGHT / 2}Z")
+                hb.append("${SPEC_WIDTH},${SPEC_HEIGHT / 2}Z")
+                info ("calculated, storing")
+                val cbgi = CachedBgi(hbg = hb.toString(), lbg = lb.toString(), lbgi = lbgi.toFloat(), hbgi = hbgi.toFloat(), date = date, period = period.getDays())
+                realm.beginTransaction()
+                realm.copyToRealm(cbgi)
+                realm.commitTransaction()
+                info ("stored")
+                cbgi
             }
-
         }
     }
 }

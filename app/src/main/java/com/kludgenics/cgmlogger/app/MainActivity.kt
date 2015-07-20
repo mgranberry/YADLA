@@ -48,8 +48,8 @@ public class MainActivity : BaseActivity(), AnkoLogger {
         /// / Set up the drawer.
 
         val recycler = find<RecyclerView>(R.id.recycler)
-        recycler.setAdapter(AgpAdapter(arrayOf(Period.days(3), Period.days(7), Period.days(14),
-                Period.days(30), Period.days(60), Period.days(90))))
+//        recycler.setAdapter(AgpAdapter(listOf(1,3,7,14,30,60,90).map{Period.days(it)}))
+        recycler.setAdapter(AgpAdapter((1 .. 90).map{Period.days(it)}))
         recycler.setLayoutManager(LinearLayoutManager(ctx))
     }
 

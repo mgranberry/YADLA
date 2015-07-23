@@ -50,7 +50,9 @@ inline fun <reified T: RealmObject> Realm.where(init: RealmQuery<T>.() -> RealmQ
     return where(javaClass<T>()).init()
 }
 
-
+inline fun <reified T: RealmObject> RealmResults<T>.where(init: RealmQuery<T>.() -> RealmQuery<T>): RealmQuery<T> {
+    return where().init()
+}
 
 inline fun <reified T: RealmObject> Realm.deleteAll() {
     transaction {

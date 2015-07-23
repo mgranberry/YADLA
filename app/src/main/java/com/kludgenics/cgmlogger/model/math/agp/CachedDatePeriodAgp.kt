@@ -13,8 +13,10 @@ import org.joda.time.Period
 import java.util.*
 import com.kludgenics.cgmlogger.extension.*
 import org.jetbrains.anko.*
+import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.Future
+import java.util.concurrent.ScheduledExecutorService
 import kotlin.properties.Delegates
 
 /**
@@ -38,7 +40,33 @@ import kotlin.properties.Delegates
     public var low: Float = 80f
 }
 
+public var CachedDatePeriodAgp.dateTime: DateTime
+    get() = DateTime(date)
+    set(value) { date = value.toDate() }
+
+
+public val CachedDatePeriodAgp.svg: String
+    get() =
+    """
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg height="${svgHeight}pt" version="1.1" viewBox="0 0 240 400" width="${svgWidth}pt" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <g id="agp">
+        <path d="${outer}" fill="#2d95c2"/>
+        <path d="${inner}" fill="#005882"/>
+        <path d="${median}" stroke="#bce6ff" fill-opacity="0.0" stroke-with="3"/>
+
+        <line x1="0" y1="${400 - target}" y2="${400 - target}" x2="360" stroke="green"/>
+        <line x1="0" y1="${400 - high}" y2="${400 - high}" x2="360" stroke="yellow"/>
+        <line x1="0" y1="${400 - low}" y2="${400 - low}" x2="360" stroke="red"/>
+    </g>
+</svg>
+"""
+
 public object AgpUtil: AnkoLogger {
+    val executor: ExecutorService =
+            Executors.newScheduledThreadPool(Runtime.getRuntime().availableProcessors()/2 + 1)
+
     fun getLatestCached(context: Context, period: Period,
                         updated: ((Future<CachedDatePeriodAgp>)->Unit)? = null,
                         dateTime: DateTime = DateTime().withTimeAtStartOfDay()): CachedDatePeriodAgp {
@@ -53,7 +81,7 @@ public object AgpUtil: AnkoLogger {
                 info("$period Result not cached, returning dummy")
                 context.async() {
                     info("$period Async executor executing")
-                    val f = context.asyncResult {
+                    val f = context.asyncResult(executor) {
                         calculateAndCacheAgp(dateTime, period)
                     }
                     updated?.invoke(f)
@@ -63,7 +91,7 @@ public object AgpUtil: AnkoLogger {
                 info("Result cached, but stale.  Calculating in background.")
                 context.async() {
                     info("starting bg")
-                    val f = context.asyncResult {
+                    val f = context.asyncResult(executor) {
                         calculateAndCacheAgp(dateTime, period)
                     }
                     updated?.invoke(f)
@@ -97,25 +125,3 @@ public object AgpUtil: AnkoLogger {
         return ro
     }
 }
-public var CachedDatePeriodAgp.dateTime: DateTime
-    get() = DateTime(date)
-    set(value) { date = value.toDate() }
-
-
-public val CachedDatePeriodAgp.svg: String
-    get() =
-            """
-<?xml version="1.0" encoding="utf-8" standalone="no"?>
-<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
-<svg height="${svgHeight}pt" version="1.1" viewBox="0 0 240 400" width="${svgWidth}pt" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-    <g id="agp">
-        <path d="${outer}" fill="#2d95c2"/>
-        <path d="${inner}" fill="#005882"/>
-        <path d="${median}" stroke="#bce6ff" fill-opacity="0.0" stroke-with="3"/>
-
-        <line x1="0" y1="${400 - target}" y2="${400 - target}" x2="360" stroke="green"/>
-        <line x1="0" y1="${400 - high}" y2="${400 - high}" x2="360" stroke="yellow"/>
-        <line x1="0" y1="${400 - low}" y2="${400 - low}" x2="360" stroke="red"/>
-    </g>
-</svg>
-"""

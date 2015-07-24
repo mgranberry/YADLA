@@ -27,6 +27,7 @@ import io.realm.Realm
 import org.jetbrains.anko.*
 import org.joda.time.DateTime
 import org.joda.time.LocalTime
+import org.joda.time.Partial
 import org.joda.time.Period
 import java.io.File
 import java.util.*
@@ -48,8 +49,9 @@ public class MainActivity : BaseActivity(), AnkoLogger {
         /// / Set up the drawer.
 
         val recycler = find<RecyclerView>(R.id.recycler)
-//        recycler.setAdapter(AgpAdapter(listOf(1,3,7,14,30,60,90).map{Period.days(it)}))
-        recycler.setAdapter(AgpAdapter((1 .. 90).map{Period.days(it)}))
+        //recycler.setAdapter(AgpAdapter(listOf(1,3,7,14,30,60,90).map{Period.days(it)}))
+        //recycler.setAdapter(AgpAdapter((1 .. 90).map{Period.days(it)}))
+        recycler.setAdapter(TrendlineAdapter((0..120).map{(DateTime() - Period.days(it)).withTimeAtStartOfDay() to Period.days(1)}))
         recycler.setLayoutManager(LinearLayoutManager(ctx))
     }
 

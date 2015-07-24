@@ -6,7 +6,9 @@ import android.util.Log
 import com.kludgenics.cgmlogger.model.Migration
 import com.kludgenics.cgmlogger.model.math.agp.CachedDatePeriodAgp
 import com.kludgenics.cgmlogger.model.math.bgi.CachedBgi
+import com.kludgenics.cgmlogger.model.math.trendline.CachedPeriod
 import com.kludgenics.cgmlogger.util.FileUtil
+import com.kludgenics.cgmlogger.extension.*
 
 import io.realm.Realm
 import io.realm.RealmConfiguration
@@ -31,11 +33,12 @@ public class LoggerApplication : Application() {
             Realm.getDefaultInstance().close()
             // delete old cache entries for testing
 
-            if (true) {
+            if (false) {
                 val arr = Realm.getDefaultInstance()
                 arr.beginTransaction()
-                arr.where(javaClass<CachedDatePeriodAgp>()).findAll().clear()
-                arr.where(javaClass<CachedBgi>()).findAll().clear()
+                arr.where<CachedDatePeriodAgp>{this}.findAll().clear()
+                arr.where<CachedBgi>{this}.findAll().clear()
+                arr.where<CachedPeriod>{this}.findAll().clear()
                 arr.commitTransaction()
                 arr.close()
             }

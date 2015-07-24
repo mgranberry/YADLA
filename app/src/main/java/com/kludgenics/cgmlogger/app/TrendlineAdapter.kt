@@ -32,42 +32,45 @@ import com.kludgenics.cgmlogger.model.glucose.BloodGlucoseRecord
 import com.kludgenics.cgmlogger.model.math.agp.dateTime
 import com.kludgenics.cgmlogger.model.math.bgi.Bgi
 import com.kludgenics.cgmlogger.model.math.bgi.BgiUtil
+import com.kludgenics.cgmlogger.model.math.trendline.CachedPeriod
+import com.kludgenics.cgmlogger.model.math.trendline.PeriodUtil
+import com.kludgenics.cgmlogger.model.math.trendline.dateTime
 import org.joda.time.DateTime
+import org.joda.time.format.DateTimeFormat
 
 /**
  * Created by matthiasgranberry on 5/31/15.
  */
-public class AgpAdapter(val periods: List<Period>): RecyclerView.Adapter<AgpAdapter.ViewHolder>(), AnkoLogger {
+public class TrendlineAdapter(val periods: List<Pair<DateTime,Period>>): RecyclerView.Adapter<TrendlineAdapter.ViewHolder>(), AnkoLogger {
 
-    data class ViewHolder(var agpView: CardView,
-                          var chartView: AgpChartView? = null,
+    val fmt = DateTimeFormat.forPattern("EEE MMM dd")
+
+    data class ViewHolder(var trendView: CardView,
+                          var chartView: DailyBgChartView? = null,
                           var textView: TextView? = null,
-                          var bgriView: BgRiChartView? = null,
-                          var agpFuture: Future<CachedDatePeriodAgp>? = null): RecyclerView.ViewHolder(agpView) {
+                          var periodFuture: Future<CachedPeriod>? = null): RecyclerView.ViewHolder(trendView) {
     }
 
     override fun onBindViewHolder(holder: ViewHolder, id: Int) {
         //val bgri = BgiUtil.getLatestCached(DateTime(), periods[id])
-        val agp = AgpUtil.getLatestCached(holder.agpView.getContext(), periods[id], {
-            holder.agpFuture = it
-            if (!it.isCancelled() && it == holder.agpFuture) { // don't update the wrong view
+        val per = PeriodUtil.getLatestCached(holder.trendView.getContext(), periods[id].first, periods[id].second, {
+            holder.periodFuture = it
+            if (!it.isCancelled() && it == holder.periodFuture) { // don't update the wrong view
                 try {
-                    val agp = holder.agpFuture?.get(20, TimeUnit.SECONDS)
-                    val inner = agp?.inner
-                    val median = agp?.median
-                    val outer = agp?.outer
-                    val end = agp?.dateTime
-                    val days = agp?.period
-                    if (!it.isCancelled() && it == holder.agpFuture && holder.getAdapterPosition() >= 0) {
-                        holder.agpView.getContext().uiThread {
-                            holder.chartView?.outerPathString = outer ?: ""
-                            holder.chartView?.innerPathString = inner ?: ""
-                            holder.chartView?.medianPathString = median ?: ""
+                    val per = holder.periodFuture?.get(20, TimeUnit.SECONDS)
+                    val trendLine = per?.trendLine
+                    val date = per?.dateTime
+                    if (!it.isCancelled() && it == holder.periodFuture && holder.getAdapterPosition() >= 0) {
+                        holder.trendView.getContext().uiThread {
+                            holder.chartView?.trendPathString = trendLine ?: ""
                             holder.chartView?.requestLayout()
                             holder.chartView?.invalidate()
-                            holder.textView?.text = if (days?.compareTo(1) == 0) "$days day" else "$days days"
+
+                            if (date != null) {
+                                holder.textView?.text = fmt.print(date)
+                            }
                             notifyItemChanged(holder.getLayoutPosition())
-                            info("notifyItemChanged(${holder?.getAdapterPosition()}) (${holder.getItemId()} ${agp?.date} ${agp?.period})")
+                            info("notifyItemChanged(${holder.getAdapterPosition()}) (${holder.getItemId()} ${per?.date} ${per?.period})")
                         }
                     }
                 } catch (c: CancellationException) {
@@ -80,41 +83,31 @@ public class AgpAdapter(val periods: List<Period>): RecyclerView.Adapter<AgpAdap
                 }
             }
         })
-        val inner = agp.inner
-        val median = agp.median
-        val outer = agp.outer
-        val end = agp.dateTime
-        val days = agp.period
-        holder.agpView!!.getContext().uiThread {
-            holder.chartView?.outerPathString = outer
-            holder.chartView?.innerPathString = inner
-            holder.chartView?.medianPathString = median
+        val trendLine = per.trendLine
+        val date = per.dateTime;
+        holder.chartView!!.getContext().uiThread {
+            holder.chartView?.trendPathString = trendLine
             holder.chartView?.requestLayout()
             holder.chartView?.invalidate()
-            /*with (holder.bgriView!!) {
-                hbgPathString = bgri!!.hbg
-                lbgPathString = bgri.lbg
-                invalidate()
-            }*/
-            holder.textView?.text = if (days.compareTo(1) == 0) "$days day" else "$days days"
+            holder.textView?.text = fmt.print(date)
         }
     }
 
     override fun onViewRecycled(holder: ViewHolder) {
         super<RecyclerView.Adapter>.onViewRecycled(holder)
-        holder.agpFuture?.cancel(true)
-        holder.agpFuture = null
+        holder.periodFuture?.cancel(true)
+        holder.periodFuture = null
     }
 
     override fun onCreateViewHolder(viewGroup: ViewGroup, viewType: Int): ViewHolder {
         val ctx = viewGroup.getContext()
         val holder = ViewHolder(CardView(ctx))
         with(ctx) {
-            with(holder.agpView) {
+            with(holder.trendView) {
                 onClick {
                     configuration(fromSdk = Build.VERSION_CODES.LOLLIPOP) {
                         setTransitionGroup(true)
-                        setTransitionName("agp")
+                        setTransitionName("trendline")
                     }
                     //startActivity()
                 }
@@ -125,7 +118,7 @@ public class AgpAdapter(val periods: List<Period>): RecyclerView.Adapter<AgpAdap
                     frameLayout {
                         paddingHorizontal = dip(8)
                         paddingVertical = dip(5)
-                        holder.chartView = agpChartView {
+                        holder.chartView = dailyBgChartView {
                             lowLine = 80
                             targetLine = 110
                             highLine = 180
@@ -147,8 +140,8 @@ public class AgpAdapter(val periods: List<Period>): RecyclerView.Adapter<AgpAdap
                     */
                 }
             }
-            holder.agpView.layoutParams = ViewGroup.MarginLayoutParams(matchParent, wrapContent)
-            with(holder.agpView.layoutParams as ViewGroup.MarginLayoutParams) {
+            holder.trendView.layoutParams = ViewGroup.MarginLayoutParams(matchParent, wrapContent)
+            with(holder.trendView.layoutParams as ViewGroup.MarginLayoutParams) {
                 bottomMargin = dip(15)
                 leftMargin = dip(15)
                 rightMargin = dip(15)

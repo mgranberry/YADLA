@@ -1,6 +1,7 @@
 package com.kludgenics.cgmlogger.app.service
 
 import android.content.Context
+import android.content.Intent
 import android.content.SharedPreferences
 import android.util.ArrayMap
 import android.util.Log
@@ -19,9 +20,7 @@ import com.kludgenics.cgmlogger.model.nightscout.NightscoutApiEndpoint
 import com.kludgenics.cgmlogger.model.nightscout.NightscoutApiEntry
 import com.kludgenics.cgmlogger.model.nightscout.NightscoutApiTreatment
 import io.realm.Realm
-import org.jetbrains.anko.AnkoLogger
-import org.jetbrains.anko.ctx
-import org.jetbrains.anko.defaultSharedPreferences
+import org.jetbrains.anko.*
 import org.joda.time.DateTime
 import retrofit.RestAdapter
 import retrofit.converter.GsonConverter
@@ -33,6 +32,8 @@ import kotlin.properties.Delegates
 
 public class TaskService : GcmTaskService(), AnkoLogger {
     companion object {
+        public val ACTION_SYNC_NOW: String = "com.kludgenics.cgmlogger.action.SYNC"
+        public val ACTION_SYNC_FULL: String = "com.kludgenics.cgmlogger.action.SYNC_FULL"
         public val TASK_SYNC_TREATMENTS: String = "sync_treatments"
         public val TASK_SYNC_ENTRIES_PERIODIC: String = "sync_entries_periodic"
         public val TASK_SYNC_ENTRIES_FULL: String = "sync_entries_full"
@@ -42,6 +43,24 @@ public class TaskService : GcmTaskService(), AnkoLogger {
         private val TREATMENT_SYNC_FLEX: Long = 60 * 10
         private val ENTRY_SYNC_PERIOD: Long = 60 * 30
         private val ENTRY_SYNC_FLEX: Long = 60 * 10
+
+        public fun syncNow(context: Context) {
+            val intent = Intent()
+            with(intent) {
+                setAction(ACTION_SYNC_NOW)
+                setClass(context, javaClass<TaskService>())
+            }
+            context.startService(intent)
+        }
+
+        public fun fullSyncNow(context: Context) {
+            val intent = Intent()
+            with(intent) {
+                setAction(ACTION_SYNC_FULL)
+                setClass(context, javaClass<TaskService>())
+            }
+            context.startService(intent)
+        }
 
         public fun cancelNightscoutTasks(context: Context) {
             Log.i ("TaskService", "Nightscout task cancellation requested by ${context}")
@@ -121,6 +140,26 @@ public class TaskService : GcmTaskService(), AnkoLogger {
     }
 
     val tasks: MutableMap<String, NightscoutTask> = ArrayMap()
+
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        return when (intent?.getAction()) {
+            ACTION_SYNC_NOW -> {
+                async {
+                    onRunTask(TaskParams(TASK_SYNC_ENTRIES_PERIODIC))
+                    //onRunTask(TaskParams(TASK_SYNC_TREATMENTS))
+                }
+                2
+            }
+            ACTION_SYNC_FULL -> {
+                async {
+                    onRunTask(TaskParams(TASK_SYNC_ENTRIES_FULL))
+                    //onRunTask(TaskParams(TASK_SYNC_TREATMENTS))
+                }
+                2
+            }
+            else -> super<GcmTaskService>.onStartCommand(intent, flags, startId)
+        }
+    }
 
     override fun onInitializeTasks() {
         super<GcmTaskService>.onInitializeTasks()

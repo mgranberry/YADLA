@@ -19,8 +19,8 @@ class NightscoutTreatmentTask(override val ctx: Context,
     override fun postprocess(realm: Realm, l: List<*>) {
     }
 
-    override val init: NightscoutApiEndpoint.() -> List<NightscoutApiTreatment>
-        get() = fun (): List<NightscoutApiTreatment> {
+    override val init: NightscoutApiEndpoint.() -> List<Map<String, String>>
+        get() = fun (): List<Map<String, String>> {
             return getTreatments()
         }
 

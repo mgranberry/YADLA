@@ -67,6 +67,32 @@ public object AgpUtil: AnkoLogger {
     val executor: ExecutorService =
             Executors.newScheduledThreadPool(Runtime.getRuntime().availableProcessors()/2 + 1)
 
+    public fun invalidate(start: DateTime,
+                          end: DateTime,
+                          realm: Realm?) {
+        if (realm == null)
+            Realm.getDefaultInstance().use{
+                realm ->
+                doInvalidate(start, end, realm)
+            }
+        else
+            doInvalidate(start, end, realm)
+    }
+
+    private fun doInvalidate(start: DateTime,
+                             end: DateTime,
+                             realm: Realm) {
+        val cachedItems = realm.allObjects(javaClass<CachedDatePeriodAgp>())
+        val removeList = arrayListOf<RealmObject>()
+        cachedItems.forEach {
+            val itemTime = it.dateTime
+            val itemStart = it.dateTime - Period.days(it.period)
+            if ( (itemStart <= start && itemTime >= start && itemTime <= end) || (itemStart >= start && itemTime <= end))
+                removeList.add(it)
+        }
+        removeList.forEach { it.removeFromRealm() }
+    }
+
     fun getLatestCached(context: Context, period: Period,
                         updated: ((Future<CachedDatePeriodAgp>)->Unit)? = null,
                         dateTime: DateTime = DateTime().withTimeAtStartOfDay()): CachedDatePeriodAgp {

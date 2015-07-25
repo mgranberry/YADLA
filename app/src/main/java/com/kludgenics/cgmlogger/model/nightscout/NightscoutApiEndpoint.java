@@ -1,6 +1,7 @@
 package com.kludgenics.cgmlogger.model.nightscout;
 
 import java.util.List;
+import java.util.Map;
 
 import retrofit.http.GET;
 import retrofit.http.Query;
@@ -16,6 +17,6 @@ public interface NightscoutApiEndpoint {
     List<SgvEntry> getSgvEntries(@Query("count") int count);
 
     @GET("/api/v1/treatments")
-    List<NightscoutApiTreatment> getTreatments();
+    List<Map<String, String>> getTreatments();
 
 }

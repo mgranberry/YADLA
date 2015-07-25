@@ -28,8 +28,8 @@ public class SettingsActivity : BaseActivity() {
         }
         if (nightscoutPrefs is Pair<Boolean, String>) {
             if (nightscoutPrefs.first == true && !nightscoutPrefs.second.isNullOrBlank()) {
+                TaskService.fullSyncNow(this)
                 TaskService.scheduleNightscoutPeriodicTasks(this)
-                TaskService.scheduleNightscoutEntriesFullSync(this)
             }
             else
                 TaskService.cancelNightscoutTasks(this)

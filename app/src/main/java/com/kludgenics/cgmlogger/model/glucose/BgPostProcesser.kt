@@ -5,6 +5,8 @@ import com.google.android.gms.location.places.Place
 import io.realm.Realm
 import org.joda.time.DateTime
 import com.kludgenics.cgmlogger.extension.*
+import com.kludgenics.cgmlogger.model.math.agp.AgpUtil
+import com.kludgenics.cgmlogger.model.math.trendline.PeriodUtil
 import com.kludgenics.cgmlogger.model.nightscout.SgvEntry
 import io.realm.RealmObject
 import io.realm.RealmQuery
@@ -17,8 +19,14 @@ import java.util.*
 
 object BgPostprocesser {
 
+    fun invalidateCaches (realm: Realm, start: DateTime, end: DateTime) {
+        AgpUtil.invalidate(start, end, realm)
+        PeriodUtil.invalidate(start, end, realm)
+    }
+
     fun groupByDay (realm: Realm, start: DateTime, end: DateTime) {
         Log.d("BgPostProcesser", "start: ${start}, end: ${end}")
+
         val bgEntries = realm.where<BloodGlucoseRecord> {
             greaterThanOrEqualTo("date", start.withTimeAtStartOfDay().getMillis())
             lessThanOrEqualTo("date", end.withTimeAtStartOfDay().plusDays(1).getMillis())

@@ -7,10 +7,7 @@ import com.kludgenics.cgmlogger.model.glucose.BloodGlucoseRecord
 import com.kludgenics.cgmlogger.model.math.agp.CachedDatePeriodAgp
 import com.kludgenics.cgmlogger.model.math.agp.DailyAgp
 import com.kludgenics.cgmlogger.model.math.agp.dateTime
-import io.realm.Realm
-import io.realm.RealmList
-import io.realm.RealmObject
-import io.realm.RealmResults
+import io.realm.*
 import io.realm.annotations.RealmClass
 import org.jetbrains.anko.AnkoLogger
 import org.jetbrains.anko.async
@@ -49,7 +46,37 @@ public object PeriodUtil: AnkoLogger {
     val executor: ExecutorService =
             Executors.newScheduledThreadPool(Runtime.getRuntime().availableProcessors()/2 + 1)
 
-    fun getLatestCached(context: Context,
+    public fun invalidate(start: DateTime,
+                   end: DateTime,
+                   realm: Realm?) {
+        if (realm == null)
+            Realm.getDefaultInstance().use{
+                realm ->
+                realm.beginTransaction()
+                doInvalidate(start, end, realm)
+                realm.commitTransaction()
+            }
+        else
+            doInvalidate(start, end, realm)
+    }
+
+    private fun doInvalidate(start: DateTime,
+                             end: DateTime,
+                             realm: Realm) {
+        val cachedItems = realm.allObjects(javaClass<CachedPeriod>())
+        val removeList = arrayListOf<RealmObject>()
+        cachedItems.forEach {
+            val itemTime = it.dateTime
+            val itemEnd = itemTime + Period.days(it.period)
+            if (itemTime > start && itemTime < end || (itemEnd > start && itemTime < end))
+                removeList.add(it)
+        }
+        //realm.beginTransaction()
+        removeList.forEach { it.removeFromRealm() }
+        //realm.commitTransaction()
+    }
+
+    public fun getLatestCached(context: Context,
                         dateTime: DateTime = DateTime().withTimeAtStartOfDay(),
                         period: Period,
                         updated: ((Future<CachedPeriod>)->Unit)? = null): CachedPeriod {

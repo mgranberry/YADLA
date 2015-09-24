@@ -12,7 +12,6 @@ import android.support.v7.widget.Toolbar
 import android.view.Gravity
 import android.view.MenuItem
 import org.jetbrains.anko.*
-import org.jetbrains.anko.internals.noBinding
 
 public abstract class BaseActivity: AppCompatActivity(), AnkoLogger {
     abstract protected val navigationId: Int

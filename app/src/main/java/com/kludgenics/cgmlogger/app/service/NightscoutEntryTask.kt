@@ -13,6 +13,8 @@ import org.jetbrains.anko.AnkoLogger
 import org.joda.time.DateTime
 import kotlin.properties.Delegates
 import com.kludgenics.cgmlogger.extension.*
+import org.jetbrains.anko.debug
+import org.jetbrains.anko.info
 import org.joda.time.Period
 
 /**
@@ -33,9 +35,15 @@ class NightscoutEntryTask(override val ctx: Context,
                     }.findAllSorted("date", false).first().date
                 })
                 val difference = Period(latestTime, DateTime())
-                1 + difference.getMinutes() / 5
+                if (difference.getMinutes() < 5) 0 else 1 + difference.getMinutes() / 5
             } else count
-            return getSgvEntries(requestCount)
+            return if (count > 0) {
+                info("getting $requestCount entries")
+                getSgvEntries(requestCount)
+            } else {
+                info("already current.  skipping update.")
+                emptyList()
+            }
         }
 
     override val copy: Realm.(Any) -> Unit

@@ -23,22 +23,22 @@ public class DailyBgChartView(context: Context, attrs: AttributeSet?, defStyle: 
     public constructor(context: Context): this(context, null, 0) {
     }
 
-    private val cornerEffect by Delegates.lazy { CornerPathEffect(dip(10)); null }
+    private val cornerEffect by lazy(LazyThreadSafetyMode.NONE) { CornerPathEffect(dip(10)); null }
 
     override var xLabelPeriod = 1
     override var showXAxis = true
     override var xAxisOffset: Float by Delegates.notNull()
-    override val xAxisTextSize: Float by Delegates.lazy { dip(10) }
-    override val xAxisPaint: Paint by Delegates.lazy {
+    override val xAxisTextSize: Float by lazy(LazyThreadSafetyMode.NONE) { dip(10) }
+    override val xAxisPaint: Paint by lazy(LazyThreadSafetyMode.NONE) {
         initializePaint(color= Color.BLACK, stroke = true, strokeWidth = dip(2), init={setAlpha(127)}) }
-    override val xAxisLabelPaint: Paint by Delegates.lazy {
+    override val xAxisLabelPaint: Paint by lazy(LazyThreadSafetyMode.NONE) {
         initializePaint(color=Color.BLACK, init={
             setAlpha(127)
             setTextSize(xAxisTextSize)
             setTextAlign(Paint.Align.LEFT)
         })
     }
-    override val xAxisTickHeight: Float by Delegates.lazy { dip(5) }
+    override val xAxisTickHeight: Float by lazy(LazyThreadSafetyMode.NONE) { dip(5) }
 
     override fun getXValue(xValue: Int): Float {
         return paddingLeft + xValue.toFloat()/ DailyAgp.SPEC_WIDTH * (getWidth() - paddingLeft - paddingRight)
@@ -60,7 +60,7 @@ public class DailyBgChartView(context: Context, attrs: AttributeSet?, defStyle: 
             trendPathData = PathParser.createNodesFromPathData(value)
         }
 
-    val trendPath by Delegates.lazy {
+    val trendPath by lazy(LazyThreadSafetyMode.NONE) {
         ScaledPaintedPath(unscaled = Path(),
                 scaleMatrix = scaleMatrix,
                 paint = initializePaint(R.color.percentile_inner, stroke = true,
@@ -68,15 +68,14 @@ public class DailyBgChartView(context: Context, attrs: AttributeSet?, defStyle: 
     }
 
 
-
     override val boundedPaths: MutableList<ScaledPaintedPath> = arrayListOf(trendPath)
     override var xProgression = (0 .. DailyAgp.SPEC_WIDTH.toInt() step 10)
 
-    override protected val highPaint: Paint by Delegates.lazy { initializePaint(R.color.high_line, stroke = true, strokeWidth = dip(2),
+    override protected val highPaint: Paint by lazy(LazyThreadSafetyMode.NONE) { initializePaint(R.color.high_line, stroke = true, strokeWidth = dip(2),
             pathEffect = DashPathEffect(floatArrayOf(dip(10), dip(20)), 0f)) }
-    override protected val lowPaint: Paint by Delegates.lazy { initializePaint(R.color.low_line, stroke = true, strokeWidth = dip(2),
+    override protected val lowPaint: Paint by lazy(LazyThreadSafetyMode.NONE) { initializePaint(R.color.low_line, stroke = true, strokeWidth = dip(2),
             pathEffect = DashPathEffect(floatArrayOf(dip(10), dip(20)), 0f)) }
-    override protected val targetPaint: Paint by Delegates.lazy { initializePaint(R.color.target_line, stroke = true, strokeWidth = dip(2),
+    override protected val targetPaint: Paint by lazy(LazyThreadSafetyMode.NONE) { initializePaint(R.color.target_line, stroke = true, strokeWidth = dip(2),
             pathEffect = DashPathEffect(floatArrayOf(dip(10), dip(20)), 0f)) }
 
 

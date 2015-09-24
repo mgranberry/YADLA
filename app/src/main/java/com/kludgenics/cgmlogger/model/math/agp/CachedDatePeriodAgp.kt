@@ -93,9 +93,10 @@ public object AgpUtil: AnkoLogger {
         removeList.forEach { it.removeFromRealm() }
     }
 
-    fun getLatestCached(context: Context, period: Period,
-                        updated: ((Future<CachedDatePeriodAgp>)->Unit)? = null,
-                        dateTime: DateTime = DateTime().withTimeAtStartOfDay()): CachedDatePeriodAgp {
+    fun getLatestCached(context: Context,
+                        period: Period,
+                        dateTime: DateTime = DateTime().withTimeAtStartOfDay(),
+                        updated: ((Future<CachedDatePeriodAgp>)->Unit)? = null): CachedDatePeriodAgp {
         val realm = Realm.getDefaultInstance()
         realm.use {
             info("$period Querying cache")

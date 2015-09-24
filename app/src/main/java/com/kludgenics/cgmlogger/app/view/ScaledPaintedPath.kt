@@ -14,7 +14,7 @@ data class ScaledPaintedPath(val unscaled: Path, val scaleMatrix: Matrix, val pa
         unscaled.transform(scaleMatrix, scaled)
     }
 
-    val scaled: Path by Delegates.lazy {
+    val scaled: Path by lazy(LazyThreadSafetyMode.NONE) {
         val p = Path()
         unscaled.transform(scaleMatrix, p)
         p

@@ -6,8 +6,7 @@ import com.google.gson.JsonParseException
 import com.kludgenics.cgmlogger.model.nightscout.NightscoutApiEndpoint
 import com.kludgenics.cgmlogger.model.nightscout.NightscoutApiTreatment
 import io.realm.Realm
-import org.jetbrains.anko.AnkoLogger
-import org.jetbrains.anko.ctx
+import org.jetbrains.anko.*
 import org.joda.time.DateTime
 import retrofit.RetrofitError
 import java.io.Closeable
@@ -30,7 +29,7 @@ interface NightscoutTask: Callable<Int>, AnkoLogger {
             try {
                 val items = nightscoutEndpoint.init()
                 realm.beginTransaction()
-                if (items != null) {
+                if (items != null && items.isNotEmpty()) {
                     items forEach {
                         realm copy it
                     }

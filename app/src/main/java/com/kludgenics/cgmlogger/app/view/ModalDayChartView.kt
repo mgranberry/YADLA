@@ -15,7 +15,7 @@ import kotlin.properties.Delegates
 public class ModalDayChartView(context: Context, attrs: AttributeSet?, defStyle: Int) : ChartXAxis,
         AnkoLogger, AbstractBgChartView(context, attrs, defStyle) {
 
-    private val cornerEffect by Delegates.lazy { CornerPathEffect(dip(10)) }
+    private val cornerEffect by lazy(LazyThreadSafetyMode.NONE) { CornerPathEffect(dip(10)) }
 
     public constructor(context: Context, attrs: AttributeSet?) : this(context, attrs, 0) {
     }
@@ -27,34 +27,34 @@ public class ModalDayChartView(context: Context, attrs: AttributeSet?, defStyle:
     override var xLabelPeriod = 2
     override var showXAxis = true
     override var xAxisOffset: Float by Delegates.notNull()
-    override val xAxisTextSize: Float by Delegates.lazy { dip(10) }
-    override val xAxisPaint: Paint by Delegates.lazy {
-        initializePaint(color= Color.BLACK, stroke = true, strokeWidth = dip(2), init={setAlpha(127)}) }
+    override val xAxisTextSize: Float by lazy(LazyThreadSafetyMode.NONE) { dip(10) }
+    override val xAxisPaint: Paint by lazy(LazyThreadSafetyMode.NONE) {
+        initializePaint(color= Color.BLACK, stroke = true, strokeWidth = dip(2), init={ alpha = 127 }) }
 
-    override val xAxisLabelPaint: Paint by Delegates.lazy {
+    override val xAxisLabelPaint: Paint by lazy(LazyThreadSafetyMode.NONE) {
         initializePaint(color= Color.BLACK, init={
-            setAlpha(127)
-            setTextSize(xAxisTextSize)
-            setTextAlign(Paint.Align.LEFT)
+            alpha = 127
+            textSize = xAxisTextSize
+            textAlign = Paint.Align.LEFT
         })
     }
 
-    override val xAxisTickHeight: Float by Delegates.lazy { dip(5) }
+    override val xAxisTickHeight: Float by lazy(LazyThreadSafetyMode.NONE) { dip(5) }
 
     override fun getXValue(xValue: Int): Float {
-        return paddingLeft + xValue.toFloat()/ DailyAgp.SPEC_WIDTH * (getWidth() - paddingLeft - paddingRight)
+        return paddingLeft + xValue.toFloat()/ DailyAgp.SPEC_WIDTH * (width - paddingLeft - paddingRight)
     }
 
     override fun getXLabel(xValue: Int): String {
         val hours = xValue.toInt() / 10
-        return "${hours}"
+        return "$hours"
     }
 
-    override protected val highPaint: Paint by Delegates.lazy { initializePaint(R.color.high_line, stroke = true, strokeWidth = dip(2),
+    override protected val highPaint: Paint by lazy(LazyThreadSafetyMode.NONE) { initializePaint(R.color.high_line, stroke = true, strokeWidth = dip(2),
             pathEffect = DashPathEffect(floatArrayOf(dip(10), dip(20)), 0f)) }
-    override protected val lowPaint: Paint by Delegates.lazy { initializePaint(R.color.low_line, stroke = true, strokeWidth = dip(2),
+    override protected val lowPaint: Paint by lazy { initializePaint(R.color.low_line, stroke = true, strokeWidth = dip(2),
             pathEffect = DashPathEffect(floatArrayOf(dip(10), dip(20)), 0f)) }
-    override protected val targetPaint: Paint by Delegates.lazy { initializePaint(R.color.target_line, stroke = true, strokeWidth = dip(2),
+    override protected val targetPaint: Paint by lazy(LazyThreadSafetyMode.NONE) { initializePaint(R.color.target_line, stroke = true, strokeWidth = dip(2),
             pathEffect = DashPathEffect(floatArrayOf(dip(10), dip(20)), 0f)) }
 
     override val boundedPaths: MutableList<ScaledPaintedPath> = arrayListOf()
@@ -64,7 +64,7 @@ public class ModalDayChartView(context: Context, attrs: AttributeSet?, defStyle:
     }
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
-        super<AbstractBgChartView>.onSizeChanged(w, h, oldw, oldh)
+        super.onSizeChanged(w, h, oldw, oldh)
         val bounds = computePathBounds()
         scaleMatrix.setRectToRect(bounds, RectF(paddingLeft.toFloat(), paddingTop.toFloat(),
                 w.toFloat() - paddingRight, h.toFloat() - paddingBottom - if (showXAxis) xAxisTextSize + xAxisTickHeight else 0f), Matrix.ScaleToFit.FILL)
@@ -73,7 +73,7 @@ public class ModalDayChartView(context: Context, attrs: AttributeSet?, defStyle:
     }
 
     override fun onDraw(canvas: Canvas) {
-        super<AbstractBgChartView>.onDraw(canvas)
+        super.onDraw(canvas)
         drawXAxis(canvas)
     }
 

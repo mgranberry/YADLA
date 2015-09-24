@@ -8,6 +8,7 @@ import android.util.AttributeSet
 import com.kludgenics.cgmlogger.app.util.PathParser
 import com.kludgenics.cgmlogger.model.math.agp.DailyAgp
 import org.jetbrains.anko.AnkoLogger
+import org.jetbrains.anko.info
 import kotlin.properties.Delegates
 
 /**

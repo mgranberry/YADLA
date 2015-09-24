@@ -113,7 +113,7 @@ public class TaskService : GcmTaskService(), AnkoLogger {
         }
     }
 
-    val prefs: SharedPreferences by Delegates.lazy {
+    val prefs: SharedPreferences by lazy(LazyThreadSafetyMode.NONE) {
         val p = defaultSharedPreferences
         p.registerOnSharedPreferenceChangeListener(sharedPreferencesListener)
         p
@@ -130,7 +130,7 @@ public class TaskService : GcmTaskService(), AnkoLogger {
         }
     }
 
-    val gsonConverter: GsonConverter by Delegates.lazy {
+    val gsonConverter: GsonConverter by lazy(LazyThreadSafetyMode.NONE) {
         GsonConverter(GsonBuilder()
                 .registerTypeAdapter(javaClass<Int>(), IntegerTypeAdapter() )
                 .registerTypeAdapter(javaClass<DateTime>(), DateTimeSerializer())

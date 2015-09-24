@@ -122,14 +122,14 @@ public class TrendlineAdapter(val periods: List<Pair<DateTime,Period>>): Recycle
                             lowLine = 80
                             targetLine = 110
                             highLine = 180
-                        }.layoutParams(width = matchParent, height = wrapContent)
+                        }.lparams(width = matchParent, height = wrapContent)
                         holder.textView = textView {
                             gravity = Gravity.CENTER
                             textSize = sp(6).toFloat()
                             textColor = Color.BLACK
                             backgroundResource = R.color.cardview_light_background
                             background.setAlpha(128)
-                        }.layoutParams(width = wrapContent, height = wrapContent) {
+                        }.lparams(width = wrapContent, height = wrapContent) {
                             gravity = (Gravity.TOP or Gravity.START)
                         }
                     }

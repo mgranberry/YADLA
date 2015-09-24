@@ -5,22 +5,21 @@ import android.support.design.widget.CoordinatorLayout
 import android.support.design.widget.FloatingActionButton
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
+import android.support.v7.widget.Toolbar
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
+import android.view.ViewGroup
 import com.google.android.gms.location.DetectedActivity
 import com.kludgenics.cgmlogger.app.service.LocationIntentService
 import com.kludgenics.cgmlogger.app.view.AgpChartView
 import com.kludgenics.cgmlogger.extension.*
 import com.kludgenics.cgmlogger.model.activity.PlayServicesActivity
 import com.kludgenics.cgmlogger.model.glucose.BloodGlucoseRecord
-import com.kludgenics.cgmlogger.model.math.agp.AgpUtil
-import com.kludgenics.cgmlogger.model.math.agp.CachedDatePeriodAgp
-import com.kludgenics.cgmlogger.model.math.agp.svg
-import com.kludgenics.cgmlogger.model.math.agp.DailyAgp
 import com.kludgenics.cgmlogger.util.FileUtil
 import com.kludgenics.cgmlogger.app.R
 import com.kludgenics.cgmlogger.app.service.TaskService
+import com.kludgenics.cgmlogger.model.math.agp.*
 import com.kludgenics.cgmlogger.model.math.bgi.Bgi
 import com.kludgenics.cgmlogger.model.math.bgi.BgiUtil
 import com.kludgenics.cgmlogger.model.math.bgi.svg
@@ -34,24 +33,44 @@ import java.io.File
 import java.util.*
 import kotlin.properties.Delegates
 
-public class MainActivity : BaseActivity(), AnkoLogger {
+public class DetailActivity : BaseActivity(), AnkoLogger {
     override protected val navigationId = R.id.nav_home
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super<BaseActivity>.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
-        setupNavigationBar()
+        setContentView(R.layout.activity_detail)
+        //setupNavigationBar()
         setupActionBar()
-
-        val fab = find<FloatingActionButton>(R.id.fab)
-        fab.onClick {
+        val agp = find<AgpChartView>(R.id.backdropAgp)
+        with(agp) {
+            val cachedAgp = AgpUtil.getLatestCached(ctx, Period.days(intent.getIntExtra("days", 1)), updated = {
+                try {
+                    val newAgp = it.get()
+                    val inner = newAgp.inner
+                    val median = newAgp.median
+                    val outer = newAgp.outer
+                    uiThread {
+                        agp.innerPathString = inner
+                        agp.medianPathString = median
+                        agp.outerPathString = outer
+                        agp.invalidate()
+                    }
+                } catch (e: Exception) {
+                }
+            })
+            innerPathString = cachedAgp.inner
+            medianPathString = cachedAgp.median
+            outerPathString = cachedAgp.outer
+            highLine = 180
+            targetLine = 110
+            lowLine = 80
+            agp.invalidate()
         }
-        startService(intentFor<LocationIntentService>().setAction(LocationIntentService.ACTION_START_LOCATION_UPDATES))
-        /// / Set up the drawer.
 
         val recycler = find<RecyclerView>(R.id.recycler)
-        recycler.setAdapter(AgpAdapter(listOf(1,3,7,14,30,60,90).map{Period.days(it)}))
+        //recycler.setAdapter(AgpAdapter(listOf(1,3,7,14,30,60,90).map{Period.days(it)}))
         //recycler.setAdapter(AgpAdapter((1 .. 90).map{Period.days(it)}))
+        recycler.setAdapter(TrendlineAdapter((0..intent.getIntExtra("days", 0)).map{(DateTime() - Period.days(it)).withTimeAtStartOfDay() to Period.days(1)}))
         recycler.setLayoutManager(LinearLayoutManager(ctx))
     }
 

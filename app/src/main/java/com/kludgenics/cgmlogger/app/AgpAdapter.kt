@@ -5,20 +5,10 @@ import android.os.Build
 import android.support.v7.widget.CardView
 import android.support.v7.widget.RecyclerView
 import android.view.Gravity
-import android.view.View
 import android.view.ViewGroup
-import android.widget.ImageView
-import android.widget.LinearLayout
 import android.widget.TextView
-import com.github.mikephil.charting.charts.BarChart
-import com.github.mikephil.charting.components.YAxis
-import com.github.mikephil.charting.data.BarData
-import com.github.mikephil.charting.data.BarDataSet
-import com.github.mikephil.charting.data.BarEntry
 import com.kludgenics.cgmlogger.app.view.*
-import io.realm.Realm
 import org.jetbrains.anko.*
-import com.kludgenics.cgmlogger.app.R
 import com.kludgenics.cgmlogger.model.math.agp.AgpUtil
 import com.kludgenics.cgmlogger.model.math.agp.CachedDatePeriodAgp
 import org.joda.time.Period
@@ -26,13 +16,7 @@ import java.util.concurrent.CancellationException
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.Future
 import java.util.concurrent.TimeUnit
-import kotlin.properties.Delegates
-import com.kludgenics.cgmlogger.extension.*
-import com.kludgenics.cgmlogger.model.glucose.BloodGlucoseRecord
 import com.kludgenics.cgmlogger.model.math.agp.dateTime
-import com.kludgenics.cgmlogger.model.math.bgi.Bgi
-import com.kludgenics.cgmlogger.model.math.bgi.BgiUtil
-import org.joda.time.DateTime
 
 /**
  * Created by matthiasgranberry on 5/31/15.
@@ -48,26 +32,26 @@ public class AgpAdapter(val periods: List<Period>): RecyclerView.Adapter<AgpAdap
 
     override fun onBindViewHolder(holder: ViewHolder, id: Int) {
         //val bgri = BgiUtil.getLatestCached(DateTime(), periods[id])
-        val agp = AgpUtil.getLatestCached(holder.agpView.getContext(), periods[id], {
+        val agp = AgpUtil.getLatestCached(holder.agpView.context, periods[id], updated = {
             holder.agpFuture = it
-            if (!it.isCancelled() && it == holder.agpFuture) { // don't update the wrong view
+            if (!it.isCancelled && it == holder.agpFuture) { // don't update the wrong view
                 try {
                     val agp = holder.agpFuture?.get(20, TimeUnit.SECONDS)
                     val inner = agp?.inner
                     val median = agp?.median
                     val outer = agp?.outer
-                    val end = agp?.dateTime
+                    //val end = agp?.dateTime
                     val days = agp?.period
-                    if (!it.isCancelled() && it == holder.agpFuture && holder.getAdapterPosition() >= 0) {
-                        holder.agpView.getContext().uiThread {
+                    if (!it.isCancelled && it == holder.agpFuture && holder.adapterPosition >= 0) {
+                        holder.agpView.context.onUiThread {
                             holder.chartView?.outerPathString = outer ?: ""
                             holder.chartView?.innerPathString = inner ?: ""
                             holder.chartView?.medianPathString = median ?: ""
                             holder.chartView?.requestLayout()
                             holder.chartView?.invalidate()
                             holder.textView?.text = if (days?.compareTo(1) == 0) "$days day" else "$days days"
-                            notifyItemChanged(holder.getLayoutPosition())
-                            info("notifyItemChanged(${holder?.getAdapterPosition()}) (${holder.getItemId()} ${agp?.date} ${agp?.period})")
+                            notifyItemChanged(holder.layoutPosition)
+                            info("notifyItemChanged(${holder.adapterPosition}) (${holder.itemId} ${agp?.date} ${agp?.period})")
                         }
                     }
                 } catch (c: CancellationException) {
@@ -75,7 +59,7 @@ public class AgpAdapter(val periods: List<Period>): RecyclerView.Adapter<AgpAdap
                 } catch (e: InterruptedException) {
                     info("future interrupted for ${periods[id]}")
                 } catch (e: ExecutionException) {
-                    error("Error in agp callback: ${e}")
+                    error("Error in agp callback: $e")
                     error("${e.getStackTraceString()}")
                 }
             }
@@ -83,9 +67,9 @@ public class AgpAdapter(val periods: List<Period>): RecyclerView.Adapter<AgpAdap
         val inner = agp.inner
         val median = agp.median
         val outer = agp.outer
-        val end = agp.dateTime
+        //val end = agp.dateTime
         val days = agp.period
-        holder.agpView!!.getContext().uiThread {
+        holder.agpView.context.onUiThread {
             holder.chartView?.outerPathString = outer
             holder.chartView?.innerPathString = inner
             holder.chartView?.medianPathString = median
@@ -101,42 +85,50 @@ public class AgpAdapter(val periods: List<Period>): RecyclerView.Adapter<AgpAdap
     }
 
     override fun onViewRecycled(holder: ViewHolder) {
-        super<RecyclerView.Adapter>.onViewRecycled(holder)
+        super.onViewRecycled(holder)
         holder.agpFuture?.cancel(true)
         holder.agpFuture = null
     }
 
     override fun onCreateViewHolder(viewGroup: ViewGroup, viewType: Int): ViewHolder {
-        val ctx = viewGroup.getContext()
+        val ctx = viewGroup.context
         val holder = ViewHolder(CardView(ctx))
         with(ctx) {
             with(holder.agpView) {
+
+
                 onClick {
                     configuration(fromSdk = Build.VERSION_CODES.LOLLIPOP) {
-                        setTransitionGroup(true)
-                        setTransitionName("agp")
+                        isTransitionGroup = true
+                        transitionName = "agp"
+                        val intent = intentFor<DetailActivity>("days" to periods[holder.adapterPosition].days)
+                        startActivity(intent)
                     }
                     //startActivity()
                 }
                 setCardBackgroundColor(resources!!.getColor(R.color.cardview_light_background))
                 contentDescription = "Graph of blood glucose"
-                setRadius(dip(5).toFloat())
+                radius = dip(5).toFloat()
                 verticalLayout {
+                    val rippleResource = obtainStyledAttributes(
+                            intArrayOf(R.attr.selectableItemBackground)).getResourceId(0, 0)
+                    backgroundResource = rippleResource
+
                     frameLayout {
-                        paddingHorizontal = dip(8)
-                        paddingVertical = dip(5)
+                        horizontalPadding = dip(8)
+                        verticalPadding = dip(5)
                         holder.chartView = agpChartView {
                             lowLine = 80
                             targetLine = 110
                             highLine = 180
-                        }.layoutParams(width = matchParent, height = wrapContent)
+                        }.lparams(width = matchParent, height = wrapContent)
                         holder.textView = textView {
                             gravity = Gravity.CENTER
                             textSize = sp(6).toFloat()
                             textColor = Color.BLACK
                             backgroundResource = R.color.cardview_light_background
-                            background.setAlpha(128)
-                        }.layoutParams(width = wrapContent, height = wrapContent) {
+                            background.alpha = 128
+                        }.lparams(width = wrapContent, height = wrapContent) {
                             gravity = (Gravity.TOP or Gravity.START)
                         }
                     }
@@ -147,6 +139,7 @@ public class AgpAdapter(val periods: List<Period>): RecyclerView.Adapter<AgpAdap
                     */
                 }
             }
+
             holder.agpView.layoutParams = ViewGroup.MarginLayoutParams(matchParent, wrapContent)
             with(holder.agpView.layoutParams as ViewGroup.MarginLayoutParams) {
                 bottomMargin = dip(15)

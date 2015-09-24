@@ -23,8 +23,8 @@ public class BgRiChartView(context: Context, attrs: AttributeSet?, defStyle: Int
     public constructor(context: Context): this(context, null, 0) {
     }
 
-    override val boundedPaths: MutableList<ScaledPaintedPath> by Delegates.lazy { arrayListOf(hbgPath, lbgPath) }
-    val cornerEffect: PathEffect by Delegates.lazy { CornerPathEffect(dip(10)) }
+    override val boundedPaths: MutableList<ScaledPaintedPath> by lazy(LazyThreadSafetyMode.NONE) { arrayListOf(hbgPath, lbgPath) }
+    val cornerEffect: PathEffect by lazy(LazyThreadSafetyMode.NONE) { CornerPathEffect(dip(10)) }
 
     var hbgPathData: Array<PathParser.PathDataNode> by Delegates.observable(emptyArray(), {
         propertyMetadata, previous, current ->
@@ -48,13 +48,13 @@ public class BgRiChartView(context: Context, attrs: AttributeSet?, defStyle: Int
             lbgPathData = PathParser.createNodesFromPathData(value)
         }
 
-    val hbgPath by Delegates.lazy {
+    val hbgPath by lazy(LazyThreadSafetyMode.NONE) {
         ScaledPaintedPath(unscaled = Path(),
                 scaleMatrix = scaleMatrix,
                 paint = initializePaint(color = Color.YELLOW, pathEffect = cornerEffect))
     }
 
-    val lbgPath by Delegates.lazy {
+    val lbgPath by lazy(LazyThreadSafetyMode.NONE) {
         ScaledPaintedPath(unscaled = Path(),
                 scaleMatrix = scaleMatrix,
                 paint = initializePaint(color = Color.RED, pathEffect = cornerEffect))

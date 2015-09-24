@@ -12,6 +12,7 @@ import io.realm.annotations.RealmClass
 import org.jetbrains.anko.AnkoLogger
 import org.jetbrains.anko.async
 import org.jetbrains.anko.asyncResult
+import org.jetbrains.anko.info
 import org.joda.time.DateTime
 import org.joda.time.Duration
 import org.joda.time.Period
@@ -144,28 +145,28 @@ class DailyTrendline(val dateTime: DateTime, val period: Period, val low: Double
         val SPEC_WIDTH = 240f
     }
 
-    val realm: Realm by Delegates.lazy { Realm.getDefaultInstance() }
-    private val periodValues: RealmResults<BloodGlucoseRecord> by Delegates.lazy {
+    val realm: Realm by lazy(LazyThreadSafetyMode.NONE) { Realm.getDefaultInstance() }
+    private val periodValues: RealmResults<BloodGlucoseRecord> by lazy(LazyThreadSafetyMode.NONE) {
         realm.where<BloodGlucoseRecord> {
             greaterThanOrEqualTo("date", dateTime.getMillis())
             lessThan("date", (dateTime + period).getMillis())
         }.findAllSorted("date", false)
     }
 
-    private val inRangeValues: RealmResults<BloodGlucoseRecord> by Delegates.lazy {
+    private val inRangeValues: RealmResults<BloodGlucoseRecord> by lazy(LazyThreadSafetyMode.NONE) {
         periodValues.where {
             greaterThan("value", low)
             lessThan("value", high)
         }.findAllSorted("date", false)
     }
 
-    private val lowValues: RealmResults<BloodGlucoseRecord> by Delegates.lazy {
+    private val lowValues: RealmResults<BloodGlucoseRecord> by lazy(LazyThreadSafetyMode.NONE) {
         periodValues.where {
             lessThanOrEqualTo("value", low)
         }.findAllSorted("date", false)
     }
 
-    private val highValues: RealmResults<BloodGlucoseRecord> by Delegates.lazy {
+    private val highValues: RealmResults<BloodGlucoseRecord> by lazy(LazyThreadSafetyMode.NONE) {
         periodValues.where {
             greaterThanOrEqualTo("value", high)
         }.findAllSorted("date", false)
@@ -196,10 +197,10 @@ class DailyTrendline(val dateTime: DateTime, val period: Period, val low: Double
         }.toString() else ""
     }
 
-    public val trendLine: String by Delegates.lazy { stringFromValues(periodValues) }
-    public val highCount: Int by Delegates.lazy { highValues.count() }
-    public val lowCount: Int by Delegates.lazy { lowValues.count() }
-    public val inRangeCount: Int by Delegates.lazy { inRangeValues.count() }
-    public val totalCount: Int by Delegates.lazy { highCount + inRangeCount + lowCount }
+    public val trendLine: String by lazy(LazyThreadSafetyMode.NONE) { stringFromValues(periodValues) }
+    public val highCount: Int by lazy(LazyThreadSafetyMode.NONE) { highValues.count() }
+    public val lowCount: Int by lazy(LazyThreadSafetyMode.NONE) { lowValues.count() }
+    public val inRangeCount: Int by lazy(LazyThreadSafetyMode.NONE) { inRangeValues.count() }
+    public val totalCount: Int by lazy(LazyThreadSafetyMode.NONE) { highCount + inRangeCount + lowCount }
 
 }

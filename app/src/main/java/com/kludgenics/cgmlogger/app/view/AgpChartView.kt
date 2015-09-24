@@ -17,7 +17,7 @@ import kotlin.properties.Delegates
 public class AgpChartView(context: Context, attrs: AttributeSet?, defStyle: Int) : ChartXAxis,
         AnkoLogger, AbstractBgChartView(context, attrs, defStyle) {
 
-    private val cornerEffect by Delegates.lazy { CornerPathEffect(dip(10)) }
+    private val cornerEffect by lazy(LazyThreadSafetyMode.NONE) { CornerPathEffect(dip(10)) }
 
     public constructor(context: Context, attrs: AttributeSet?) : this(context, attrs, 0) {
     }
@@ -29,11 +29,11 @@ public class AgpChartView(context: Context, attrs: AttributeSet?, defStyle: Int)
     override var xLabelPeriod = 2
     override var showXAxis = true
     override var xAxisOffset: Float by Delegates.notNull()
-    override val xAxisTextSize: Float by Delegates.lazy { dip(10) }
-    override val xAxisPaint: Paint by Delegates.lazy {
+    override val xAxisTextSize: Float by lazy(LazyThreadSafetyMode.NONE) { dip(10) }
+    override val xAxisPaint: Paint by lazy(LazyThreadSafetyMode.NONE) {
         initializePaint(color=Color.BLACK, stroke = true, strokeWidth = dip(2), init={setAlpha(127)}) }
 
-    override val xAxisLabelPaint: Paint by Delegates.lazy {
+    override val xAxisLabelPaint: Paint by lazy(LazyThreadSafetyMode.NONE) {
         initializePaint(color=Color.BLACK, init={
             setAlpha(127)
             setTextSize(xAxisTextSize)
@@ -41,7 +41,7 @@ public class AgpChartView(context: Context, attrs: AttributeSet?, defStyle: Int)
         })
     }
 
-    override val xAxisTickHeight: Float by Delegates.lazy { dip(5) }
+    override val xAxisTickHeight: Float by lazy(LazyThreadSafetyMode.NONE) { dip(5) }
 
     override fun getXValue(xValue: Int): Float {
         return paddingLeft + xValue.toFloat()/DailyAgp.SPEC_WIDTH * (getWidth() - paddingLeft - paddingRight)
@@ -85,30 +85,30 @@ public class AgpChartView(context: Context, attrs: AttributeSet?, defStyle: Int)
             medianPathData = PathParser.createNodesFromPathData(value)
         }
 
-    val outerPath by Delegates.lazy {
+    val outerPath by lazy(LazyThreadSafetyMode.NONE) {
         ScaledPaintedPath(unscaled = Path(),
                 scaleMatrix = scaleMatrix,
                 paint = initializePaint(R.color.percentile_outer, pathEffect = cornerEffect))
     }
 
-    val innerPath by Delegates.lazy {
+    val innerPath by lazy(LazyThreadSafetyMode.NONE) {
         ScaledPaintedPath(unscaled = Path(),
                 scaleMatrix = scaleMatrix,
                 paint = initializePaint(R.color.percentile_inner, pathEffect = cornerEffect))
     }
 
-    val medianPath by Delegates.lazy {
+    val medianPath by lazy(LazyThreadSafetyMode.NONE) {
         ScaledPaintedPath(unscaled = Path(),
                 scaleMatrix = scaleMatrix,
                 paint = initializePaint(R.color.percentile_median, stroke = true,
                         pathEffect = cornerEffect))
     }
 
-    override protected val highPaint: Paint by Delegates.lazy { initializePaint(R.color.high_line, stroke = true, strokeWidth = dip(2),
+    override protected val highPaint: Paint by lazy(LazyThreadSafetyMode.NONE) { initializePaint(R.color.high_line, stroke = true, strokeWidth = dip(2),
             pathEffect = DashPathEffect(floatArrayOf(dip(10), dip(20)), 0f)) }
-    override protected val lowPaint: Paint by Delegates.lazy { initializePaint(R.color.low_line, stroke = true, strokeWidth = dip(2),
+    override protected val lowPaint: Paint by lazy(LazyThreadSafetyMode.NONE) { initializePaint(R.color.low_line, stroke = true, strokeWidth = dip(2),
             pathEffect = DashPathEffect(floatArrayOf(dip(10), dip(20)), 0f)) }
-    override protected val targetPaint: Paint by Delegates.lazy { initializePaint(R.color.target_line, stroke = true, strokeWidth = dip(2),
+    override protected val targetPaint: Paint by lazy(LazyThreadSafetyMode.NONE) { initializePaint(R.color.target_line, stroke = true, strokeWidth = dip(2),
             pathEffect = DashPathEffect(floatArrayOf(dip(10), dip(20)), 0f)) }
 
     override val boundedPaths: MutableList<ScaledPaintedPath> = arrayListOf(outerPath, innerPath, medianPath)

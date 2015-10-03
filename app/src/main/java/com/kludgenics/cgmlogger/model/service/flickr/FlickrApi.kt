@@ -40,7 +40,7 @@ public abstract class FlickrSearch(private val client: OkClient): AnkoLogger {
 
 
     protected fun getFlickrSearch(): FlickrApi {
-        return getRestAdapter().create<FlickrApi>(javaClass<FlickrApi>())
+        return getRestAdapter().create<FlickrApi>(FlickrApi::class.java)
     }
 
     private fun getRestAdapter(): RestAdapter {

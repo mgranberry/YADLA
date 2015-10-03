@@ -25,21 +25,21 @@ fun Realm.transaction (init: Realm.() -> Unit) {
 //inline fun <reified T: io.realm.RealmObject> Realm.create(f: (it: T) -> Unit): T {
 inline fun <reified T: io.realm.RealmObject> Realm.create(init: T.() -> Unit): T {
     beginTransaction()
-    val realmObject = createObject(javaClass<T>())
+    val realmObject = createObject(T::class.java)
     realmObject.init()
     commitTransaction()
     return realmObject
 }
 
 inline fun <reified T: io.realm.RealmObject> Realm.createInsideTransaction(init: T.() -> Unit): T {
-    val realmObject = createObject(javaClass<T>())
+    val realmObject = createObject(T::class.java)
     realmObject.init()
     return realmObject
 }
 
 inline fun <reified T: RealmObject> Realm.update(key: String, value: String, f: (it: T, change: MutableMap<String, String>) -> Unit): UpdateResult<T> {
     beginTransaction()
-    val realmObject = where(javaClass<T>()).equalTo(key, value).findFirst()
+    val realmObject = where(T::class.java).equalTo(key, value).findFirst()
     val changeMap: MutableMap<String, String> = hashMapOf()
     f(realmObject, changeMap)
     commitTransaction()
@@ -47,7 +47,7 @@ inline fun <reified T: RealmObject> Realm.update(key: String, value: String, f: 
 }
 
 inline fun <reified T: RealmObject> Realm.where(init: RealmQuery<T>.() -> RealmQuery<T>): RealmQuery<T> {
-    return where(javaClass<T>()).init()
+    return where(T::class.java).init()
 }
 
 inline fun <reified T: RealmObject> RealmResults<T>.where(init: RealmQuery<T>.() -> RealmQuery<T>): RealmQuery<T> {
@@ -56,14 +56,14 @@ inline fun <reified T: RealmObject> RealmResults<T>.where(init: RealmQuery<T>.()
 
 inline fun <reified T: RealmObject> Realm.deleteAll() {
     transaction {
-        val results = where(javaClass<T>()).findAll()
+        val results = where(T::class.java).findAll()
         results.clear()
     }
 }
 
 inline fun <reified T: RealmObject> Realm.delete(key: String, value: String) {
     transaction {
-        val results = where(javaClass<T>()).equalTo(key, value).findAll()
+        val results = where(T::class.java).equalTo(key, value).findAll()
         results.clear()
     }
 }

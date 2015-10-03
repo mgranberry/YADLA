@@ -25,42 +25,34 @@ public class LoggerApplication : Application() {
         super.onCreate()
         Log.d("LoggerApplication", "start")
         JodaTimeAndroid.init(this);
-        try {
-            // should throw as migration is required
-            Log.d("LoggerApplication", "trying realm for migration")
-            val configuration = RealmConfiguration.Builder(this).build()
-            Realm.setDefaultConfiguration(configuration)
-            Realm.getDefaultInstance().close()
-            // delete old cache entries for testing
+        // should throw as migration is required
+        Log.d("LoggerApplication", "trying realm for migration")
+        val configuration = RealmConfiguration.Builder(this).build()
+        Realm.setDefaultConfiguration(configuration)
+        Realm.getDefaultInstance().close()
+        // delete old cache entries for testing
 
-            if (false) {
-                val arr = Realm.getDefaultInstance()
-                arr.beginTransaction()
-                arr.where<CachedDatePeriodAgp>{this}.findAll().clear()
-                arr.where<CachedBgi>{this}.findAll().clear()
-                arr.where<CachedPeriod>{this}.findAll().clear()
-                arr.commitTransaction()
-                arr.close()
+        if (false) {
+            val arr = Realm.getDefaultInstance()
+            arr.beginTransaction()
+            arr.where<CachedDatePeriodAgp> { this }.findAll().clear()
+            arr.where<CachedBgi> { this }.findAll().clear()
+            arr.where<CachedPeriod> { this }.findAll().clear()
+            arr.commitTransaction()
+            arr.close()
+        }
+
+        async {
+            val realm = Realm.getDefaultInstance()
+            realm.use {
+                var toFile = File("/sdcard/cgm.realm")
+                toFile.delete()
+                Log.i("LoggerApplication", "Copying realm file")
+                realm.writeCopyTo(File("/sdcard/cgm.realm"))
+                Log.i("LoggerApplication", "Realm is at: ${realm.path}")
             }
-
-            async {
-                val realm = Realm.getDefaultInstance()
-                realm.use {
-                    var toFile = File("/sdcard/cgm.realm")
-                    toFile.delete()
-                    Log.i("LoggerApplication", "Copying realm file")
-                    realm.writeCopyTo(File("/sdcard/cgm.realm"))
-                    Log.i("LoggerApplication", "Realm is at: ${realm.getPath()}")
-                }
-
-            }
-            Log.d("LoggerApplication", "succeeded")
-
-        } catch (ex: RealmMigrationNeededException) {
-            Log.d("LogerApplication", "migrating")
-            Realm.migrateRealmAtPath("${getFilesDir()}/${Realm.DEFAULT_REALM_NAME}", Migration())
-            Log.d("LogerApplication", "migrated")
 
         }
+        Log.d("LoggerApplication", "succeeded")
     }
 }

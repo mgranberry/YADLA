@@ -85,7 +85,7 @@ public class TrendlineAdapter(val periods: List<Pair<DateTime,Period>>): Recycle
         })
         val trendLine = per.trendLine
         val date = per.dateTime;
-        holder.chartView!!.getContext().uiThread {
+        holder.chartView!!.context.onUiThread {
             holder.chartView?.trendPathString = trendLine
             holder.chartView?.requestLayout()
             holder.chartView?.invalidate()
@@ -116,8 +116,8 @@ public class TrendlineAdapter(val periods: List<Pair<DateTime,Period>>): Recycle
                 setRadius(dip(5).toFloat())
                 verticalLayout {
                     frameLayout {
-                        paddingHorizontal = dip(8)
-                        paddingVertical = dip(5)
+                        horizontalPadding = dip(8)
+                        verticalPadding = dip(5)
                         holder.chartView = dailyBgChartView {
                             lowLine = 80
                             targetLine = 110

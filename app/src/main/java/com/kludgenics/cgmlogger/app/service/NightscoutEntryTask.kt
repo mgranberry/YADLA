@@ -39,7 +39,7 @@ class NightscoutEntryTask(override val ctx: Context,
             } else count
             return if (requestCount > 0) {
                 info("getting $requestCount entries")
-                getSgvEntries(requestCount)
+                getSgvEntries(requestCount, "2010")
             } else {
                 info("already current.  skipping update.")
                 emptyList()

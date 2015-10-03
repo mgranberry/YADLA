@@ -16,7 +16,7 @@ public fun percentile (percentile: Double, x: List<Double>): Double {
 }
 
 inline public fun<T> Iterable<T>.percentiles(percentiles: DoubleArray, valueExtractor: (T) -> Double): DoubleArray {
-    val sorted = map {valueExtractor (it) }.sort()
+    val sorted = map {valueExtractor (it) }.sorted()
     return percentiles.map { percentile(it, sorted) }.toDoubleArray()
 }
 

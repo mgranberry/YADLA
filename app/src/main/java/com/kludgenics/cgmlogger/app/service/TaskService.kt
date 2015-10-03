@@ -47,7 +47,7 @@ public class TaskService : GcmTaskService(), AnkoLogger {
             val intent = Intent()
             with(intent) {
                 setAction(ACTION_SYNC_NOW)
-                setClass(context, javaClass<TaskService>())
+                setClass(context, TaskService::class.java)
             }
             context.startService(intent)
         }
@@ -56,7 +56,7 @@ public class TaskService : GcmTaskService(), AnkoLogger {
             val intent = Intent()
             with(intent) {
                 setAction(ACTION_SYNC_FULL)
-                setClass(context, javaClass<TaskService>())
+                setClass(context, TaskService::class.java)
             }
             context.startService(intent)
         }
@@ -64,9 +64,9 @@ public class TaskService : GcmTaskService(), AnkoLogger {
         public fun cancelNightscoutTasks(context: Context) {
             Log.i ("TaskService", "Nightscout task cancellation requested by ${context}")
             val networkManager = GcmNetworkManager.getInstance(context)
-            networkManager.cancelTask(TASK_SYNC_ENTRIES_FULL, javaClass<TaskService>())
-            networkManager.cancelTask(TASK_SYNC_ENTRIES_PERIODIC, javaClass<TaskService>())
-            networkManager.cancelTask(TASK_SYNC_TREATMENTS, javaClass<TaskService>())
+            networkManager.cancelTask(TASK_SYNC_ENTRIES_FULL, TaskService::class.java)
+            networkManager.cancelTask(TASK_SYNC_ENTRIES_PERIODIC, TaskService::class.java)
+            networkManager.cancelTask(TASK_SYNC_TREATMENTS, TaskService::class.java)
         }
 
         public fun scheduleNightscoutPeriodicTasks(context: Context) {
@@ -83,7 +83,7 @@ public class TaskService : GcmTaskService(), AnkoLogger {
                     .setRequiredNetwork(Task.NETWORK_STATE_CONNECTED)
                     .setExecutionWindow(0, 30)
                     .setPersisted(true)
-                    .setService(javaClass<TaskService>())
+                    .setService(TaskService::class.java)
                     .setUpdateCurrent(true)
                     .setTag(TASK_SYNC_ENTRIES_FULL)
                     .build())
@@ -94,7 +94,7 @@ public class TaskService : GcmTaskService(), AnkoLogger {
                     .setPeriod(ENTRY_SYNC_PERIOD)
                     .setFlex(ENTRY_SYNC_FLEX)
                     .setPersisted(true)
-                    .setService(javaClass<TaskService>())
+                    .setService(TaskService::class.java)
                     .setUpdateCurrent(true)
                     .setTag(TASK_SYNC_ENTRIES_PERIODIC)
                     .build()
@@ -105,7 +105,7 @@ public class TaskService : GcmTaskService(), AnkoLogger {
                     .setPeriod(TREATMENT_SYNC_PERIOD)
                     .setFlex(TREATMENT_SYNC_FLEX)
                     .setPersisted(true)
-                    .setService(javaClass<TaskService>())
+                    .setService(TaskService::class.java)
                     .setUpdateCurrent(true)
                     .setTag(TASK_SYNC_TREATMENTS)
                     .build()
@@ -131,8 +131,8 @@ public class TaskService : GcmTaskService(), AnkoLogger {
 
     val gsonConverter: GsonConverter by lazy(LazyThreadSafetyMode.NONE) {
         GsonConverter(GsonBuilder()
-                .registerTypeAdapter(javaClass<Int>(), IntegerTypeAdapter() )
-                .registerTypeAdapter(javaClass<DateTime>(), DateTimeSerializer())
+                .registerTypeAdapter(Int::class.java, IntegerTypeAdapter() )
+                .registerTypeAdapter(DateTime::class.java, DateTimeSerializer())
                 .setFieldNamingPolicy(FieldNamingPolicy.IDENTITY)
                 .excludeFieldsWithoutExposeAnnotation()
                 .create())
@@ -201,7 +201,7 @@ public class TaskService : GcmTaskService(), AnkoLogger {
             RestAdapter.Builder()
                     .setEndpoint(uri)
                     .setConverter(gsonConverter)
-                    .build().create(javaClass<NightscoutApiEndpoint>())
+                    .build().create(NightscoutApiEndpoint::class.java)
             else
                 null
         info ("closing tasks in createNightscoutTasks")

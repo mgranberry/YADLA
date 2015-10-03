@@ -14,7 +14,7 @@ public interface NightscoutApiEndpoint {
     List<NightscoutApiEntry> getEntries(@Query("count") int count);
 
     @GET("/api/v1/entries/sgv.json")
-    List<SgvEntry> getSgvEntries(@Query("count") int count);
+    List<SgvEntry> getSgvEntries(@Query("count") int count, @Query("find[dateString][$gte]") String start);
 
     @GET("/api/v1/treatments")
     List<Map<String, String>> getTreatments();

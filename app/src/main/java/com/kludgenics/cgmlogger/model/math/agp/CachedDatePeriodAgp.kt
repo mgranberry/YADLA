@@ -82,11 +82,11 @@ public object AgpUtil: AnkoLogger {
     private fun doInvalidate(start: DateTime,
                              end: DateTime,
                              realm: Realm) {
-        val cachedItems = realm.allObjects(javaClass<CachedDatePeriodAgp>())
+        val cachedItems = realm.allObjects(CachedDatePeriodAgp::class.java)
         val removeList = arrayListOf<RealmObject>()
         cachedItems.forEach {
             val itemTime = it.dateTime
-            val itemStart = it.dateTime - Period.days(it.period)
+            val itemStart = it.dateTime.minus(Period.days(it.period))
             if ( (itemStart <= start && itemTime >= start && itemTime <= end) || (itemStart >= start && itemTime <= end))
                 removeList.add(it)
         }

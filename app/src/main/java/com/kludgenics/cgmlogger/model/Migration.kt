@@ -16,7 +16,7 @@ public class Migration() : RealmMigration {
         while (index < current) {
             index = when (version) {
                 0L, 1L -> {
-                    val tableClasses = arrayOf(javaClass<BloodGlucoseRecord>())
+                    val tableClasses = arrayOf(BloodGlucoseRecord::class.java)
                     tableClasses.forEach {
                         val t: Table = realm.getTable(it)
                         t.setPrimaryKey("id")

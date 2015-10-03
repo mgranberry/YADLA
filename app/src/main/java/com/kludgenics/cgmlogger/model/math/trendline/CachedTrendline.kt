@@ -64,11 +64,11 @@ public object PeriodUtil: AnkoLogger {
     private fun doInvalidate(start: DateTime,
                              end: DateTime,
                              realm: Realm) {
-        val cachedItems = realm.allObjects(javaClass<CachedPeriod>())
+        val cachedItems = realm.allObjects(CachedPeriod::class.java)
         val removeList = arrayListOf<RealmObject>()
         cachedItems.forEach {
             val itemTime = it.dateTime
-            val itemEnd = itemTime + Period.days(it.period)
+            val itemEnd = itemTime.plus(Period.days(it.period))
             if (itemTime > start && itemTime < end || (itemEnd > start && itemTime < end))
                 removeList.add(it)
         }
@@ -85,7 +85,7 @@ public object PeriodUtil: AnkoLogger {
         realm.use {
             info("$period Querying cache")
             val result = realm.where<CachedPeriod> {
-                equalTo("period", period.getDays())
+                equalTo("period", period.days)
                 equalTo("date", dateTime.toDate())
             }.findAllSorted("date", false).firstOrNull()
 
@@ -98,7 +98,7 @@ public object PeriodUtil: AnkoLogger {
                     }
                     updated?.invoke(f)
                 }
-                CachedPeriod(date = dateTime.toDate(), period = period.getDays())
+                CachedPeriod(date = dateTime.toDate(), period = period.days)
             } else if (result.dateTime != dateTime) {
                 info("Result cached, but stale.  Calculating in background.")
                 context.async() {
@@ -130,7 +130,7 @@ public object PeriodUtil: AnkoLogger {
             val cache = CachedPeriod(date = result.dateTime.toDate(), trendLine = result.trendLine,
                     high = result.high, highCount = result.highCount,
                     inRangeCount = result.inRangeCount, low = result.low, lowCount = result.lowCount,
-                    totalCount = result.totalCount, period = result.period.getDays())
+                    totalCount = result.totalCount, period = result.period.days)
             result.realm.beginTransaction()
             result.realm.copyToRealm(cache)
             result.realm.commitTransaction()
@@ -148,8 +148,8 @@ class DailyTrendline(val dateTime: DateTime, val period: Period, val low: Double
     val realm: Realm by lazy(LazyThreadSafetyMode.NONE) { Realm.getDefaultInstance() }
     private val periodValues: RealmResults<BloodGlucoseRecord> by lazy(LazyThreadSafetyMode.NONE) {
         realm.where<BloodGlucoseRecord> {
-            greaterThanOrEqualTo("date", dateTime.getMillis())
-            lessThan("date", (dateTime + period).getMillis())
+            greaterThanOrEqualTo("date", dateTime.millis)
+            lessThan("date", (dateTime.plus(period)).millis)
         }.findAllSorted("date", false)
     }
 
@@ -179,15 +179,15 @@ class DailyTrendline(val dateTime: DateTime, val period: Period, val low: Double
     private fun stringFromValues (values: List<BloodGlucoseRecord>): String {
         return if (values.isNotEmpty()) StringBuilder {
             append("M0,${SPEC_HEIGHT - values.first().value}L")
-            val timeLimit = dateTime + period
+            val timeLimit = dateTime.plus(period)
             val timeStart = dateTime
             val duration = Duration(timeStart, timeLimit)
             var lastTime = timeStart
             values.forEach {
                 value ->
                 val currentTime = value.dateTime
-                val xScale = Duration(timeStart, currentTime).getMillis().toFloat() / duration.getMillis()
-                if (Duration(lastTime, currentTime).getStandardMinutes() > 10) {
+                val xScale = Duration(timeStart, currentTime).millis.toFloat() / duration.millis
+                if (Duration(lastTime, currentTime).standardMinutes > 10) {
                     // Draw gaps where appropriate
                     append("M${xScale * SPEC_WIDTH},${SPEC_HEIGHT - value.value}L")
                 }

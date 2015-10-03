@@ -11,14 +11,14 @@ import kotlin.properties.Delegates
  */
 public class MbgEntry() : BloodGlucose, NightscoutEntry {
 
-    Expose
-    SerializedName("_id")
+    @Expose
+    @SerializedName("_id")
     private var id: String = ""
-    Expose
+    @Expose
     private var device: String = ""
-    Expose
+    @Expose
     private var mbg: Int = 0
-    Expose
+    @Expose
     private var date: Long = 0
 
     public constructor(id: String, device: String, date: Long, mbg: Int) : this() {

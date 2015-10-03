@@ -9,17 +9,17 @@ import java.util.Collections
  * Created by matthiasgranberry on 5/23/15.
  */
 public class GooglePlacesWebLocation : GeocodedLocation {
-    Expose
+    @Expose
     var place_id: String = ""
-    Expose
+    @Expose
     var types: List<String> = Collections.emptyList()
-    Expose
+    @Expose
     var name: String = ""
-    Expose
+    @Expose
     var geometry: Geometry = Geometry()
 
     inner class Geometry {
-        Expose
+        @Expose
         var location: GeometryLocation = GeometryLocation()
 
         fun getPosition(): Position {
@@ -27,9 +27,9 @@ public class GooglePlacesWebLocation : GeocodedLocation {
         }
 
         inner class GeometryLocation {
-            Expose
+            @Expose
             var lat: Float = 0.toFloat()
-            Expose
+            @Expose
             var lng: Float = 0.toFloat()
         }
     }

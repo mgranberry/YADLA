@@ -1,5 +1,5 @@
 buildscript {
-    ext.kotlin_version = '0.13.1513'
+    ext.kotlin_version = '0.14.449'
     ext.realm_version = '0.81.1'
     ext.play_services_version = '7.8.0'
     ext.android_support_version = '22.2.1'
@@ -71,7 +71,7 @@ dependencies {
     compile 'com.squareup.okhttp:okhttp-urlconnection:2.4.0'
     compile 'com.google.code.gson:gson:2.3.1'
     compile "io.realm:realm-android:$realm_version"
-    kapt "io.realm:realm-android:$realm_version"
+    kapt    "io.realm:realm-android:$realm_version"
     compile 'org.jetbrains.anko:anko-sdk21:0.7' // sdk19, sdk21, sdk23 are also available
     compile 'org.jetbrains.anko:anko-support-v4:0.7' // In case you need support.v4 bindings
     compile 'net.danlew:android.joda:2.8.0'

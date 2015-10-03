@@ -1,11 +1,8 @@
 package com.kludgenics.cgmlogger.model.math.bgi
 
-import android.util.Log
 import com.kludgenics.cgmlogger.extension.dateTime
 import com.kludgenics.cgmlogger.model.glucose.BloodGlucoseRecord
-import io.realm.RealmList
 import org.joda.time.DateTime
-import java.util
 import java.util.*
 
 /**
@@ -50,20 +47,20 @@ object Bgi {
         return if (rv > 0) 10 * rv else 0.0
     }
 
-    fun lbgi(records: List<BloodGlucoseRecord>): Double {
+    public fun lbgi(records: List<BloodGlucoseRecord>): Double {
         return records.map { rl(it.value) }.average()
     }
 
-    fun hbgi(records: List<BloodGlucoseRecord>): Double {
+    public fun hbgi(records: List<BloodGlucoseRecord>): Double {
         return records.map { rh(it.value) }.average()
     }
 
-    fun bgRiskIndices(records: List<BloodGlucoseRecord>): Pair<Double, Double> {
+    public fun bgRiskIndices(records: List<BloodGlucoseRecord>): Pair<Double, Double> {
         val rlRh = records.map { rl(it.value) to rh(it.value)}
         return rlRh.map { it.first }.average() to rlRh.map { it.second }.average()
     }
 
-    fun bgri(records: List<BloodGlucoseRecord>): Double {
+    public fun bgri(records: List<BloodGlucoseRecord>): Double {
         val (lbgi, hbgi) = bgRiskIndices(records)
         return lbgi + hbgi
     }
@@ -72,7 +69,7 @@ object Bgi {
      * Calculates the ADRR as given by
      * Evaluation of a New Measure of BloodGlucose Variability in Diabetes
      */
-    fun adrr(records: List<BloodGlucoseRecord>): Double {
+    public fun adrr(records: List<BloodGlucoseRecord>): Double {
         val grouped = records.groupBy { DateTime(it.date).withTimeAtStartOfDay() }
         return grouped.filter { it.getValue().size() > 0 }.map {
             val bgValues = it.getValue().map { it.value }
@@ -82,7 +79,7 @@ object Bgi {
         }.average()
     }
 
-    fun bgRiByTimeBucket(records: List<BloodGlucoseRecord>): List<Pair<Int,FloatArray>> {
+    public fun bgRiByTimeBucket(records: List<BloodGlucoseRecord>): List<Pair<Int,FloatArray>> {
         val sortedMap = sortedMapOf<Int, MutableList<BloodGlucoseRecord>>()
         records.groupByTo(sortedMap) { it.dateTime.minuteOfDay().get() / 30}
         return sortedMap.map {
@@ -91,7 +88,7 @@ object Bgi {
         }
     }
 
-    fun evaluateRisk(map: SortedMap<Double, String>, value: Double) : String {
+    public fun evaluateRisk(map: SortedMap<Double, String>, value: Double) : String {
         val key = map.tailMap(value).firstKey()
         return map.getOrElse(key, {map[map.lastKey()]})!!
     }

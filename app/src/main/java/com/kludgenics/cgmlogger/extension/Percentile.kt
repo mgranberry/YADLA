@@ -1,6 +1,5 @@
 package com.kludgenics.cgmlogger.extension
 import android.util.Log
-import kotlin.InlineOption.ONLY_LOCAL_RETURN
 
 public fun percentile (percentile: Double, x: List<Double>): Double {
     val n = x.size();

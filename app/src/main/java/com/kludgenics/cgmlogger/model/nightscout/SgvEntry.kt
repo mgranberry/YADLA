@@ -9,24 +9,24 @@ import java.util.Date
  * Created by matthiasgranberry on 5/21/15.
  */
 public open class SgvEntry() : BloodGlucose, NightscoutEntry {
-    Expose
-    SerializedName("_id")
+    @Expose
+    @SerializedName("_id")
     private var id: String = ""
-    Expose
+    @Expose
     private var device: String = ""
-    Expose
+    @Expose
     private var date: Long = 0
-    Expose
+    @Expose
     public var sgv: Int = 0
-    Expose
+    @Expose
     public var direction: String = ""
-    Expose
+    @Expose
     public var filtered: Int = 0
-    Expose
+    @Expose
     public var unfiltered: Int = 0
-    Expose
+    @Expose
     public var rssi: Int = 0
-    Expose
+    @Expose
     public var noise: Int = 0
 
     public constructor(id: String, device: String, date: Long, sgv: Int, direction: String, filtered: Int, unfiltered: Int, rssi: Int, noise: Int) : this() {
@@ -64,6 +64,4 @@ public open class SgvEntry() : BloodGlucose, NightscoutEntry {
     override fun getDate(): Long {
         return date
     }
-
-
 }

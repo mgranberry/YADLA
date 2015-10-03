@@ -11,34 +11,34 @@ import java.util.Date
  * Created by matthiasgranberry on 5/24/15.
  */
 public class NightscoutApiEntry : NightscoutEntry {
-    Expose
-    SerializedName("_id")
+    @Expose
+    @SerializedName("_id")
     private val id: String = ""
-    Expose
+    @Expose
     private val slope: Double = 0.0
-    Expose
+    @Expose
     private val intercept: Double = 0.0
-    Expose
+    @Expose
     private val scale: Double = 0.0
-    Expose
+    @Expose
     private val mbg: Double = 0.0
-    Expose
+    @Expose
     private val device: String = ""
-    Expose
+    @Expose
     private val date: Long = 0
-    Expose
+    @Expose
     private val sgv: Double = 0.0
-    Expose
+    @Expose
     private val direction: String = ""
-    Expose
+    @Expose
     private val type: String = ""
-    Expose
+    @Expose
     private val filtered: Double = 0.0
-    Expose
+    @Expose
     private val unfiltered: Double = 0.0
-    Expose
+    @Expose
     private val rssi: Double = 0.0
-    Expose
+    @Expose
     private val noise: Double = 0.0
 
     public fun getType(): String {
@@ -56,6 +56,4 @@ public class NightscoutApiEntry : NightscoutEntry {
     override fun getDate(): Long {
         return date
     }
-
-
 }

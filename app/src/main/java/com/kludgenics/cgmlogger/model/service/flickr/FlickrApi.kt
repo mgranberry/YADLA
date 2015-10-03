@@ -30,12 +30,12 @@ public abstract class FlickrSearch(private val client: OkClient): AnkoLogger {
     }
 
     interface FlickrApi {
-        GET("/services/rest/?method=flickr.photos.search&in_gallery=1&license=4,5,6,7,8&sort=relevance&content_type=1&media=photos")
-        public fun search(Query("text") search: String): SearchResult
-        GET("/services/rest/?method=flickr.photos.getInfo")
-        public fun getInfo(Query("photo_id") photoId: String, Query("secret") photoSecret: String): PhotoInfoResult
-        GET("/services/rest/?method=flickr.photos.getInfo")
-        public fun getInfo(Query("photo_id") photoId: String): PhotoInfoResult
+        @GET("/services/rest/?method=flickr.photos.search&in_gallery=1&license=4,5,6,7,8&sort=relevance&content_type=1&media=photos")
+        public fun search(@Query("text") search: String): SearchResult
+        @GET("/services/rest/?method=flickr.photos.getInfo")
+        public fun getInfo(@Query("photo_id") photoId: String, @Query("secret") photoSecret: String): PhotoInfoResult
+        @GET("/services/rest/?method=flickr.photos.getInfo")
+        public fun getInfo(@Query("photo_id") photoId: String): PhotoInfoResult
     }
 
 

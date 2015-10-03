@@ -37,7 +37,7 @@ class NightscoutEntryTask(override val ctx: Context,
                 val difference = Period(latestTime, DateTime())
                 if (difference.getMinutes() < 5) 0 else 1 + difference.getMinutes() / 5
             } else count
-            return if (count > 0) {
+            return if (requestCount > 0) {
                 info("getting $requestCount entries")
                 getSgvEntries(requestCount)
             } else {

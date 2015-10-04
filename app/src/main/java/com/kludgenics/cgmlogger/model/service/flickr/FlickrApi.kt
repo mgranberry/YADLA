@@ -1,9 +1,6 @@
 package com.kludgenics.cgmlogger.model.service.flickr
 
-import com.squareup.okhttp.OkHttpClient
 import org.jetbrains.anko.AnkoLogger
-
-import retrofit.RequestInterceptor
 import retrofit.RestAdapter
 import retrofit.android.AndroidLog
 import retrofit.client.OkClient

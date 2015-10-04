@@ -1,23 +1,21 @@
 package com.kludgenics.cgmlogger.model.math.agp
 
 import android.content.Context
-import android.graphics.Canvas
-import android.graphics.Paint
-import android.graphics.Path
+import com.kludgenics.cgmlogger.extension.where
 import io.realm.Realm
 import io.realm.RealmObject
 import io.realm.annotations.Ignore
 import io.realm.annotations.RealmClass
+import org.jetbrains.anko.AnkoLogger
+import org.jetbrains.anko.async
+import org.jetbrains.anko.asyncResult
+import org.jetbrains.anko.info
 import org.joda.time.DateTime
 import org.joda.time.Period
 import java.util.*
-import com.kludgenics.cgmlogger.extension.*
-import org.jetbrains.anko.*
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.Future
-import java.util.concurrent.ScheduledExecutorService
-import kotlin.properties.Delegates
 
 /**
  * Created by matthiasgranberry on 7/5/15.
@@ -52,9 +50,9 @@ public val CachedDatePeriodAgp.svg: String
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
 <svg height="${svgHeight}pt" version="1.1" viewBox="0 0 240 400" width="${svgWidth}pt" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
     <g id="agp">
-        <path d="${outer}" fill="#2d95c2"/>
-        <path d="${inner}" fill="#005882"/>
-        <path d="${median}" stroke="#bce6ff" fill-opacity="0.0" stroke-with="3"/>
+        <path d="$outer" fill="#2d95c2"/>
+        <path d="$inner" fill="#005882"/>
+        <path d="$median" stroke="#bce6ff" fill-opacity="0.0" stroke-with="3"/>
 
         <line x1="0" y1="${400 - target}" y2="${400 - target}" x2="360" stroke="green"/>
         <line x1="0" y1="${400 - high}" y2="${400 - high}" x2="360" stroke="yellow"/>
@@ -101,7 +99,7 @@ public object AgpUtil: AnkoLogger {
         realm.use {
             info("$period Querying cache")
             val result = realm.where<CachedDatePeriodAgp> {
-                equalTo("period", period.getDays())
+                equalTo("period", period.days)
             }.findAllSorted("date", false).firstOrNull()
 
             return if (result == null) {
@@ -113,7 +111,7 @@ public object AgpUtil: AnkoLogger {
                     }
                     updated?.invoke(f)
                 }
-                CachedDatePeriodAgp(date = dateTime.toDate(), period = period.getDays())
+                CachedDatePeriodAgp(date = dateTime.toDate(), period = period.days)
             } else if (result.dateTime != dateTime) {
                 info("Result cached, but stale.  Calculating in background.")
                 context.async() {
@@ -133,11 +131,11 @@ public object AgpUtil: AnkoLogger {
     }
 
     private fun calculateAndCacheAgp(dateTime: DateTime, period: Period): CachedDatePeriodAgp {
-        info ("$period Calculating agp: ${dateTime}, ${period}")
+        info ("$period Calculating agp: $dateTime, $period")
         val currentAgp = DailyAgp(dateTime, period)
         info("$period Storing cached AGP")
         val ro = CachedDatePeriodAgp(currentAgp.pathStrings[0], currentAgp.pathStrings[1],
-                currentAgp.pathStrings[2], date = dateTime.toDate(), period = period.getDays())
+                currentAgp.pathStrings[2], date = dateTime.toDate(), period = period.days)
         info("$period acquiring realm in caca")
         val realm = Realm.getDefaultInstance()
         info("$period acquired realm")

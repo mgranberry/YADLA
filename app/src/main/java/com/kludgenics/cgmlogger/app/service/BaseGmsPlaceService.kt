@@ -37,7 +37,7 @@ public class BaseGmsPlaceService : Service(), GoogleApiClient.OnConnectionFailed
     }
 
     override fun onDestroy() {
-        super<Service>.onDestroy()
+        super.onDestroy()
         disconnectGoogleClient()
     }
 
@@ -48,7 +48,7 @@ public class BaseGmsPlaceService : Service(), GoogleApiClient.OnConnectionFailed
     }
 
     override fun onConfigurationChanged(newConfig: Configuration) {
-        super<Service>.onConfigurationChanged(newConfig)
+        super.onConfigurationChanged(newConfig)
     }
 
     public inner class LocalBinder(private val client: GoogleApiClient) : Binder() {

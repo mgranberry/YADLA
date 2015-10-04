@@ -1,10 +1,5 @@
 package com.kludgenics.cgmlogger.model.glucose
 
-import org.jetbrains.annotations.NotNull
-import java.util.Date
-import java.util.InvalidPropertiesFormatException
-import kotlin.properties.Delegates
-
 /**
  * Created by matthiasgranberry on 5/12/15.
  */

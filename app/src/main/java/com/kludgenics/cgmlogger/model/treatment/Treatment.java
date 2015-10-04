@@ -1,10 +1,5 @@
 package com.kludgenics.cgmlogger.model.treatment;
 
-import com.google.gson.annotations.Expose;
-import com.google.gson.annotations.SerializedName;
-
-import org.joda.time.DateTime;
-
 import java.util.Date;
 
 import io.realm.RealmObject;

@@ -1,7 +1,6 @@
 package com.kludgenics.cgmlogger.model
 
 import com.kludgenics.cgmlogger.model.glucose.BloodGlucoseRecord
-import com.kludgenics.cgmlogger.model.nightscout.CalibrationEntry
 import io.realm.Realm
 import io.realm.RealmMigration
 import io.realm.internal.Table

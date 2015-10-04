@@ -1,14 +1,9 @@
 package com.kludgenics.cgmlogger.app.service
 
 import android.content.Context
-import com.kludgenics.cgmlogger.model.glucose.BgPostprocesser
 import com.kludgenics.cgmlogger.model.nightscout.NightscoutApiEndpoint
-import com.kludgenics.cgmlogger.model.nightscout.NightscoutApiEntry
 import com.kludgenics.cgmlogger.model.nightscout.NightscoutApiTreatment
 import io.realm.Realm
-import org.joda.time.DateTime
-import java.io.Closeable
-import kotlin.properties.Delegates
 
 /**
  * Created by matthiasgranberry on 6/4/15.
@@ -21,7 +16,7 @@ class NightscoutTreatmentTask(override val ctx: Context,
 
     override val init: NightscoutApiEndpoint.() -> List<Map<String, String>>
         get() = fun (): List<Map<String, String>> {
-            return getTreatments()
+            return treatments
         }
 
     override val copy: Realm.(Any) -> Unit

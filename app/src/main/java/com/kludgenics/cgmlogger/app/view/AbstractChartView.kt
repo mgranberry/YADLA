@@ -5,8 +5,8 @@ import android.graphics.*
 import android.util.AttributeSet
 import android.view.View
 import com.kludgenics.cgmlogger.app.util.PathParser
-import com.kludgenics.cgmlogger.model.math.agp.DailyAgp
 import org.jetbrains.anko.*
+
 /**
  * Created by matthiasgranberry on 7/17/15.
  */
@@ -28,7 +28,7 @@ public abstract class AbstractChartView(context: Context, attrs: AttributeSet?, 
             Float.MIN_VALUE, Float.MIN_VALUE)): RectF {
         boundedPaths.forEach {
             measurePath ->
-            if (!measurePath.unscaled.isEmpty()) {
+            if (!measurePath.unscaled.isEmpty) {
                 measurePath.unscaled.computeBounds(boundRect, false)
                 bounds.left = Math.min(bounds.left, boundRect.left)
                 bounds.top = Math.min(bounds.top, boundRect.top)
@@ -69,15 +69,15 @@ public abstract class AbstractChartView(context: Context, attrs: AttributeSet?, 
             View.MeasureSpec.EXACTLY ->
                 heightMeasureVal
             View.MeasureSpec.AT_MOST ->
-                Math.min(heightMeasureVal, (getVerticalDecoractionSize()).toInt() + paddingVertical + getContext().dip(bounds.bottom - bounds.top))
+                Math.min(heightMeasureVal, (getVerticalDecoractionSize()).toInt() + paddingVertical + context.dip(bounds.bottom - bounds.top))
             else -> heightMeasureVal
         }
-        info ("setMeasuredDimensions; ${width} ${height}")
+        info ("setMeasuredDimensions; $width $height")
         setMeasuredDimension(width, height)
     }
 
     override fun onDraw(canvas: Canvas) {
-        super<View>.onDraw(canvas)
+        super.onDraw(canvas)
         boundedPaths.forEach {
             path ->
             canvas.drawPath(path.scaled, path.paint)
@@ -86,22 +86,22 @@ public abstract class AbstractChartView(context: Context, attrs: AttributeSet?, 
 
     protected fun getVerticalDecoractionSize(): Float = 0f
 
-    protected fun dip(pixels: Int): Float = (pixels * (getResources()?.getDisplayMetrics()?.density ?: 0f))
+    protected fun dip(pixels: Int): Float = (pixels * (resources?.displayMetrics?.density ?: 0f))
 
     protected fun initializePaint(colorResource: Int = 0, color: Int = Color.BLACK, stroke: Boolean = false,
                                 strokeWidth: Float = dip(3),
                                 pathEffect: PathEffect? = null, init: Paint.()->Unit = {}): Paint {
         val paint = Paint()
-        paint.setColor(if (colorResource != 0)
+        paint.color = if (colorResource != 0)
             resources!!getColor(colorResource)
         else
-            color)
-        paint.setAntiAlias(true)
+            color
+        paint.isAntiAlias = true
         if (stroke) {
-            paint.setStyle(Paint.Style.STROKE)
-            paint.setStrokeWidth(strokeWidth)
+            paint.style = Paint.Style.STROKE
+            paint.strokeWidth = strokeWidth
         } else
-            paint.setStyle(Paint.Style.FILL)
+            paint.style = Paint.Style.FILL
         if (pathEffect != null)
             paint.setPathEffect(pathEffect)
         paint.init()

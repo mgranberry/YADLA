@@ -2,10 +2,9 @@ package com.kludgenics.cgmlogger.app
 
 import android.content.SharedPreferences
 import android.os.Bundle
-import android.preference.PreferenceActivity
 import android.preference.PreferenceFragment
 import com.kludgenics.cgmlogger.app.service.TaskService
-import org.jetbrains.anko.*
+import org.jetbrains.anko.defaultSharedPreferences
 
 /**
  * Created by matthiasgranberry on 6/2/15.
@@ -16,7 +15,7 @@ public class SettingsActivity : BaseActivity() {
 
     val preferencesListener = SharedPreferences.OnSharedPreferenceChangeListener {
         prefs, key ->
-        val resources = getResources()
+        val resources = resources
         val nightscoutPrefs = when(key) {
             resources.getString(R.string.nightscout_enable) -> {
                 prefs.getBoolean(key, false) to prefs.getString(resources.getString(R.string.nightscout_uri), "")
@@ -46,7 +45,7 @@ public class SettingsActivity : BaseActivity() {
     fun setupPreferences() {
         val preferenceFragment = LoggerPreferenceFragment();
 
-        getFragmentManager().beginTransaction().replace(android.R.id.content,
+        fragmentManager.beginTransaction().replace(android.R.id.content,
                 preferenceFragment).commit();
 
         defaultSharedPreferences.registerOnSharedPreferenceChangeListener(preferencesListener)

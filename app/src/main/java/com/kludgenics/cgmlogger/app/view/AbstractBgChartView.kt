@@ -1,11 +1,9 @@
 package com.kludgenics.cgmlogger.app.view
 
 import android.content.Context
-import android.graphics.Matrix
 import android.graphics.Paint
 import android.graphics.Path
 import android.util.AttributeSet
-import com.kludgenics.cgmlogger.app.util.PathParser
 import com.kludgenics.cgmlogger.model.math.agp.DailyAgp
 import org.jetbrains.anko.AnkoLogger
 import org.jetbrains.anko.info
@@ -34,7 +32,7 @@ public abstract class AbstractBgChartView(context: Context, attrs: AttributeSet?
 
     public var lowLine: Int by Delegates.observable(80, {
         propertyMetadata: PropertyMetadata, previous: Int, current: Int ->
-        info("setting lowLine to ${current}")
+        info("setting lowLine to $current")
         if (current == 0) {
             boundedPaths.remove(lowPath)
             lowPath = null
@@ -50,7 +48,7 @@ public abstract class AbstractBgChartView(context: Context, attrs: AttributeSet?
 
     public var targetLine: Int by Delegates.observable(110, {
         propertyMetadata: PropertyMetadata, previous: Int, current: Int ->
-        info("setting targetLine to ${current}")
+        info("setting targetLine to $current")
         if (current == 0) {
             boundedPaths.remove(targetPath)
             targetPath = null
@@ -66,7 +64,7 @@ public abstract class AbstractBgChartView(context: Context, attrs: AttributeSet?
 
     public var highLine: Int by Delegates.observable(180, {
         propertyMetadata: PropertyMetadata, previous: Int, current: Int ->
-        info("setting highLine to ${current}")
+        info("setting highLine to $current")
         if (current == 0) {
             boundedPaths.remove(highPath)
             highPath = null

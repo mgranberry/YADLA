@@ -30,23 +30,23 @@ public class DailyBgChartView(context: Context, attrs: AttributeSet?, defStyle: 
     override var xAxisOffset: Float by Delegates.notNull()
     override val xAxisTextSize: Float by lazy(LazyThreadSafetyMode.NONE) { dip(10) }
     override val xAxisPaint: Paint by lazy(LazyThreadSafetyMode.NONE) {
-        initializePaint(color= Color.BLACK, stroke = true, strokeWidth = dip(2), init={setAlpha(127)}) }
+        initializePaint(color= Color.BLACK, stroke = true, strokeWidth = dip(2), init={ alpha = 127 }) }
     override val xAxisLabelPaint: Paint by lazy(LazyThreadSafetyMode.NONE) {
         initializePaint(color=Color.BLACK, init={
-            setAlpha(127)
-            setTextSize(xAxisTextSize)
-            setTextAlign(Paint.Align.LEFT)
+            alpha = 127
+            textSize = xAxisTextSize
+            textAlign = Paint.Align.LEFT
         })
     }
     override val xAxisTickHeight: Float by lazy(LazyThreadSafetyMode.NONE) { dip(5) }
 
     override fun getXValue(xValue: Int): Float {
-        return paddingLeft + xValue.toFloat()/ DailyAgp.SPEC_WIDTH * (getWidth() - paddingLeft - paddingRight)
+        return paddingLeft + xValue.toFloat()/ DailyAgp.SPEC_WIDTH * (width - paddingLeft - paddingRight)
     }
 
     override fun getXLabel(xValue: Int): String {
         val hours = xValue.toInt() / 10
-        return "${hours}"
+        return "$hours"
     }
 
     var trendPathData: Array<PathParser.PathDataNode> by Delegates.observable(emptyArray(), {
@@ -80,7 +80,7 @@ public class DailyBgChartView(context: Context, attrs: AttributeSet?, defStyle: 
 
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
-        super<AbstractBgChartView>.onSizeChanged(w, h, oldw, oldh)
+        super.onSizeChanged(w, h, oldw, oldh)
         val bounds = computePathBounds()
         scaleMatrix.setRectToRect(bounds, RectF(paddingLeft.toFloat(), paddingTop.toFloat(),
                 w.toFloat() - paddingRight, h.toFloat() - paddingBottom - if (showXAxis) xAxisTextSize + xAxisTickHeight else 0f), Matrix.ScaleToFit.FILL)
@@ -89,7 +89,7 @@ public class DailyBgChartView(context: Context, attrs: AttributeSet?, defStyle: 
     }
 
     override fun onDraw(canvas: Canvas) {
-        super<AbstractBgChartView>.onDraw(canvas)
+        super.onDraw(canvas)
         drawXAxis(canvas)
     }
 

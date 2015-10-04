@@ -1,7 +1,5 @@
 package com.kludgenics.cgmlogger.model.nightscout
 
-import java.util.Date
-
 /**
  * Created by matthiasgranberry on 5/26/15.
  */

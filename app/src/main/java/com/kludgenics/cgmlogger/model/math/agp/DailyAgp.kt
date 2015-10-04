@@ -1,17 +1,12 @@
 package com.kludgenics.cgmlogger.model.math.agp
 
-import android.content.Context
-import android.util.Log
 import com.kludgenics.cgmlogger.extension.dateTime
 import com.kludgenics.cgmlogger.extension.percentiles
 import com.kludgenics.cgmlogger.model.glucose.BloodGlucoseRecord
 import io.realm.Realm
-import org.jetbrains.anko.ctx
 import org.joda.time.DateTime
-import org.joda.time.Duration
 import org.joda.time.Period
 import java.util.*
-import kotlin.properties.Delegates
 
 /**
  * Created by matthiasgranberry on 7/4/15.
@@ -67,8 +62,8 @@ public class DailyAgp(val dateTime: DateTime = DateTime(), val period: Period = 
         realm.use {
             val timeAtStartOfDay = dateTime.withTimeAtStartOfDay()
             val res = realm.where(BloodGlucoseRecord::class.java)
-                    .greaterThanOrEqualTo("date", (timeAtStartOfDay.minus(period)).getMillis())
-                    .lessThanOrEqualTo("date", timeAtStartOfDay.getMillis())
+                    .greaterThanOrEqualTo("date", (timeAtStartOfDay.minus(period)).millis)
+                    .lessThanOrEqualTo("date", timeAtStartOfDay.millis)
                     .findAll()
             val dateBgPairs = res.map { it.dateTime.minuteOfDay().get() / 30 to it.value }
             val map = TreeMap<Int, MutableList<Pair<Int, Double>>>()

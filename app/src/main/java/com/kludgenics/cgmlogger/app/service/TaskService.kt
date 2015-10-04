@@ -14,16 +14,11 @@ import com.google.gson.stream.JsonToken
 import com.google.gson.stream.JsonWriter
 import com.kludgenics.cgmlogger.app.R
 import com.kludgenics.cgmlogger.app.util.DateTimeSerializer
-import com.kludgenics.cgmlogger.model.glucose.BloodGlucoseRecord
 import com.kludgenics.cgmlogger.model.nightscout.NightscoutApiEndpoint
-import com.kludgenics.cgmlogger.model.nightscout.NightscoutApiEntry
-import com.kludgenics.cgmlogger.model.nightscout.NightscoutApiTreatment
-import io.realm.Realm
 import org.jetbrains.anko.*
 import org.joda.time.DateTime
 import retrofit.RestAdapter
 import retrofit.converter.GsonConverter
-import kotlin.properties.Delegates
 
 /**
  * Created by matthiasgranberry on 5/31/15.
@@ -62,7 +57,7 @@ public class TaskService : GcmTaskService(), AnkoLogger {
         }
 
         public fun cancelNightscoutTasks(context: Context) {
-            Log.i ("TaskService", "Nightscout task cancellation requested by ${context}")
+            Log.i ("TaskService", "Nightscout task cancellation requested by $context")
             val networkManager = GcmNetworkManager.getInstance(context)
             networkManager.cancelTask(TASK_SYNC_ENTRIES_FULL, TaskService::class.java)
             networkManager.cancelTask(TASK_SYNC_ENTRIES_PERIODIC, TaskService::class.java)
@@ -70,14 +65,14 @@ public class TaskService : GcmTaskService(), AnkoLogger {
         }
 
         public fun scheduleNightscoutPeriodicTasks(context: Context) {
-            Log.i ("TaskService", "Periodic Nightscout sync requested by ${context}")
+            Log.i ("TaskService", "Periodic Nightscout sync requested by $context")
             val networkManager = GcmNetworkManager.getInstance(context)
             networkManager.schedule(createPeriodicTreatmentTask())
             networkManager.schedule(createPeriodicEntryTask())
         }
 
         public fun scheduleNightscoutEntriesFullSync(context: Context) {
-            Log.i ("TaskService", "Full sync requested by ${context}")
+            Log.i ("TaskService", "Full sync requested by $context")
             val networkManager = GcmNetworkManager.getInstance(context)
             return networkManager.schedule(OneoffTask.Builder()
                     .setRequiredNetwork(Task.NETWORK_STATE_CONNECTED)
@@ -120,7 +115,7 @@ public class TaskService : GcmTaskService(), AnkoLogger {
 
     val sharedPreferencesListener = SharedPreferences.OnSharedPreferenceChangeListener {
         sharedPreferences, s ->
-        val resources = getResources()
+        val resources = resources
         when (s) {
             resources.getString(R.string.nightscout_uri),
             resources.getString(R.string.nightscout_enable) -> {
@@ -141,7 +136,7 @@ public class TaskService : GcmTaskService(), AnkoLogger {
     val tasks: MutableMap<String, NightscoutTask> = ArrayMap()
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        return when (intent?.getAction()) {
+        return when (intent?.action) {
             ACTION_SYNC_NOW -> {
                 async {
                     onRunTask(TaskParams(TASK_SYNC_ENTRIES_PERIODIC))
@@ -156,14 +151,14 @@ public class TaskService : GcmTaskService(), AnkoLogger {
                 }
                 2
             }
-            else -> super<GcmTaskService>.onStartCommand(intent, flags, startId)
+            else -> super.onStartCommand(intent, flags, startId)
         }
     }
 
     override fun onInitializeTasks() {
-        super<GcmTaskService>.onInitializeTasks()
+        super.onInitializeTasks()
         info("initializing tasks")
-        val resources = getResources()
+        val resources = resources
         if (prefs.getBoolean(resources.getString(R.string.nightscout_enable), false)  &&
                 !(prefs.getString(resources.getString(R.string.nightscout_uri), "").isBlank())) {
             scheduleNightscoutPeriodicTasks(this)
@@ -175,28 +170,28 @@ public class TaskService : GcmTaskService(), AnkoLogger {
         if (tasks.isEmpty())
             createNightscoutTasks()
 
-        return when (taskParams.getTag()) {
+        return when (taskParams.tag) {
             TASK_LOOKUP_LOCATIONS -> {
                 error("Location lookup currently unimplemented")
                 GcmNetworkManager.RESULT_FAILURE
             }
             in tasks.keySet() -> {
                 // if the tasks were reset mid-stream, don't crash
-                info ("Starting ${taskParams.getTag()}")
-                val r = tasks.get(taskParams.getTag())?.call() ?: GcmNetworkManager.RESULT_RESCHEDULE
-                info ("Finished ${taskParams.getTag()}")
+                info ("Starting ${taskParams.tag}")
+                val r = tasks.get(taskParams.tag)?.call() ?: GcmNetworkManager.RESULT_RESCHEDULE
+                info ("Finished ${taskParams.tag}")
                 r
             }
             else -> {
-                error ("Unrecognized tag ${taskParams.getTag()} in onRunTask")
+                error ("Unrecognized tag ${taskParams.tag} in onRunTask")
                 GcmNetworkManager.RESULT_FAILURE
             }  // unrecognized tag, should never happen
         }
     }
 
     private fun createNightscoutTasks(): Unit {
-        val uri = prefs.getString(getResources().getString(R.string.nightscout_uri), "")
-        val enabled = prefs.getBoolean(getResources().getString(R.string.nightscout_enable), false)
+        val uri = prefs.getString(resources.getString(R.string.nightscout_uri), "")
+        val enabled = prefs.getBoolean(resources.getString(R.string.nightscout_enable), false)
         val endpoint = if (enabled && !uri.isNullOrBlank())
             RestAdapter.Builder()
                     .setEndpoint(uri)
@@ -217,7 +212,7 @@ public class TaskService : GcmTaskService(), AnkoLogger {
     override fun onDestroy() {
         info ("onDestroy()")
         tasks.clear()
-        super<GcmTaskService>.onDestroy()
+        super.onDestroy()
     }
 
     public class IntegerTypeAdapter: TypeAdapter<Int>() {

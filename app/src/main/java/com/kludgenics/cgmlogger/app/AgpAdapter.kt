@@ -7,16 +7,17 @@ import android.support.v7.widget.RecyclerView
 import android.view.Gravity
 import android.view.ViewGroup
 import android.widget.TextView
-import com.kludgenics.cgmlogger.app.view.*
-import org.jetbrains.anko.*
+import com.kludgenics.cgmlogger.app.view.AgpChartView
+import com.kludgenics.cgmlogger.app.view.BgRiChartView
+import com.kludgenics.cgmlogger.app.view.agpChartView
 import com.kludgenics.cgmlogger.model.math.agp.AgpUtil
 import com.kludgenics.cgmlogger.model.math.agp.CachedDatePeriodAgp
+import org.jetbrains.anko.*
 import org.joda.time.Period
 import java.util.concurrent.CancellationException
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.Future
 import java.util.concurrent.TimeUnit
-import com.kludgenics.cgmlogger.model.math.agp.dateTime
 
 /**
  * Created by matthiasgranberry on 5/31/15.

@@ -1,11 +1,11 @@
 package com.kludgenics.cgmlogger.extension
-import android.util.ArrayMap
-import com.kludgenics.cgmlogger.model.glucose.BloodGlucose
 import com.kludgenics.cgmlogger.model.glucose.BloodGlucoseRecord
-import io.realm.*
+import io.realm.Realm
+import io.realm.RealmObject
+import io.realm.RealmQuery
+import io.realm.RealmResults
 import io.realm.exceptions.RealmException
 import org.joda.time.DateTime
-import java.util.*
 
 
 fun Realm.transaction (init: Realm.() -> Unit) {
@@ -77,6 +77,6 @@ inline fun <T: RealmObject> RealmQuery<T>.group(init: RealmQuery<T>.() -> RealmQ
 
 inline var BloodGlucoseRecord.dateTime: DateTime
     get() = DateTime(date)
-    set(dt: DateTime) = { date = dt.getMillis() }()
+    set(dt: DateTime) = { date = dt.millis }()
 
 data class UpdateResult<T: RealmObject>(val result: T, val changeMap: Map<String, String>)

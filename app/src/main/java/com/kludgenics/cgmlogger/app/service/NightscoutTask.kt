@@ -4,12 +4,11 @@ import android.content.Context
 import com.google.android.gms.gcm.GcmNetworkManager
 import com.google.gson.JsonParseException
 import com.kludgenics.cgmlogger.model.nightscout.NightscoutApiEndpoint
-import com.kludgenics.cgmlogger.model.nightscout.NightscoutApiTreatment
 import io.realm.Realm
-import org.jetbrains.anko.*
-import org.joda.time.DateTime
+import org.jetbrains.anko.AnkoLogger
+import org.jetbrains.anko.error
+import org.jetbrains.anko.info
 import retrofit.RetrofitError
-import java.io.Closeable
 import java.util.concurrent.Callable
 
 /**
@@ -47,9 +46,9 @@ interface NightscoutTask: Callable<Int>, AnkoLogger {
                     return GcmNetworkManager.RESULT_RESCHEDULE
                 }
             } catch (e: RetrofitError) {
-                error("Retrofit Error: ${e}")
+                error("Retrofit Error: $e")
                 e.printStackTrace()
-                return when (e.getKind()) {
+                return when (e.kind) {
                     RetrofitError.Kind.CONVERSION -> GcmNetworkManager.RESULT_FAILURE
                     RetrofitError.Kind.HTTP -> GcmNetworkManager.RESULT_FAILURE
                     RetrofitError.Kind.NETWORK -> GcmNetworkManager.RESULT_RESCHEDULE
@@ -57,7 +56,7 @@ interface NightscoutTask: Callable<Int>, AnkoLogger {
                     else -> GcmNetworkManager.RESULT_FAILURE
                 }
             } catch (t: JsonParseException) {
-                error("sync failed: ${t}")
+                error("sync failed: $t")
                 return GcmNetworkManager.RESULT_FAILURE
             }
         }

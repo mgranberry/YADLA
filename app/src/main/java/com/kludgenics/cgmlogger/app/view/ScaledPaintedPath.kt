@@ -3,7 +3,6 @@ package com.kludgenics.cgmlogger.app.view
 import android.graphics.Matrix
 import android.graphics.Paint
 import android.graphics.Path
-import kotlin.properties.Delegates
 
 /**
  * Created by matthiasgranberry on 7/18/15.

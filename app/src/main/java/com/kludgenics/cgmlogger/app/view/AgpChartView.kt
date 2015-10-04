@@ -2,16 +2,12 @@ package com.kludgenics.cgmlogger.app.view
 
 import android.content.Context
 import android.graphics.*
-import android.support.design.widget.AppBarLayout
 import android.util.AttributeSet
-import android.view.View
 import android.view.ViewManager
 import com.kludgenics.cgmlogger.app.R
 import com.kludgenics.cgmlogger.app.util.PathParser
-import com.kludgenics.cgmlogger.model.math.agp.CachedDatePeriodAgp
 import com.kludgenics.cgmlogger.model.math.agp.DailyAgp
 import org.jetbrains.anko.*
-import org.joda.time.Period
 import kotlin.properties.Delegates
 
 public class AgpChartView(context: Context, attrs: AttributeSet?, defStyle: Int) : ChartXAxis,
@@ -31,25 +27,25 @@ public class AgpChartView(context: Context, attrs: AttributeSet?, defStyle: Int)
     override var xAxisOffset: Float by Delegates.notNull()
     override val xAxisTextSize: Float by lazy(LazyThreadSafetyMode.NONE) { dip(10) }
     override val xAxisPaint: Paint by lazy(LazyThreadSafetyMode.NONE) {
-        initializePaint(color=Color.BLACK, stroke = true, strokeWidth = dip(2), init={setAlpha(127)}) }
+        initializePaint(color=Color.BLACK, stroke = true, strokeWidth = dip(2), init={ alpha = 127 }) }
 
     override val xAxisLabelPaint: Paint by lazy(LazyThreadSafetyMode.NONE) {
         initializePaint(color=Color.BLACK, init={
-            setAlpha(127)
-            setTextSize(xAxisTextSize)
-            setTextAlign(Paint.Align.LEFT)
+            alpha = 127
+            textSize = xAxisTextSize
+            textAlign = Paint.Align.LEFT
         })
     }
 
     override val xAxisTickHeight: Float by lazy(LazyThreadSafetyMode.NONE) { dip(5) }
 
     override fun getXValue(xValue: Int): Float {
-        return paddingLeft + xValue.toFloat()/DailyAgp.SPEC_WIDTH * (getWidth() - paddingLeft - paddingRight)
+        return paddingLeft + xValue.toFloat()/DailyAgp.SPEC_WIDTH * (width - paddingLeft - paddingRight)
     }
 
     override fun getXLabel(xValue: Int): String {
         val hours = xValue.toInt() / 10
-        return "${hours}"
+        return "$hours"
     }
 
     var outerPathData: Array<PathParser.PathDataNode> by Delegates.observable(emptyArray(), {
@@ -118,7 +114,7 @@ public class AgpChartView(context: Context, attrs: AttributeSet?, defStyle: Int)
     }
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
-        super<AbstractBgChartView>.onSizeChanged(w, h, oldw, oldh)
+        super.onSizeChanged(w, h, oldw, oldh)
         val bounds = computePathBounds()
         scaleMatrix.setRectToRect(bounds, RectF(paddingLeft.toFloat(), paddingTop.toFloat(),
                 w.toFloat() - paddingRight, h.toFloat() - paddingBottom - if (showXAxis) xAxisTextSize + xAxisTickHeight else 0f), Matrix.ScaleToFit.FILL)
@@ -127,7 +123,7 @@ public class AgpChartView(context: Context, attrs: AttributeSet?, defStyle: Int)
     }
 
     override fun onDraw(canvas: Canvas) {
-        super<AbstractBgChartView>.onDraw(canvas)
+        super.onDraw(canvas)
         drawXAxis(canvas)
     }
 }

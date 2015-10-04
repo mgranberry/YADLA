@@ -1,5 +1,4 @@
 package com.kludgenics.cgmlogger.extension
-import android.util.Log
 
 public fun percentile (percentile: Double, x: List<Double>): Double {
     val n = x.size();

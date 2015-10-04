@@ -4,10 +4,9 @@ import android.content.Context
 import com.kludgenics.cgmlogger.extension.dateTime
 import com.kludgenics.cgmlogger.extension.where
 import com.kludgenics.cgmlogger.model.glucose.BloodGlucoseRecord
-import com.kludgenics.cgmlogger.model.math.agp.CachedDatePeriodAgp
-import com.kludgenics.cgmlogger.model.math.agp.DailyAgp
-import com.kludgenics.cgmlogger.model.math.agp.dateTime
-import io.realm.*
+import io.realm.Realm
+import io.realm.RealmObject
+import io.realm.RealmResults
 import io.realm.annotations.RealmClass
 import org.jetbrains.anko.AnkoLogger
 import org.jetbrains.anko.async
@@ -21,7 +20,6 @@ import java.util.*
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.Future
-import kotlin.properties.Delegates
 
 /**
  * Created by matthiasgranberry on 7/18/15.

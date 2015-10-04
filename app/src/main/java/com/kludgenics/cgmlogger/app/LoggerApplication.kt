@@ -1,18 +1,13 @@
 package com.kludgenics.cgmlogger.app
 
 import android.app.Application
-import android.app.usage.UsageEvents
 import android.util.Log
-import com.kludgenics.cgmlogger.model.Migration
+import com.kludgenics.cgmlogger.extension.where
 import com.kludgenics.cgmlogger.model.math.agp.CachedDatePeriodAgp
 import com.kludgenics.cgmlogger.model.math.bgi.CachedBgi
 import com.kludgenics.cgmlogger.model.math.trendline.CachedPeriod
-import com.kludgenics.cgmlogger.util.FileUtil
-import com.kludgenics.cgmlogger.extension.*
-
 import io.realm.Realm
 import io.realm.RealmConfiguration
-import io.realm.exceptions.RealmMigrationNeededException
 import net.danlew.android.joda.JodaTimeAndroid
 import org.jetbrains.anko.async
 import java.io.File

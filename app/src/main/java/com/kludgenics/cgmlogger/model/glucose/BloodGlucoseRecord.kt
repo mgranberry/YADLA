@@ -1,11 +1,8 @@
 package com.kludgenics.cgmlogger.model.glucose
 
 import io.realm.RealmObject
-import io.realm.annotations.Index
 import io.realm.annotations.PrimaryKey
 import io.realm.annotations.RealmClass
-
-import java.util.Date
 
 /**
  * Created by matthiasgranberry on 5/24/15.

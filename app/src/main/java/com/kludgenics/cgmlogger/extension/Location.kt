@@ -1,12 +1,9 @@
 package com.kludgenics.cgmlogger.extension
 
-import android.content.Context
-import android.graphics.Path
 import android.location.Location
-import android.util.Log
 import com.google.android.gms.location.Geofence
 import com.google.android.gms.location.GeofencingRequest
-import kotlin.Collection.*
+
 /**
  * Calculates the error function assuming a normal distribution with mean 0 and standard deviation 1
  */
@@ -26,7 +23,7 @@ private fun cumulativeDensityFunction(x: Double, mean: Double, sigma: Double): D
 }
 
 public fun Location.probabilityWithin(neighbor: Location) : Double {
-    val sigma = this.getAccuracy().toDouble()
+    val sigma = this.accuracy.toDouble()
     val distance = this.distanceTo(neighbor).toDouble()
     return 1 - (cumulativeDensityFunction(distance, 0.0, sigma) - cumulativeDensityFunction(-distance, 0.0, sigma))
 }
@@ -40,7 +37,7 @@ public fun Location.toGeofence(radius: Float, requestId: String? = null,
         if (expirationDurationMillis != null) setExpirationDuration(expirationDurationMillis)
         if (transitionTypes != null) setTransitionTypes(transitionTypes)
         if (loiteringDelayMs != null) setLoiteringDelay(loiteringDelayMs)
-        setCircularRegion(this@toGeofence.getLatitude(), this@toGeofence.getLongitude(), radius)
+        setCircularRegion(this@toGeofence.latitude, this@toGeofence.longitude, radius)
     }
 }
 
@@ -50,7 +47,7 @@ private inline fun Geofence(init: Geofence.Builder.() -> Geofence.Builder?): Geo
 }
 
 public fun Geofence.Builder.setCircularRegion(location: Location, radius: Float): Geofence.Builder? {
-    return setCircularRegion(location.getLatitude(), location.getLongitude(), radius)
+    return setCircularRegion(location.latitude, location.longitude, radius)
 }
 
 public inline fun GeofencingRequest (init: GeofencingRequest.Builder.() -> GeofencingRequest.Builder?): GeofencingRequest? {

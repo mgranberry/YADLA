@@ -1,37 +1,19 @@
 package com.kludgenics.cgmlogger.app
 
 import android.os.Bundle
-import android.support.design.widget.CoordinatorLayout
-import android.support.design.widget.FloatingActionButton
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
-import android.support.v7.widget.Toolbar
-import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
-import android.view.ViewGroup
-import com.google.android.gms.location.DetectedActivity
-import com.kludgenics.cgmlogger.app.service.LocationIntentService
-import com.kludgenics.cgmlogger.app.view.AgpChartView
-import com.kludgenics.cgmlogger.extension.*
-import com.kludgenics.cgmlogger.model.activity.PlayServicesActivity
-import com.kludgenics.cgmlogger.model.glucose.BloodGlucoseRecord
-import com.kludgenics.cgmlogger.util.FileUtil
-import com.kludgenics.cgmlogger.app.R
 import com.kludgenics.cgmlogger.app.service.TaskService
-import com.kludgenics.cgmlogger.model.math.agp.*
-import com.kludgenics.cgmlogger.model.math.bgi.Bgi
-import com.kludgenics.cgmlogger.model.math.bgi.BgiUtil
-import com.kludgenics.cgmlogger.model.math.bgi.svg
-import io.realm.Realm
-import org.jetbrains.anko.*
+import com.kludgenics.cgmlogger.app.view.AgpChartView
+import com.kludgenics.cgmlogger.model.math.agp.AgpUtil
+import org.jetbrains.anko.AnkoLogger
+import org.jetbrains.anko.ctx
+import org.jetbrains.anko.find
+import org.jetbrains.anko.onUiThread
 import org.joda.time.DateTime
-import org.joda.time.LocalTime
-import org.joda.time.Partial
 import org.joda.time.Period
-import java.io.File
-import java.util.*
-import kotlin.properties.Delegates
 
 public class DetailActivity : BaseActivity(), AnkoLogger {
     override protected val navigationId = R.id.nav_home

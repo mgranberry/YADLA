@@ -2,10 +2,8 @@ package com.kludgenics.cgmlogger.app.view
 
 import android.content.Context
 import android.graphics.*
-import android.support.v7.widget.CardView
 import android.util.AttributeSet
 import android.view.ViewManager
-import com.kludgenics.cgmlogger.app.R
 import com.kludgenics.cgmlogger.app.util.PathParser
 import org.jetbrains.anko.*
 import kotlin.properties.Delegates
@@ -62,7 +60,7 @@ public class BgRiChartView(context: Context, attrs: AttributeSet?, defStyle: Int
 
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
-        super<AbstractChartView>.onSizeChanged(w, h, oldw, oldh)
+        super.onSizeChanged(w, h, oldw, oldh)
         val bounds = computePathBounds()
         val target = RectF(paddingLeft.toFloat(), paddingTop.toFloat(),
                 w.toFloat() - paddingRight, h.toFloat() - paddingBottom)

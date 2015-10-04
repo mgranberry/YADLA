@@ -1,8 +1,7 @@
 package com.kludgenics.cgmlogger.model.location
 
-import com.kludgenics.cgmlogger.model.location.places.AutoCompleteResult
 import com.kludgenics.cgmlogger.model.location.data.GeocodedLocation
-import com.kludgenics.cgmlogger.model.location.Position
+import com.kludgenics.cgmlogger.model.location.places.AutoCompleteResult
 
 /**
  * Created by matthiasgranberry on 5/11/15.

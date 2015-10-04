@@ -1,24 +1,23 @@
 package com.kludgenics.cgmlogger.app
 
-import android.app.Activity
-import android.content.Context
-import android.os.Bundle
 import android.support.design.widget.NavigationView
-import android.support.v4.app.ActivityCompat
 import android.support.v4.widget.DrawerLayout
 import android.support.v7.app.ActionBar
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.Toolbar
 import android.view.Gravity
 import android.view.MenuItem
-import org.jetbrains.anko.*
+import org.jetbrains.anko.AnkoLogger
+import org.jetbrains.anko.find
+import org.jetbrains.anko.info
+import org.jetbrains.anko.startActivity
 
 public abstract class BaseActivity: AppCompatActivity(), AnkoLogger {
     abstract protected val navigationId: Int
 
     protected fun handleNavigationBarClick(menuItem: MenuItem): Boolean {
-        info("nav item clicked: ${menuItem.getTitle()}")
-        return when(menuItem.getItemId()) {
+        info("nav item clicked: ${menuItem.title}")
+        return when(menuItem.itemId) {
             R.id.nav_home -> true
             R.id.nav_view -> true
             R.id.nav_places -> true
@@ -47,7 +46,7 @@ public abstract class BaseActivity: AppCompatActivity(), AnkoLogger {
                 drawer.openDrawer(Gravity.START)
             }
         }
-        val ab: ActionBar? = getSupportActionBar()
+        val ab: ActionBar? = supportActionBar
 
         //ab.setHomeAsUpIndicator(R.drawable.ic_photo_camera_white_24dp)
         ab?.setDisplayHomeAsUpEnabled(navigationId != R.id.nav_home)
@@ -57,7 +56,7 @@ public abstract class BaseActivity: AppCompatActivity(), AnkoLogger {
     protected fun setupNavigationBar() {
         if (navigationId != 0) {
             val navView = find<NavigationView>(R.id.nav_view)
-            navView.getMenu()?.findItem(navigationId)?.setChecked(true)
+            navView.menu?.findItem(navigationId)?.setChecked(true)
             navView.setNavigationItemSelectedListener {
                 handleNavigationBarClick(it)
             }

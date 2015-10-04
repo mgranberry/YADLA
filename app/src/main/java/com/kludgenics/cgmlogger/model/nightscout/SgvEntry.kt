@@ -3,7 +3,6 @@ package com.kludgenics.cgmlogger.model.nightscout
 import com.google.gson.annotations.Expose
 import com.google.gson.annotations.SerializedName
 import com.kludgenics.cgmlogger.model.glucose.BloodGlucose
-import java.util.Date
 
 /**
  * Created by matthiasgranberry on 5/21/15.

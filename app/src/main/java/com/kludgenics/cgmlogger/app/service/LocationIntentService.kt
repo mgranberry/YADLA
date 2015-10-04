@@ -12,14 +12,15 @@ import com.google.android.gms.common.api.GoogleApiClient
 import com.google.android.gms.common.api.ResultCallback
 import com.google.android.gms.common.api.Status
 import com.google.android.gms.location.*
+import com.kludgenics.cgmlogger.extension.create
 import com.kludgenics.cgmlogger.model.activity.PlayServicesActivity
 import com.kludgenics.cgmlogger.model.location.Position
-import com.kludgenics.cgmlogger.extension.Geofence
-import com.kludgenics.cgmlogger.extension.GeofencingRequest
-import org.jetbrains.anko.*
-import com.kludgenics.cgmlogger.extension.*
 import io.realm.Realm
-import java.util.Date
+import org.jetbrains.anko.AnkoLogger
+import org.jetbrains.anko.ctx
+import org.jetbrains.anko.info
+import org.jetbrains.anko.intentFor
+import java.util.*
 
 /**
  * Created by matthiasgranberry on 5/29/15.
@@ -43,7 +44,7 @@ public class LocationIntentService : IntentService("location"), GoogleApiClient.
     }
 
     override fun onCreate() {
-        super<IntentService>.onCreate()
+        super.onCreate()
         client = GoogleApiClient.Builder(ctx)
                 .addConnectionCallbacks(this)
                 .addOnConnectionFailedListener(this)
@@ -61,7 +62,7 @@ public class LocationIntentService : IntentService("location"), GoogleApiClient.
     }
 
     override fun onConnectionFailed(p0: ConnectionResult) {
-        info("connection failed: ${p0}")
+        info("connection failed: $p0")
     }
 
     override fun onResult(status: Status) {
@@ -77,31 +78,31 @@ public class LocationIntentService : IntentService("location"), GoogleApiClient.
                     .addApi(ActivityRecognition.API)
                     .build()
         }
-        if ((client != null) && !client!!.isConnected())
+        if ((client != null) && !client!!.isConnected)
             client!!.blockingConnect()
-        when (intent?.getAction()) {
+        when (intent?.action) {
             ACTION_LOCATION_UPDATE -> {
                 if (LocationResult.hasResult(intent)) {
-                    logLocations(LocationResult.extractResult(intent).getLocations())
+                    logLocations(LocationResult.extractResult(intent).locations)
                 }
             }
             ACTION_ACTIVITY_UPDATE -> {
                 if (ActivityRecognitionResult.hasResult(intent)) {
                     val result = ActivityRecognitionResult.extractResult(intent)
-                    val likelyActivity = result.getMostProbableActivity()
+                    val likelyActivity = result.mostProbableActivity
                     info(likelyActivity.toString())
                     val realm: Realm = Realm.getInstance(ctx)
                     realm.use {
                         realm.create<PlayServicesActivity> {
-                            this.setActivityId(likelyActivity.getType())
-                            this.setConfidence(likelyActivity.getConfidence())
-                            this.setTime(Date())
+                            this.activityId = likelyActivity.type
+                            this.confidence = likelyActivity.confidence
+                            this.time = Date()
                         }
                     }
                 }
             }
             ACTION_BOOT, ACTION_START_LOCATION_UPDATES -> {
-                if ((client != null) && !client!!.isConnected())
+                if ((client != null) && !client!!.isConnected)
                     client!!.blockingConnect()
 
                 requestLocationUpdates()
@@ -115,13 +116,13 @@ public class LocationIntentService : IntentService("location"), GoogleApiClient.
         val realm: Realm = Realm.getInstance(ctx)
         realm.use {
             for (location in locations) {
-                info("Received location: ${location}")
+                info("Received location: $location")
 
                 realm.create<Position> {
-                    this.setTime(System.currentTimeMillis() - (SystemClock.elapsedRealtimeNanos() - location.getElapsedRealtimeNanos())/1000000)
-                    this.setAccuracy(location.getAccuracy())
-                    this.setLatitude(location.getLatitude())
-                    this.setLongitude(location.getLongitude())
+                    this.time = System.currentTimeMillis() - (SystemClock.elapsedRealtimeNanos() - location.elapsedRealtimeNanos)/1000000
+                    this.accuracy = location.accuracy
+                    this.latitude = location.latitude
+                    this.longitude = location.longitude
                 }
             }
         }
@@ -154,8 +155,8 @@ public class LocationIntentService : IntentService("location"), GoogleApiClient.
 
     private fun createLocationRequest(): LocationRequest {
         val lastLocation = LocationServices.FusedLocationApi.getLastLocation(client)
-        val locationBubble = if (lastLocation != null && lastLocation.getAccuracy() < 50.0)
-            lastLocation.getAccuracy()
+        val locationBubble = if (lastLocation != null && lastLocation.accuracy < 50.0)
+            lastLocation.accuracy
         else
             50f
 

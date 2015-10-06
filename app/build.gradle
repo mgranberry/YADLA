@@ -72,8 +72,8 @@ dependencies {
     compile 'com.google.code.gson:gson:2.3.1'
     compile "io.realm:realm-android:$realm_version"
     kapt    "io.realm:realm-android:$realm_version"
-    compile 'org.jetbrains.anko:anko-sdk21:0.7' // sdk19, sdk21, sdk23 are also available
-    compile 'org.jetbrains.anko:anko-support-v4:0.7' // In case you need support.v4 bindings
+    compile 'org.jetbrains.anko:anko-sdk21:0.7.1' // sdk19, sdk21, sdk23 are also available
+    compile 'org.jetbrains.anko:anko-support-v4:0.7.1' // In case you need support.v4 bindings
     compile 'net.danlew:android.joda:2.8.0'
     compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
 }

@@ -8,6 +8,7 @@ import com.kludgenics.cgmlogger.app.R
 import com.kludgenics.cgmlogger.app.util.PathParser
 import com.kludgenics.cgmlogger.model.math.agp.DailyAgp
 import org.jetbrains.anko.*
+import org.jetbrains.anko.custom.ankoView
 import kotlin.properties.Delegates
 
 /**
@@ -97,4 +98,4 @@ public class DailyBgChartView(context: Context, attrs: AttributeSet?, defStyle: 
 
 
 fun ViewManager.dailyBgChartView(init: DailyBgChartView.() -> Unit = {}) =
-        __dslAddView({ DailyBgChartView(it) }, init, this)
+        ankoView({ DailyBgChartView(it)}, init)

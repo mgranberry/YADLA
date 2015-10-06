@@ -72,6 +72,7 @@ object BgiUtil: AnkoLogger {
                 val riskIndexes = Bgi.bgRiByTimeBucket(records)
                 val (lbgi, hbgi) = Bgi.bgRiskIndices(records)
                 val date = start.withTimeAtStartOfDay().toDate()
+                val adrr = Bgi.adrr(records)
                 val hb = StringBuilder("M0,${SPEC_HEIGHT / 2}L")
                 val lb = StringBuilder("M0,${SPEC_HEIGHT / 2}L")
                 riskIndexes.forEach {
@@ -86,7 +87,13 @@ object BgiUtil: AnkoLogger {
                 lb.append("$SPEC_WIDTH,${SPEC_HEIGHT / 2}Z")
                 hb.append("$SPEC_WIDTH,${SPEC_HEIGHT / 2}Z")
                 info ("calculated, storing")
-                val cbgi = CachedBgi(hbg = hb.toString(), lbg = lb.toString(), lbgi = lbgi.toFloat(), hbgi = hbgi.toFloat(), date = date, period = period.days)
+                val cbgi = CachedBgi(hbg = hb.toString(),
+                                     lbg = lb.toString(),
+                                     lbgi = lbgi.toFloat(),
+                                     hbgi = hbgi.toFloat(),
+                                     adrr = adrr.toFloat(),
+                                     date = date,
+                                     period = period.days)
                 realm.beginTransaction()
                 realm.copyToRealm(cbgi)
                 realm.commitTransaction()

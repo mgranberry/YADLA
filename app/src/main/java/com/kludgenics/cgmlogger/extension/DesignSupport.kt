@@ -4,32 +4,32 @@ import android.support.design.widget.*
 import android.support.v7.widget.CardView
 import android.view.View
 import android.view.ViewManager
-import org.jetbrains.anko.__dslAddView
+import org.jetbrains.anko.custom.ankoView
 import java.util.concurrent.atomic.AtomicInteger
 
 fun ViewManager.cardView(init: CardView.() -> Unit = {}) =
-        __dslAddView({ CardView(it) }, init, this)
+        ankoView({ CardView(it) }, init)
 
 fun ViewManager.appBarLayout(init: AppBarLayout.() -> Unit = {}) =
-        __dslAddView({ AppBarLayout(it) }, init, this)
+        ankoView({ AppBarLayout(it) }, init)
 
 fun ViewManager.collapsingToolbarLayout(init: CollapsingToolbarLayout.() -> Unit = {}) =
-        __dslAddView({ CollapsingToolbarLayout(it) }, init, this)
+        ankoView({ CollapsingToolbarLayout(it)}, init)
 
 fun ViewManager.coordinatorLayout(init: CoordinatorLayout.() -> Unit = {}) =
-        __dslAddView({ CoordinatorLayout(it) }, init, this)
+        ankoView({ CoordinatorLayout(it)}, init)
 
 fun ViewManager.floatingActionButton(init: FloatingActionButton.() -> Unit = {}) =
-        __dslAddView({ FloatingActionButton(it) }, init, this)
+        ankoView({ FloatingActionButton(it)}, init)
 
 fun ViewManager.navigationView(init: NavigationView.() -> Unit = {}) =
-        __dslAddView({ NavigationView(it) }, init, this)
+        ankoView({ NavigationView(it)}, init)
 
 fun ViewManager.tabLayout(init: TabLayout.() -> Unit = {}) =
-        __dslAddView({ TabLayout(it) }, init, this)
+        ankoView({ TabLayout(it)}, init)
 
 fun ViewManager.textInputLayout(init: TextInputLayout.() -> Unit = {}) =
-        __dslAddView({ TextInputLayout(it) }, init, this)
+        ankoView({ TextInputLayout(it)}, init)
 
 fun View.snackbar(text: CharSequence, duration: Int = Snackbar.LENGTH_SHORT, init: Snackbar.() -> Unit = {}): Snackbar {
     val snack = Snackbar.make(this, text, duration)

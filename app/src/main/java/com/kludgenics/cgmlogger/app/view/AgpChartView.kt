@@ -8,6 +8,7 @@ import com.kludgenics.cgmlogger.app.R
 import com.kludgenics.cgmlogger.app.util.PathParser
 import com.kludgenics.cgmlogger.model.math.agp.DailyAgp
 import org.jetbrains.anko.*
+import org.jetbrains.anko.custom.ankoView
 import kotlin.properties.Delegates
 
 public class AgpChartView(context: Context, attrs: AttributeSet?, defStyle: Int) : ChartXAxis,
@@ -129,4 +130,4 @@ public class AgpChartView(context: Context, attrs: AttributeSet?, defStyle: Int)
 }
 
 fun ViewManager.agpChartView(init: AgpChartView.() -> Unit = {}) =
-        __dslAddView({ AgpChartView(it) }, init, this)
+        ankoView({ AgpChartView(it)}, init)

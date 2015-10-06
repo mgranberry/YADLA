@@ -6,6 +6,7 @@ import android.util.AttributeSet
 import android.view.ViewManager
 import com.kludgenics.cgmlogger.app.util.PathParser
 import org.jetbrains.anko.*
+import org.jetbrains.anko.custom.ankoView
 import kotlin.properties.Delegates
 
 /**
@@ -72,4 +73,4 @@ public class BgRiChartView(context: Context, attrs: AttributeSet?, defStyle: Int
 }
 
 fun ViewManager.bgriChartView(init: BgRiChartView.() -> Unit = {}) =
-        __dslAddView({ BgRiChartView(it) }, init, this)
+        ankoView({ BgRiChartView(it)}, init)

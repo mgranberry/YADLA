@@ -24,11 +24,11 @@ import java.util.concurrent.TimeUnit
  */
 public class AgpAdapter(val periods: List<Period>): RecyclerView.Adapter<AgpAdapter.ViewHolder>(), AnkoLogger {
 
-    data class ViewHolder(var agpView: CardView,
-                          var chartView: AgpChartView? = null,
-                          var textView: TextView? = null,
-                          var bgriView: BgRiChartView? = null,
-                          var agpFuture: Future<CachedDatePeriodAgp>? = null): RecyclerView.ViewHolder(agpView) {
+    class ViewHolder(var agpView: CardView,
+                     var chartView: AgpChartView? = null,
+                     var textView: TextView? = null,
+                     var bgriView: BgRiChartView? = null,
+                     var agpFuture: Future<CachedDatePeriodAgp>? = null): RecyclerView.ViewHolder(agpView) {
     }
 
     override fun onBindViewHolder(holder: ViewHolder, id: Int) {
@@ -76,11 +76,6 @@ public class AgpAdapter(val periods: List<Period>): RecyclerView.Adapter<AgpAdap
             holder.chartView?.medianPathString = median
             holder.chartView?.requestLayout()
             holder.chartView?.invalidate()
-            /*with (holder.bgriView!!) {
-                hbgPathString = bgri!!.hbg
-                lbgPathString = bgri.lbg
-                invalidate()
-            }*/
             holder.textView?.text = if (days.compareTo(1) == 0) "$days day" else "$days days"
         }
     }

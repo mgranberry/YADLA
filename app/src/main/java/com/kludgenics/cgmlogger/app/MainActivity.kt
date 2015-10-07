@@ -23,7 +23,7 @@ public class MainActivity : BaseActivity(), AnkoLogger {
         val fab = find<FloatingActionButton>(R.id.fab)
         fab.onClick {
         }
-        startService(intentFor<LocationIntentService>().setAction(LocationIntentService.ACTION_START_LOCATION_UPDATES))
+        //startService(intentFor<LocationIntentService>().setAction(LocationIntentService.ACTION_START_LOCATION_UPDATES))
         /// / Set up the drawer.
 
         val recycler = find<RecyclerView>(R.id.recycler)

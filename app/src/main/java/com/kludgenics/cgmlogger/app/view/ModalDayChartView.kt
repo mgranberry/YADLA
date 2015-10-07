@@ -59,10 +59,6 @@ public class ModalDayChartView(context: Context, attrs: AttributeSet?, defStyle:
 
     override val boundedPaths: MutableList<ScaledPaintedPath> = arrayListOf()
 
-    private fun animatePath(name: String, previous: String, current: String) {
-        //throw UnsupportedOperationException("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
-
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         super.onSizeChanged(w, h, oldw, oldh)
         val bounds = computePathBounds()

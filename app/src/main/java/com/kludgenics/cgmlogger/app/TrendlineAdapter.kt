@@ -84,7 +84,7 @@ public class TrendlineAdapter(val periods: List<Pair<DateTime,Period>>): Recycle
     }
 
     override fun getItemViewType(position: Int): Int {
-        return if (position == 0) 0 else 1
+        return 1 // if (position == 0) 0 else 1
     }
 
     override fun onCreateViewHolder(viewGroup: ViewGroup, viewType: Int): TrendlineViewHolder {
@@ -138,11 +138,14 @@ public class TrendlineAdapter(val periods: List<Pair<DateTime,Period>>): Recycle
                 }
             }
         } else {
+            with(ctx) {
+
+            }
         }
         return holder
     }
 
     override fun getItemCount(): Int {
-        return periods.size() + 1
+        return periods.size()// + 1
     }
 }

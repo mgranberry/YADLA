@@ -114,7 +114,7 @@ public class AgpAdapter(val periods: List<Period>): RecyclerView.Adapter<AgpAdap
                         horizontalPadding = dip(8)
                         verticalPadding = dip(5)
                         holder.chartView = agpChartView {
-                            lowLine = 80
+                            lowLine = 70
                             targetLine = 110
                             highLine = 180
                         }.lparams(width = matchParent, height = wrapContent)

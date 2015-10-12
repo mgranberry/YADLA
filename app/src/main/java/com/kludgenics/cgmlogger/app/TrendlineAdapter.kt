@@ -109,7 +109,7 @@ public class TrendlineAdapter(val periods: List<Pair<DateTime,Period>>): Recycle
                             horizontalPadding = dip(8)
                             verticalPadding = dip(5)
                             holder.chartView = dailyBgChartView {
-                                lowLine = 80
+                                lowLine = 70
                                 targetLine = 110
                                 highLine = 180
                             }.lparams(width = matchParent, height = wrapContent)

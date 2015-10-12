@@ -1,6 +1,6 @@
 buildscript {
     ext.kotlin_version = '0.14.449'
-    ext.realm_version = '0.82.2'
+    ext.realm_version = '0.83.0'
     ext.play_services_version = '8.1.0'
     ext.android_support_version = '22.2.1'
     repositories {

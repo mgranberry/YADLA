@@ -52,7 +52,6 @@ public abstract class BaseActivity: AppCompatActivity(), AnkoLogger {
         ab?.setDisplayHomeAsUpEnabled(navigationId != R.id.nav_home)
     }
 
-
     protected fun setupNavigationBar() {
         if (navigationId != 0) {
             val navView = find<NavigationView>(R.id.nav_view)

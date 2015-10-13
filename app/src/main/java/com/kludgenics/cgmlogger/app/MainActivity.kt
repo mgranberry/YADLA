@@ -6,6 +6,7 @@ import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.view.Menu
 import android.view.MenuItem
+import com.kludgenics.cgmlogger.app.adapter.AgpAdapter
 import com.kludgenics.cgmlogger.app.service.LocationIntentService
 import com.kludgenics.cgmlogger.app.service.TaskService
 import org.jetbrains.anko.*
@@ -27,7 +28,7 @@ public class MainActivity : BaseActivity(), AnkoLogger {
         /// / Set up the drawer.
 
         val recycler = find<RecyclerView>(R.id.recycler)
-        recycler.adapter = AgpAdapter(listOf(1,3,7,14,30,60,90).map{Period.days(it)})
+        recycler.adapter = AgpAdapter(listOf(1, 3, 7, 14, 30, 60, 90).map { Period.days(it) })
         //recycler.setAdapter(AgpAdapter((1 .. 90).map{Period.days(it)}))
         recycler.layoutManager = LinearLayoutManager(ctx)
     }

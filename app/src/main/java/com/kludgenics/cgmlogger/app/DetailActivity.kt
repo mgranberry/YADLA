@@ -5,6 +5,7 @@ import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.view.Menu
 import android.view.MenuItem
+import com.kludgenics.cgmlogger.app.adapter.TrendlineAdapter
 import com.kludgenics.cgmlogger.app.service.TaskService
 import com.kludgenics.cgmlogger.app.view.AgpChartView
 import com.kludgenics.cgmlogger.model.math.agp.AgpUtil
@@ -54,7 +55,7 @@ public class DetailActivity : BaseActivity(), AnkoLogger {
         //recycler.setAdapter(AgpAdapter(listOf(1,3,7,14,30,60,90).map{Period.days(it)}))
         //recycler.setAdapter(AgpAdapter((1 .. 90).map{Period.days(it)}))
         recycler.adapter = TrendlineAdapter((0..intent.getIntExtra("days", 0))
-                .map{(DateTime().minus(Period.days(it))).withTimeAtStartOfDay() to Period.days(1)})
+                .map { (DateTime().minus(Period.days(it))).withTimeAtStartOfDay() to Period.days(1) })
         recycler.layoutManager = LinearLayoutManager(ctx)
     }
 

@@ -1,4 +1,4 @@
-package com.kludgenics.cgmlogger.app
+package com.kludgenics.cgmlogger.app.adapter
 
 import android.graphics.Color
 import android.os.Build
@@ -7,6 +7,8 @@ import android.support.v7.widget.RecyclerView
 import android.view.Gravity
 import android.view.ViewGroup
 import android.widget.TextView
+import com.kludgenics.cgmlogger.app.DetailActivity
+import com.kludgenics.cgmlogger.app.R
 import com.kludgenics.cgmlogger.app.view.AgpChartView
 import com.kludgenics.cgmlogger.app.view.BgRiChartView
 import com.kludgenics.cgmlogger.app.view.agpChartView

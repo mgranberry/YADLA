@@ -1,3 +1,5 @@
+package com.kludgenics.cgmlogger.model.cards
+
 import io.realm.RealmObject
 import io.realm.annotations.RealmClass
 import io.realm.annotations.Required

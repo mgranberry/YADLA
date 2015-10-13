@@ -25,7 +25,8 @@ public class DetailActivity : BaseActivity(), AnkoLogger {
         setupActionBar()
         val agp = find<AgpChartView>(R.id.backdropAgp)
         with(agp) {
-            val cachedAgp = AgpUtil.getLatestCached(ctx, Period.days(intent.getIntExtra("days", 1)), updated = {
+            val cachedAgp = AgpUtil.getLatestCached(ctx, Period.days(intent.getIntExtra("days", 1)),
+                    updated = {
                 try {
                     val newAgp = it.get()
                     val inner = newAgp.inner
@@ -52,7 +53,8 @@ public class DetailActivity : BaseActivity(), AnkoLogger {
         val recycler = find<RecyclerView>(R.id.recycler)
         //recycler.setAdapter(AgpAdapter(listOf(1,3,7,14,30,60,90).map{Period.days(it)}))
         //recycler.setAdapter(AgpAdapter((1 .. 90).map{Period.days(it)}))
-        recycler.adapter = TrendlineAdapter((0..intent.getIntExtra("days", 0)).map{(DateTime().minus(Period.days(it))).withTimeAtStartOfDay() to Period.days(1)})
+        recycler.adapter = TrendlineAdapter((0..intent.getIntExtra("days", 0))
+                .map{(DateTime().minus(Period.days(it))).withTimeAtStartOfDay() to Period.days(1)})
         recycler.layoutManager = LinearLayoutManager(ctx)
     }
 

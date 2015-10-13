@@ -7,6 +7,7 @@ import com.kludgenics.cgmlogger.model.nightscout.NightscoutApiEndpoint
 import io.realm.Realm
 import org.jetbrains.anko.AnkoLogger
 import org.jetbrains.anko.error
+import org.jetbrains.anko.getStackTraceString
 import org.jetbrains.anko.info
 import retrofit.RetrofitError
 import java.util.concurrent.Callable
@@ -26,7 +27,9 @@ interface NightscoutTask: Callable<Int>, AnkoLogger {
         val realm = Realm.getInstance(ctx)
         realm use {
             try {
+                info("init")
                 val items = nightscoutEndpoint.init()
+                info("bt")
                 realm.beginTransaction()
                 if (items != null && items.isNotEmpty()) {
                     items forEach {
@@ -58,6 +61,10 @@ interface NightscoutTask: Callable<Int>, AnkoLogger {
             } catch (t: JsonParseException) {
                 error("sync failed: $t")
                 return GcmNetworkManager.RESULT_FAILURE
+            } catch (e: RuntimeException) {
+                error("failure: $e")
+                error(e.getStackTraceString())
+                throw RuntimeException(e)
             }
         }
     }

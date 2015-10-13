@@ -1,4 +1,4 @@
-package com.kludgenics.cgmlogger.app
+package com.kludgenics.cgmlogger.app.adapter
 
 import android.graphics.Color
 import android.os.Build
@@ -7,6 +7,7 @@ import android.support.v7.widget.RecyclerView
 import android.view.Gravity
 import android.view.ViewGroup
 import android.widget.TextView
+import com.kludgenics.cgmlogger.app.R
 import com.kludgenics.cgmlogger.app.view.DailyBgChartView
 import com.kludgenics.cgmlogger.app.view.dailyBgChartView
 import com.kludgenics.cgmlogger.model.math.bgi.BgiUtil
@@ -25,7 +26,7 @@ import java.util.concurrent.TimeUnit
 /**
  * Created by matthiasgranberry on 5/31/15.
  */
-public class TrendlineAdapter(val periods: List<Pair<DateTime,Period>>): RecyclerView.Adapter<TrendlineAdapter.TrendlineViewHolder>(), AnkoLogger {
+public class TrendlineAdapter(val periods: List<Pair<DateTime, Period>>): RecyclerView.Adapter<TrendlineAdapter.TrendlineViewHolder>(), AnkoLogger {
 
     val fmt = DateTimeFormat.forPattern("EEE MMM dd")
 
@@ -51,7 +52,7 @@ public class TrendlineAdapter(val periods: List<Pair<DateTime,Period>>): Recycle
                             holder.chartView?.invalidate()
 
                             if (date != null) {
-                                holder.textView?.text = "${fmt.print(date)}: ${bgri?.hbgi}, ${bgri?.lbgi}"
+                                holder.textView?.text = "${fmt.print(date)}: ${bgri?.adrr}"
                             }
                             notifyItemChanged(holder.layoutPosition)
                             info("notifyItemChanged(${holder.adapterPosition}) (${holder.itemId} ${per?.date} ${per?.period})")
@@ -73,7 +74,7 @@ public class TrendlineAdapter(val periods: List<Pair<DateTime,Period>>): Recycle
             holder.chartView?.trendPathString = trendLine
             holder.chartView?.requestLayout()
             holder.chartView?.invalidate()
-            holder.textView?.text = "${fmt.print(date)}: ${bgri?.hbgi}, ${bgri?.lbgi}"
+            holder.textView?.text = "${fmt.print(date)}: ${bgri?.adrr}"
         }
     }
 

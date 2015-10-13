@@ -54,7 +54,7 @@
 -keep public class * extends android.preference.Preference
 -keep public class com.android.vending.licensing.ILicensingService
 -keep class com.github.mikephil.charting.** { *; }
--keep class com.kludgenics.cgmlogger.app.AgpAdapter$onCreateViewHolder$card$1$1
+-keep class com.kludgenics.cgmlogger.app.adapter.AgpAdapter$onCreateViewHolder$card$1$1
 -keepclasseswithmembernames class * {
     native <methods>;
 }

@@ -1,7 +1,7 @@
 package com.kludgenics.cgmlogger.model.math.bgi
 
 import com.kludgenics.cgmlogger.extension.dateTime
-import com.kludgenics.cgmlogger.model.glucose.BloodGlucoseRecord
+import com.kludgenics.cgmlogger.model.realm.glucose.BloodGlucoseRecord
 import org.joda.time.DateTime
 import java.util.*
 

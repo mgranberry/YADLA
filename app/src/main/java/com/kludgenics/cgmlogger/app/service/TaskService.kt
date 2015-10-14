@@ -140,14 +140,14 @@ public class TaskService : GcmTaskService(), AnkoLogger {
             ACTION_SYNC_NOW -> {
                 async {
                     onRunTask(TaskParams(TASK_SYNC_ENTRIES_PERIODIC))
-                    //onRunTask(TaskParams(TASK_SYNC_TREATMENTS))
+                    onRunTask(TaskParams(TASK_SYNC_TREATMENTS))
                 }
                 2
             }
             ACTION_SYNC_FULL -> {
                 async {
                     onRunTask(TaskParams(TASK_SYNC_ENTRIES_FULL))
-                    //onRunTask(TaskParams(TASK_SYNC_TREATMENTS))
+                    onRunTask(TaskParams(TASK_SYNC_TREATMENTS))
                 }
                 2
             }

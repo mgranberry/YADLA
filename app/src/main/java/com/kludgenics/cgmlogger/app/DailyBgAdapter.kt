@@ -3,7 +3,7 @@ package com.kludgenics.cgmlogger.app
 import android.support.v7.widget.RecyclerView
 import android.view.View
 import android.view.ViewGroup
-import com.kludgenics.cgmlogger.model.glucose.BgByDay
+import com.kludgenics.cgmlogger.model.realm.glucose.BgByDay
 import io.realm.RealmResults
 import kotlin.properties.Delegates
 

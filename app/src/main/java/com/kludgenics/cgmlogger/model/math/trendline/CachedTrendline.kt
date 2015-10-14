@@ -3,7 +3,7 @@ package com.kludgenics.cgmlogger.model.math.trendline
 import android.content.Context
 import com.kludgenics.cgmlogger.extension.dateTime
 import com.kludgenics.cgmlogger.extension.where
-import com.kludgenics.cgmlogger.model.glucose.BloodGlucoseRecord
+import com.kludgenics.cgmlogger.model.realm.glucose.BloodGlucoseRecord
 import io.realm.Realm
 import io.realm.RealmObject
 import io.realm.RealmResults

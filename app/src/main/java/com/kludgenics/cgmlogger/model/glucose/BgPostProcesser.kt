@@ -6,6 +6,8 @@ import com.kludgenics.cgmlogger.extension.dateTime
 import com.kludgenics.cgmlogger.extension.where
 import com.kludgenics.cgmlogger.model.math.agp.AgpUtil
 import com.kludgenics.cgmlogger.model.math.trendline.PeriodUtil
+import com.kludgenics.cgmlogger.model.realm.glucose.BgByDay
+import com.kludgenics.cgmlogger.model.realm.glucose.BloodGlucoseRecord
 import io.realm.Realm
 import io.realm.RealmResults
 import org.joda.time.DateTime

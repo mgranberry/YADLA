@@ -3,7 +3,7 @@ package com.kludgenics.cgmlogger.app.service
 import android.content.Context
 import com.kludgenics.cgmlogger.extension.where
 import com.kludgenics.cgmlogger.model.glucose.BgPostprocesser
-import com.kludgenics.cgmlogger.model.glucose.BloodGlucoseRecord
+import com.kludgenics.cgmlogger.model.realm.glucose.BloodGlucoseRecord
 import com.kludgenics.cgmlogger.model.nightscout.NightscoutApiEndpoint
 import com.kludgenics.cgmlogger.model.nightscout.SgvEntry
 import io.realm.Realm
@@ -45,8 +45,8 @@ class NightscoutEntryTask(override val ctx: Context,
     override val copy: Realm.(Any) -> Unit
         get() = fun (it: Any) {
             if (it is SgvEntry && it.sgv >= 39) {
-                copyToRealmOrUpdate(BloodGlucoseRecord(value=it.getValue(), date=it.getDate(),
-                        type=it.getType(), unit=it.getUnit(), id=it.getId()))
+                copyToRealmOrUpdate(BloodGlucoseRecord(value = it.getValue(), date = it.getDate(),
+                        type = it.getType(), unit = it.getUnit(), id = it.getId()))
             }
         }
 

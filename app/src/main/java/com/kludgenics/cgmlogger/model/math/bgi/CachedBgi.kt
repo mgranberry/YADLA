@@ -1,7 +1,7 @@
 package com.kludgenics.cgmlogger.model.math.bgi
 
 import com.kludgenics.cgmlogger.extension.where
-import com.kludgenics.cgmlogger.model.glucose.BloodGlucoseRecord
+import com.kludgenics.cgmlogger.model.realm.glucose.BloodGlucoseRecord
 import io.realm.Realm
 import io.realm.RealmObject
 import io.realm.annotations.Ignore

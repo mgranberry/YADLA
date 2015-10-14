@@ -6,22 +6,26 @@ import com.kludgenics.cgmlogger.extension.where
 import com.kludgenics.cgmlogger.model.math.agp.CachedDatePeriodAgp
 import com.kludgenics.cgmlogger.model.math.bgi.CachedBgi
 import com.kludgenics.cgmlogger.model.math.trendline.CachedPeriod
+import com.kludgenics.cgmlogger.model.treatment.Treatment
 import io.realm.Realm
 import io.realm.RealmConfiguration
 import net.danlew.android.joda.JodaTimeAndroid
+import org.jetbrains.anko.AnkoLogger
 import org.jetbrains.anko.async
+import org.jetbrains.anko.debug
+import org.jetbrains.anko.info
 import java.io.File
 
 /**
  * Created by matthiasgranberry on 5/28/15.
  */
-public class LoggerApplication : Application() {
+public class LoggerApplication : Application(), AnkoLogger {
     override fun onCreate() {
         super.onCreate()
-        Log.d("LoggerApplication", "start")
+        debug("start")
         JodaTimeAndroid.init(this);
         // should throw as migration is required
-        Log.d("LoggerApplication", "trying realm for migration")
+        debug("trying realm for migration")
         val configuration = RealmConfiguration.Builder(this).build()
         Realm.setDefaultConfiguration(configuration)
         Realm.getDefaultInstance().close()
@@ -42,12 +46,15 @@ public class LoggerApplication : Application() {
             realm.use {
                 var toFile = File("/sdcard/cgm.realm")
                 toFile.delete()
-                Log.i("LoggerApplication", "Copying realm file")
+                info("Copying realm file")
                 realm.writeCopyTo(File("/sdcard/cgm.realm"))
-                Log.i("LoggerApplication", "Realm is at: ${realm.path}")
+                info("Realm is at: ${realm.path}")
+                var t = realm.where<Treatment>{this}.findAll()
+                info("T count: ${t.count()}")
+                t.forEach { info(it) }
             }
 
         }
-        Log.d("LoggerApplication", "succeeded")
+        debug("succeeded")
     }
 }

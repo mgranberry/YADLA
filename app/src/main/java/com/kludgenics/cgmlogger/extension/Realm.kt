@@ -1,5 +1,5 @@
 package com.kludgenics.cgmlogger.extension
-import com.kludgenics.cgmlogger.model.glucose.BloodGlucoseRecord
+import com.kludgenics.cgmlogger.model.realm.glucose.BloodGlucoseRecord
 import io.realm.Realm
 import io.realm.RealmObject
 import io.realm.RealmQuery

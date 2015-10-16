@@ -66,8 +66,8 @@ object BgiUtil: AnkoLogger {
             } else {
                 info("No cache, calculating")
                 val records = realm.where<BloodGlucoseRecord> {
-                    greaterThanOrEqualTo("date", (start.minus(period)).millis)
-                    lessThanOrEqualTo("date", (start).millis)
+                    greaterThanOrEqualTo("date", start.millis)
+                    lessThanOrEqualTo("date", (start.plus(period)).millis)
                 }.findAll()
                 val riskIndexes = Bgi.bgRiByTimeBucket(records)
                 val (lbgi, hbgi) = Bgi.bgRiskIndices(records)

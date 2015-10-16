@@ -14,8 +14,6 @@ import java.util.*
 
 public class DailyAgp(val dateTime: DateTime = DateTime(), val period: Period = Period.days(30),
                       percentileValues: DoubleArray = DailyAgp.STANDARD_PERCENTILES) {
-    val TAG = "DailyAgp"
-
     val percentiles : DoubleArray by lazy(LazyThreadSafetyMode.NONE) {
         getAgp(dateTime, period, percentileValues)
     }

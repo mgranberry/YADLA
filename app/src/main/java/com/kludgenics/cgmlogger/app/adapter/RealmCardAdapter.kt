@@ -66,6 +66,7 @@ abstract class RealmCardAdapter<T: RecyclerView.ViewHolder>(): RecyclerView.Adap
             lastUpdate = DateTime.now()
             notifyDataSetChanged()
         }
+        realm.close()
     }
 
     private fun updateIdList(queryResults: RealmResults<CardList>?) {

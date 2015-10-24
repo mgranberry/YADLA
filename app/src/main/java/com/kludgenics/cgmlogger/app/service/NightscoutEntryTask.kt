@@ -1,6 +1,8 @@
 package com.kludgenics.cgmlogger.app.service
 
 import android.content.Context
+import com.crashlytics.android.answers.Answers
+import com.crashlytics.android.answers.CustomEvent
 import com.kludgenics.cgmlogger.extension.where
 import com.kludgenics.cgmlogger.model.glucose.BgPostprocesser
 import com.kludgenics.cgmlogger.model.realm.glucose.BloodGlucoseRecord
@@ -33,13 +35,16 @@ class NightscoutEntryTask(override val ctx: Context,
                 val difference = Period(latestTime, DateTime())
                 if (difference.minutes < 5) 0 else 1 + difference.minutes / 5
             } else count
-            return if (requestCount > 0) {
+            val entries = if (requestCount > 0) {
                 info("getting $requestCount entries")
                 getSgvEntries(requestCount, "2010")
             } else {
                 info("already current.  skipping update.")
                 emptyList()
             }
+            Answers.getInstance().logCustom(CustomEvent("Nightscout Entry Sync")
+                    .putCustomAttribute("entry_count", entries.size()))
+            return entries
         }
 
     override val copy: Realm.(Any) -> Unit

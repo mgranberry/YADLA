@@ -5,6 +5,8 @@ import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.view.Menu
 import android.view.MenuItem
+import com.crashlytics.android.answers.Answers
+import com.crashlytics.android.answers.CustomEvent
 import com.kludgenics.cgmlogger.app.adapter.TrendlineAdapter
 import com.kludgenics.cgmlogger.app.service.TaskService
 import com.kludgenics.cgmlogger.app.view.AgpChartView
@@ -18,6 +20,7 @@ import org.joda.time.Period
 
 public class DetailActivity : BaseActivity(), AnkoLogger {
     override protected val navigationId = R.id.nav_home
+    private val period by lazy { Period.days(intent.getIntExtra("days", 1)) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -26,7 +29,7 @@ public class DetailActivity : BaseActivity(), AnkoLogger {
         setupActionBar()
         val agp = find<AgpChartView>(R.id.backdropAgp)
         with(agp) {
-            val cachedAgp = AgpUtil.getLatestCached(ctx, Period.days(intent.getIntExtra("days", 1)),
+            val cachedAgp = AgpUtil.getLatestCached(ctx, period,
                     updated = {
                 try {
                     val newAgp = it.get()
@@ -54,7 +57,7 @@ public class DetailActivity : BaseActivity(), AnkoLogger {
         val recycler = find<RecyclerView>(R.id.recycler)
         //recycler.setAdapter(AgpAdapter(listOf(1,3,7,14,30,60,90).map{Period.days(it)}))
         //recycler.setAdapter(AgpAdapter((1 .. 90).map{Period.days(it)}))
-        recycler.adapter = TrendlineAdapter((0..intent.getIntExtra("days", 0))
+        recycler.adapter = TrendlineAdapter((0..period.days)
                 .map { (DateTime().minus(Period.days(it))).withTimeAtStartOfDay() to Period.days(1) })
         recycler.layoutManager = LinearLayoutManager(ctx)
     }
@@ -64,6 +67,7 @@ public class DetailActivity : BaseActivity(), AnkoLogger {
     override fun onStart() {
         super.onStart()
         TaskService.syncNow(this)
+        Answers.getInstance().logCustom(CustomEvent("DetailActivity").putCustomAttribute("period", period.days))
     }
 
     override fun onStop() {

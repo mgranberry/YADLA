@@ -1,6 +1,8 @@
 package com.kludgenics.cgmlogger.app.service
 
 import android.content.Context
+import com.crashlytics.android.answers.Answers
+import com.crashlytics.android.answers.CustomEvent
 import com.kludgenics.cgmlogger.model.nightscout.NightscoutApiEndpoint
 import com.kludgenics.cgmlogger.model.treatment.Treatment
 import io.realm.Realm
@@ -20,7 +22,10 @@ class NightscoutTreatmentTask(override val ctx: Context,
 
     override val init: NightscoutApiEndpoint.() -> List<Map<String, String>>
         get() = fun (): List<Map<String, String>> {
-            return getTreatmentsSince("2010")
+            val treatments = getTreatmentsSince("2010")
+            Answers.getInstance().logCustom(CustomEvent("Nightscout Treatment Sync")
+                    .putCustomAttribute("entry_count", treatments.size()))
+            return treatments
         }
 
     override val copy: Realm.(Any) -> Unit

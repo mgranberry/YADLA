@@ -15,7 +15,8 @@ import org.jetbrains.anko.async
 import org.jetbrains.anko.debug
 import org.jetbrains.anko.info
 import java.io.File
-
+import io.fabric.sdk.android.Fabric;
+import com.crashlytics.android.Crashlytics;
 /**
  * Created by matthiasgranberry on 5/28/15.
  */
@@ -24,6 +25,7 @@ public class LoggerApplication : Application(), AnkoLogger {
         super.onCreate()
         debug("start")
         JodaTimeAndroid.init(this);
+        Fabric.with(this, Crashlytics());
         // should throw as migration is required
         debug("trying realm for migration")
         val configuration = RealmConfiguration.Builder(this).build()

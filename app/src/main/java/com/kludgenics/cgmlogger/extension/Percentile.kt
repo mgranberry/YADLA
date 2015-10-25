@@ -1,7 +1,7 @@
 package com.kludgenics.cgmlogger.extension
 
 public fun percentile (percentile: Double, x: List<Double>): Double {
-    val n = x.size();
+    val n = x.size;
     val p = percentile / 100.0
     val h = (n + 0.25) * p + 0.375
     val fh = Math.floor(h).toInt()

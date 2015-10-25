@@ -30,8 +30,8 @@ class Diff<T>(var old: MutableList<T>, private val isModified: (old: T, new: T) 
             if (oldPosition >= 0) {
                 val oldItem = old.get(oldPosition)
                 if (oldPosition != idx) {
-                    old.remove(oldPosition)
-                    if (idx < old.size()) {
+                    old.removeAt(oldPosition)
+                    if (idx < old.size) {
                         old.add(idx, oldItem)
                     } else
                         old.add(oldItem)
@@ -43,7 +43,7 @@ class Diff<T>(var old: MutableList<T>, private val isModified: (old: T, new: T) 
                     operations.add(Operation(OP_MODIFY, it, idx))
             } else {
                 operations.add(Operation(OP_INSERT, it, idx))
-                if (idx < old.size()) {
+                if (idx < old.size) {
                     old.add(idx, it)
                 } else
                     old.add(it)

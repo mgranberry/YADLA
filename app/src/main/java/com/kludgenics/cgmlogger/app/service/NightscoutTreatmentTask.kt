@@ -24,7 +24,7 @@ class NightscoutTreatmentTask(override val ctx: Context,
         get() = fun (): List<Map<String, String>> {
             val treatments = getTreatmentsSince("2010")
             Answers.getInstance().logCustom(CustomEvent("Nightscout Treatment Sync")
-                    .putCustomAttribute("entry_count", treatments.size()))
+                    .putCustomAttribute("entry_count", treatments.size))
             return treatments
         }
 

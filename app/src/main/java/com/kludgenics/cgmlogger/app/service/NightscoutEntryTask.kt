@@ -43,7 +43,7 @@ class NightscoutEntryTask(override val ctx: Context,
                 emptyList()
             }
             Answers.getInstance().logCustom(CustomEvent("Nightscout Entry Sync")
-                    .putCustomAttribute("entry_count", entries.size()))
+                    .putCustomAttribute("entry_count", entries.size))
             return entries
         }
 

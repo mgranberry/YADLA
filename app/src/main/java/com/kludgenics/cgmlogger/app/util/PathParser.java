@@ -17,6 +17,7 @@ import android.graphics.Path;
 import android.util.Log;
 
 import java.util.ArrayList;
+import java.nio.ByteBuffer;
 
 // This class is a duplicate from the PathParser.java of frameworks/base, with slight
 // update on incompatible API like copyOfRange().
@@ -290,6 +291,10 @@ public class PathParser {
         private PathDataNode(PathDataNode n) {
             mType = n.mType;
             mParams = copyOfRange(n.mParams, 0, n.mParams.length);
+        }
+
+        public static void nodesToByteBuffer(PathDataNode[] node, ByteBuffer path) {
+
         }
 
         /**

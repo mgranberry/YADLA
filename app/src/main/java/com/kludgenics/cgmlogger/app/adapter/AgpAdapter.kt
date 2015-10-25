@@ -149,6 +149,6 @@ public class AgpAdapter(val periods: List<Period>): RecyclerView.Adapter<AgpAdap
     }
 
     override fun getItemCount(): Int {
-        return periods.size()
+        return periods.size
     }
 }

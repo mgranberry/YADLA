@@ -25,14 +25,14 @@ interface NightscoutTask: Callable<Int>, AnkoLogger {
 
     override fun call(): Int {
         val realm = Realm.getInstance(ctx)
-        realm use {
+        realm.use {
             try {
                 info("init")
                 val items = nightscoutEndpoint.init()
                 info("bt")
                 realm.beginTransaction()
                 if (items != null && items.isNotEmpty()) {
-                    items forEach {
+                    items.forEach {
                         realm copy it
                     }
                     info("sync completed")

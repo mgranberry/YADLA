@@ -11,14 +11,12 @@ import io.realm.RealmResults
 import org.jetbrains.anko.AnkoLogger
 import org.jetbrains.anko.info
 import org.joda.time.DateTime
+import java.util.*
 
-/**
- * Created by matthias on 10/14/15.
- */
 abstract class RealmCardAdapter<T: RecyclerView.ViewHolder>(): RecyclerView.Adapter<T>(), AnkoLogger {
 
     private var results: RealmResults<CardList>? = null
-    private val ids = arrayListOf<Long>()
+    private val ids = ArrayList<Long>()
 
     private val differ = Diff(ids, { old, new ->
         val realm = Realm.getDefaultInstance()
@@ -47,7 +45,7 @@ abstract class RealmCardAdapter<T: RecyclerView.ViewHolder>(): RecyclerView.Adap
 
     override fun getItemCount(): Int {
         return synchronized(ids) {
-            ids.size()
+            ids.size
         }
     }
 

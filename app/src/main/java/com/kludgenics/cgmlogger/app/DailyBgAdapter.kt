@@ -12,7 +12,7 @@ import kotlin.properties.Delegates
  */
 public class DailyBgAdapter : RecyclerView.Adapter<BloodGlucoseViewHolder> {
     private var results: RealmResults<BgByDay> by Delegates.notNull()
-    private val count: Int get() = results.size()
+    private val count: Int get() = results.size
     public constructor() {
     }
 

@@ -71,8 +71,8 @@ object Bgi {
      */
     public fun adrr(records: List<BloodGlucoseRecord>): Double {
         val grouped = records.groupBy { DateTime(it.date).withTimeAtStartOfDay() }
-        return grouped.filter { it.getValue().size() > 0 }.map {
-            val bgValues = it.getValue().map { it.value }
+        return grouped.filter { it.value.size > 0 }.map {
+            val bgValues = it.value.map { it.value }
             val minBg = bgValues.min()!! // cannot be null
             val maxBg = bgValues.max()!! // cannot be null
             rl(minBg) + rh(maxBg)
@@ -83,8 +83,8 @@ object Bgi {
         val sortedMap = sortedMapOf<Int, MutableList<BloodGlucoseRecord>>()
         records.groupByTo(sortedMap) { it.dateTime.minuteOfDay().get() / 30}
         return sortedMap.map {
-            val (lbgi, hbgi) = bgRiskIndices(it.getValue())
-            it.getKey() to floatArrayOf(-lbgi.toFloat(), hbgi.toFloat())
+            val (lbgi, hbgi) = bgRiskIndices(it.value)
+            it.key to floatArrayOf(-lbgi.toFloat(), hbgi.toFloat())
         }
     }
 

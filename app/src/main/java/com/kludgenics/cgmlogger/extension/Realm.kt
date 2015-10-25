@@ -75,7 +75,7 @@ inline fun <T: RealmObject> RealmQuery<T>.group(init: RealmQuery<T>.() -> RealmQ
     return this
 }
 
-inline var BloodGlucoseRecord.dateTime: DateTime
+var BloodGlucoseRecord.dateTime: DateTime
     get() = DateTime(date)
     set(dt: DateTime) = { date = dt.millis }()
 

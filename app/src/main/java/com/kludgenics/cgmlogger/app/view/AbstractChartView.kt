@@ -93,7 +93,7 @@ public abstract class AbstractChartView(context: Context, attrs: AttributeSet?, 
                                 pathEffect: PathEffect? = null, init: Paint.()->Unit = {}): Paint {
         val paint = Paint()
         paint.color = if (colorResource != 0)
-            resources!!getColor(colorResource)
+            resources!!.getColor(colorResource)
         else
             color
         paint.isAntiAlias = true

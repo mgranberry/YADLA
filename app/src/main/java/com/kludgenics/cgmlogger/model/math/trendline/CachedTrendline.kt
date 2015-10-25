@@ -175,7 +175,7 @@ class DailyTrendline(val dateTime: DateTime, val period: Period, val low: Double
     }
 
     private fun stringFromValues (values: List<BloodGlucoseRecord>): String {
-        return if (values.isNotEmpty()) StringBuilder {
+        return if (values.isNotEmpty()) buildString {
             append("M0,${SPEC_HEIGHT - values.first().value}L")
             val timeLimit = dateTime.plus(period)
             val timeStart = dateTime
@@ -192,7 +192,7 @@ class DailyTrendline(val dateTime: DateTime, val period: Period, val low: Double
                 append("${xScale * SPEC_WIDTH},${SPEC_HEIGHT - value.value} ")
                 lastTime = currentTime
             }
-        }.toString() else ""
+        } else ""
     }
 
     public val trendLine: String by lazy(LazyThreadSafetyMode.NONE) { stringFromValues(periodValues) }

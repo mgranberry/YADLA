@@ -43,7 +43,7 @@ public class GooglePlacesWebLocation : GeocodedLocation {
     }
 
     override fun getLocationTypes(): String {
-        return types.join("|")
+        return types.joinToString("|")
     }
 
     override fun getAddress(): CharSequence {

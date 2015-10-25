@@ -26,15 +26,15 @@ public class DailyAgp(val dateTime: DateTime = DateTime(), val period: Period = 
 
     // Generate SVG paths for printing, display, etc
     val pathStrings: Array<String> by lazy(LazyThreadSafetyMode.NONE) {
-        val size = percentileValues.size()
-        val pointArrays = Array(size, { DoubleArray(percentiles.size() / percentileValues.size()) })
+        val size = percentileValues.size
+        val pointArrays = Array(size, { DoubleArray(percentiles.size / percentileValues.size()) })
         for (i in 0..pointArrays.lastIndex) {
             for (j in 0..pointArrays[i].lastIndex) {
                 pointArrays[i][j] = percentiles[5 * j + i]
             }
         }
-        val stringBuilders = ArrayList<StringBuilder>(Math.ceil(pointArrays.size() / 2.0).toInt())
-        val xStep = SPEC_WIDTH / pointArrays[0].size()
+        val stringBuilders = ArrayList<StringBuilder>(Math.ceil(pointArrays.size / 2.0).toInt())
+        val xStep = SPEC_WIDTH / pointArrays[0].size
         for (i in 0..pointArrays.lastIndex) {
             if (i % 2 == 0) {
                 stringBuilders.add(StringBuilder("M0,${SPEC_HEIGHT - pointArrays[i][0]}L"))
@@ -47,7 +47,7 @@ public class DailyAgp(val dateTime: DateTime = DateTime(), val period: Period = 
                 }
             }
         }
-        Array(stringBuilders.size(), {
+        Array(stringBuilders.size, {
             if (it != stringBuilders.lastIndex) {
                 stringBuilders[it].append('Z')
             }
@@ -67,7 +67,7 @@ public class DailyAgp(val dateTime: DateTime = DateTime(), val period: Period = 
             val map = TreeMap<Int, MutableList<Pair<Int, Double>>>()
             val times = dateBgPairs.groupByTo (map, { it.first })
 
-            return times.flatMap { it.getValue().percentiles(percentileValues, { it.second }).toList() }.toDoubleArray()
+            return times.flatMap { it.value.percentiles(percentileValues, { it.second }).toList() }.toDoubleArray()
         }
     }
 }

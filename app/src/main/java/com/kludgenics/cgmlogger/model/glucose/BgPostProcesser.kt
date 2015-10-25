@@ -32,13 +32,13 @@ object BgPostprocesser {
         }.findAllSorted("date", RealmResults.SORT_ORDER_ASCENDING)
         val entriesByDay = bgEntries.groupBy { it.dateTime.withTimeAtStartOfDay() }
         entriesByDay.forEach {
-            val dailyValues = realm.where<BgByDay> { equalTo("day", it.getKey().millis) }
+            val dailyValues = realm.where<BgByDay> { equalTo("day", it.key.millis) }
                     .findFirst() ?: realm.createInsideTransaction<BgByDay>{
-                day = it.getKey().millis
+                day = it.key.millis
             }
             val bgList = dailyValues.bgRecords
             bgList.clear()
-            bgList.addAll(it.getValue())
+            bgList.addAll(it.value)
         }
         Log.d("BgPostProcesser", "end")
 

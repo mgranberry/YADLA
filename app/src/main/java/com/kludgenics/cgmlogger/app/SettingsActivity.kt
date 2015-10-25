@@ -3,6 +3,8 @@ package com.kludgenics.cgmlogger.app
 import android.content.SharedPreferences
 import android.os.Bundle
 import android.preference.PreferenceFragment
+import com.crashlytics.android.answers.Answers
+import com.crashlytics.android.answers.ContentViewEvent
 import com.kludgenics.cgmlogger.app.service.TaskService
 import org.jetbrains.anko.defaultSharedPreferences
 
@@ -16,6 +18,9 @@ public class SettingsActivity : BaseActivity() {
     val preferencesListener = SharedPreferences.OnSharedPreferenceChangeListener {
         prefs, key ->
         val resources = resources
+        Answers.getInstance().logContentView(ContentViewEvent()
+                .putContentName("Settings")
+                .putContentId(key))
         val nightscoutPrefs = when(key) {
             resources.getString(R.string.nightscout_enable) -> {
                 prefs.getBoolean(key, false) to prefs.getString(resources.getString(R.string.nightscout_uri), "")
@@ -33,6 +38,13 @@ public class SettingsActivity : BaseActivity() {
             else
                 TaskService.cancelNightscoutTasks(this)
         }
+    }
+
+    override fun onStart() {
+        super.onStart()
+        Answers.getInstance().logContentView(ContentViewEvent()
+                .putContentName("Settings"))
+
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {

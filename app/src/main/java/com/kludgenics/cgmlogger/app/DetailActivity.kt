@@ -6,6 +6,7 @@ import android.support.v7.widget.RecyclerView
 import android.view.Menu
 import android.view.MenuItem
 import com.crashlytics.android.answers.Answers
+import com.crashlytics.android.answers.ContentViewEvent
 import com.crashlytics.android.answers.CustomEvent
 import com.kludgenics.cgmlogger.app.adapter.TrendlineAdapter
 import com.kludgenics.cgmlogger.app.service.TaskService
@@ -55,8 +56,6 @@ public class DetailActivity : BaseActivity(), AnkoLogger {
         }
 
         val recycler = find<RecyclerView>(R.id.recycler)
-        //recycler.setAdapter(AgpAdapter(listOf(1,3,7,14,30,60,90).map{Period.days(it)}))
-        //recycler.setAdapter(AgpAdapter((1 .. 90).map{Period.days(it)}))
         recycler.adapter = TrendlineAdapter((0..period.days)
                 .map { (DateTime().minus(Period.days(it))).withTimeAtStartOfDay() to Period.days(1) })
         recycler.layoutManager = LinearLayoutManager(ctx)
@@ -66,8 +65,10 @@ public class DetailActivity : BaseActivity(), AnkoLogger {
 
     override fun onStart() {
         super.onStart()
-        TaskService.syncNow(this)
-        Answers.getInstance().logCustom(CustomEvent("DetailActivity").putCustomAttribute("period", period.days))
+        Answers.getInstance().logContentView(ContentViewEvent()
+                .putContentId("detail-$period")
+                .putContentName("Detail")
+                .putContentType(period.toString()))
     }
 
     override fun onStop() {

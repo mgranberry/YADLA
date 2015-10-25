@@ -175,7 +175,7 @@ public class TaskService : GcmTaskService(), AnkoLogger {
                 error("Location lookup currently unimplemented")
                 GcmNetworkManager.RESULT_FAILURE
             }
-            in tasks.keySet() -> {
+            in tasks.keys -> {
                 // if the tasks were reset mid-stream, don't crash
                 info ("Starting ${taskParams.tag}")
                 val r = tasks.get(taskParams.tag)?.call() ?: GcmNetworkManager.RESULT_RESCHEDULE

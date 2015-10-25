@@ -31,7 +31,7 @@ public abstract class AbstractBgChartView(context: Context, attrs: AttributeSet?
     protected var targetPath: ScaledPaintedPath? = null
 
     public var lowLine: Int by Delegates.observable(80, {
-        propertyMetadata: PropertyMetadata, previous: Int, current: Int ->
+        propertyMetadata: KProperty, previous: Int, current: Int ->
         info("setting lowLine to $current")
         if (current == 0) {
             boundedPaths.remove(lowPath)
@@ -47,7 +47,7 @@ public abstract class AbstractBgChartView(context: Context, attrs: AttributeSet?
     })
 
     public var targetLine: Int by Delegates.observable(110, {
-        propertyMetadata: PropertyMetadata, previous: Int, current: Int ->
+        propertyMetadata: KProperty, previous: Int, current: Int ->
         info("setting targetLine to $current")
         if (current == 0) {
             boundedPaths.remove(targetPath)
@@ -63,7 +63,7 @@ public abstract class AbstractBgChartView(context: Context, attrs: AttributeSet?
     })
 
     public var highLine: Int by Delegates.observable(180, {
-        propertyMetadata: PropertyMetadata, previous: Int, current: Int ->
+        propertyMetadata: KProperty, previous: Int, current: Int ->
         info("setting highLine to $current")
         if (current == 0) {
             boundedPaths.remove(highPath)

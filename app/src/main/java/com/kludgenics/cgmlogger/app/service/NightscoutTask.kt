@@ -33,7 +33,7 @@ interface NightscoutTask: Callable<Int>, AnkoLogger {
                 realm.beginTransaction()
                 if (items != null && items.isNotEmpty()) {
                     items.forEach {
-                        realm copy it
+                        realm.copy(it)
                     }
                     info("sync completed")
                     realm.commitTransaction()

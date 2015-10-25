@@ -8,6 +8,7 @@ import com.kludgenics.cgmlogger.model.math.agp.DailyAgp
 import org.jetbrains.anko.AnkoLogger
 import org.jetbrains.anko.info
 import kotlin.properties.Delegates
+import kotlin.reflect.KProperty
 
 /**
  * Created by matthiasgranberry on 7/17/15.
@@ -31,10 +32,10 @@ public abstract class AbstractBgChartView(context: Context, attrs: AttributeSet?
     protected var targetPath: ScaledPaintedPath? = null
 
     public var lowLine: Int by Delegates.observable(80, {
-        propertyMetadata: KProperty, previous: Int, current: Int ->
+        propertyMetadata: KProperty<*>, previous: Int, current: Int ->
         info("setting lowLine to $current")
         if (current == 0) {
-            boundedPaths.remove(lowPath)
+            boundedPaths.removeRaw(lowPath)
             lowPath = null
         }
         else {
@@ -47,10 +48,10 @@ public abstract class AbstractBgChartView(context: Context, attrs: AttributeSet?
     })
 
     public var targetLine: Int by Delegates.observable(110, {
-        propertyMetadata: KProperty, previous: Int, current: Int ->
+        propertyMetadata: KProperty<*>, previous: Int, current: Int ->
         info("setting targetLine to $current")
         if (current == 0) {
-            boundedPaths.remove(targetPath)
+            boundedPaths.removeRaw(targetPath)
             targetPath = null
         }
         else {
@@ -63,10 +64,10 @@ public abstract class AbstractBgChartView(context: Context, attrs: AttributeSet?
     })
 
     public var highLine: Int by Delegates.observable(180, {
-        propertyMetadata: KProperty, previous: Int, current: Int ->
+        propertyMetadata: KProperty<*>, previous: Int, current: Int ->
         info("setting highLine to $current")
         if (current == 0) {
-            boundedPaths.remove(highPath)
+            boundedPaths.removeRaw(highPath)
             highPath = null
         }
         else {

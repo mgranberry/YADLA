@@ -27,7 +27,7 @@ public class DailyAgp(val dateTime: DateTime = DateTime(), val period: Period = 
     // Generate SVG paths for printing, display, etc
     val pathStrings: Array<String> by lazy(LazyThreadSafetyMode.NONE) {
         val size = percentileValues.size
-        val pointArrays = Array(size, { DoubleArray(percentiles.size / percentileValues.size()) })
+        val pointArrays = Array(size, { DoubleArray(percentiles.size / percentileValues.size) })
         for (i in 0..pointArrays.lastIndex) {
             for (j in 0..pointArrays[i].lastIndex) {
                 pointArrays[i][j] = percentiles[5 * j + i]

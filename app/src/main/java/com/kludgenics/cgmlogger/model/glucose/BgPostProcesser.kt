@@ -5,6 +5,8 @@ import com.kludgenics.cgmlogger.extension.createInsideTransaction
 import com.kludgenics.cgmlogger.extension.dateTime
 import com.kludgenics.cgmlogger.extension.where
 import com.kludgenics.cgmlogger.model.math.agp.AgpUtil
+import com.kludgenics.cgmlogger.model.math.bgi.BgiUtil
+import com.kludgenics.cgmlogger.model.math.bgi.CachedBgi
 import com.kludgenics.cgmlogger.model.math.trendline.PeriodUtil
 import com.kludgenics.cgmlogger.model.realm.glucose.BgByDay
 import com.kludgenics.cgmlogger.model.realm.glucose.BloodGlucoseRecord
@@ -21,6 +23,7 @@ object BgPostprocesser {
     fun invalidateCaches (realm: Realm, start: DateTime, end: DateTime) {
         AgpUtil.invalidate(start, end, realm)
         PeriodUtil.invalidate(start, end, realm)
+        BgiUtil.invalidate(start, end, realm)
     }
 
     fun groupByDay (realm: Realm, start: DateTime, end: DateTime) {

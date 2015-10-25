@@ -50,6 +50,36 @@ object BgiUtil: AnkoLogger {
     val SPEC_HEIGHT = 200f
     val SPEC_WIDTH = 240f
 
+    public fun invalidate(start: DateTime,
+                          end: DateTime,
+                          realm: Realm?) {
+        if (realm == null)
+            Realm.getDefaultInstance().use{
+                realm ->
+                realm.beginTransaction()
+                doInvalidate(start, end, realm)
+                realm.commitTransaction()
+            }
+        else
+            doInvalidate(start, end, realm)
+    }
+
+    private fun doInvalidate(start: DateTime,
+                             end: DateTime,
+                             realm: Realm) {
+        val cachedItems = realm.allObjects(CachedBgi::class.java)
+        val removeList = arrayListOf<RealmObject>()
+        cachedItems.forEach {
+            val itemTime = it.dateTime
+            val itemEnd = itemTime.plus(Period.days(it.period))
+            if (itemTime > start && itemTime < end || (itemEnd > start && itemTime < end))
+                removeList.add(it)
+        }
+        //realm.beginTransaction()
+        removeList.forEach { it.removeFromRealm() }
+        //realm.commitTransaction()
+    }
+
     fun getLatestCached(dateTime: DateTime, period: Period): CachedBgi? {
         val start = dateTime.withTimeAtStartOfDay()
         info("getting cache for! $start $period")

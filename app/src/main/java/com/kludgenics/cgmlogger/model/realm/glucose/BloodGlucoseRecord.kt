@@ -10,13 +10,12 @@ import io.realm.annotations.Required
  */
 @RealmClass
 public open class BloodGlucoseRecord(
-        @Required
         public open var value: Double = 0.0,
         public open var date: Long = 0,
         public open var type: String = "",
         @Required
         public open var unit: String = "",
-        @io.realm.annotations.PrimaryKey public open var id: String = ""
+        @PrimaryKey public open var id: String = ""
         ) : RealmObject() {
 }
 

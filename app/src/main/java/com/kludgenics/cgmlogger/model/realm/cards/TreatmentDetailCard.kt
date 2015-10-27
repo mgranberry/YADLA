@@ -12,7 +12,6 @@ public open class TreatmentDetailCard : RealmObject(), Card {
         public val TYPE = 3
     }
 
-    @Required
     override var metadata: CardMetadata = CardMetadata()
 
     @Required

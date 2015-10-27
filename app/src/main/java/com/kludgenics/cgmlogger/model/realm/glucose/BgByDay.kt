@@ -13,6 +13,5 @@ import io.realm.annotations.Required
 public open class BgByDay : RealmObject() {
     @PrimaryKey
     public open var day: Long = 0
-    @Required
     public open var bgRecords: RealmList<BloodGlucoseRecord> = RealmList()
 }

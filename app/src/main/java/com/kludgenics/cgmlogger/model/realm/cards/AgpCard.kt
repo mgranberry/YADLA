@@ -11,16 +11,10 @@ public open class AgpCard : RealmObject(), Card {
     companion object {
         public val TYPE = 0
     }
-
-    @Required
     override public var metadata: CardMetadata = CardMetadata()
-
     @Required
     public open var day: Date = Date()
-
-    @Required
     public open var period: Int = 1
-
     @Required
     public open var agpGraph: String = ""
 }

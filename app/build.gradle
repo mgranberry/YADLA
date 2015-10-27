@@ -1,6 +1,6 @@
 buildscript {
     ext.kotlin_version = '1.0.0-beta-1038'
-    ext.realm_version = '0.84.0'
+    ext.realm_version = '0.84.1-SNAPSHOT'
     ext.play_services_version = '8.1.0'
     ext.android_support_version = '23.0.1'
     repositories {
@@ -20,6 +20,7 @@ apply plugin: 'io.fabric'
 
 repositories {
     jcenter()
+    maven { url 'http://oss.jfrog.org/artifactory/oss-snapshot-local' }
     maven { url "https://oss.sonatype.org/content/repositories/snapshots/" }
     maven { url "https://jitpack.io" }
     maven { url 'https://maven.fabric.io/public' }
@@ -78,9 +79,11 @@ dependencies {
     compile 'com.squareup.okhttp:okhttp-urlconnection:2.4.0'
     compile 'com.google.code.gson:gson:2.3.1'
     compile "io.realm:realm-android:$realm_version"
-    kapt    "io.realm:realm-android:$realm_version"
-    compile 'org.jetbrains.anko:anko-sdk21:0.7.2' // sdk19, sdk21, sdk23 are also available
-    compile 'org.jetbrains.anko:anko-support-v4:0.7.2' // In case you need support.v4 bindings
+    kapt "io.realm:realm-android:$realm_version"
+    compile 'org.jetbrains.anko:anko-sdk21:0.7.2'
+    // sdk19, sdk21, sdk23 are also available
+    compile 'org.jetbrains.anko:anko-support-v4:0.7.2'
+    // In case you need support.v4 bindings
     compile 'net.danlew:android.joda:2.8.0'
     compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
 }

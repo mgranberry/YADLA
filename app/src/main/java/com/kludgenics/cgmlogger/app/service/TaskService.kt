@@ -200,13 +200,15 @@ public class TaskService : GcmTaskService(), AnkoLogger {
             else
                 null
         info ("closing tasks in createNightscoutTasks")
-        tasks.clear()
-        if (endpoint != null) {
-            tasks.put(TASK_SYNC_TREATMENTS, NightscoutTreatmentTask(ctx, endpoint))
-            tasks.put(TASK_SYNC_ENTRIES_FULL, NightscoutEntryTask(ctx, endpoint, 50000))
-            tasks.put(TASK_SYNC_ENTRIES_PERIODIC, NightscoutEntryTask(ctx, endpoint))
-        } else
-            cancelNightscoutTasks(ctx)
+        synchronized(tasks) {
+            tasks.clear()
+            if (endpoint != null) {
+                tasks.put(TASK_SYNC_TREATMENTS, NightscoutTreatmentTask(ctx, endpoint))
+                tasks.put(TASK_SYNC_ENTRIES_FULL, NightscoutEntryTask(ctx, endpoint, 50000))
+                tasks.put(TASK_SYNC_ENTRIES_PERIODIC, NightscoutEntryTask(ctx, endpoint))
+            } else
+                cancelNightscoutTasks(ctx)
+        }
     }
 
     override fun onDestroy() {

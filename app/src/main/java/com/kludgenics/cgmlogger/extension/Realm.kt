@@ -6,6 +6,7 @@ import io.realm.RealmQuery
 import io.realm.RealmResults
 import io.realm.exceptions.RealmException
 import org.joda.time.DateTime
+import java.util.*
 
 
 fun Realm.transaction (init: Realm.() -> Unit) {
@@ -22,7 +23,6 @@ fun Realm.transaction (init: Realm.() -> Unit) {
     }
 }
 
-//inline fun <reified T: io.realm.RealmObject> Realm.create(f: (it: T) -> Unit): T {
 inline fun <reified T: io.realm.RealmObject> Realm.create(init: T.() -> Unit): T {
     beginTransaction()
     val realmObject = createObject(T::class.java)
@@ -80,3 +80,6 @@ var BloodGlucoseRecord.dateTime: DateTime
     set(dt: DateTime) = { date = dt.millis }()
 
 data class UpdateResult<T: RealmObject>(val result: T, val changeMap: Map<String, String>)
+
+val Date.dateTime: DateTime
+    get() = DateTime(date)

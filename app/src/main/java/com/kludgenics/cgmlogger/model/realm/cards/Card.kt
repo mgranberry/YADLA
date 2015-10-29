@@ -9,13 +9,21 @@ import io.realm.Realm
 
 interface Card {
     companion object {
+
+        const val CARD_TYPE_AGP = 0
+        const val CARD_TYPE_IOB_COB = 1
+        const val CARD_TYPE_MODAL_DAY = 2
+        const val CARD_TYPE_TREATMENT = 3
+        const val CARD_TYPE_OVERVIEW = 4
+
         fun retrieve(metadata: CardMetadata): Card? {
             val r = Realm.getDefaultInstance()
             return when (metadata.cardtType) {
-                AgpCard.TYPE -> r.where<AgpCard> {equalTo("metadata.id", metadata.id)}.findFirst()
-                IobCobCard.TYPE -> r.where<IobCobCard> {equalTo("metadata.id", metadata.id)}.findFirst()
-                ModalDayCard.TYPE -> r.where<ModalDayCard> {equalTo("metadata.id", metadata.id)}.findFirst()
-                TreatmentDetailCard.TYPE -> r.where<TreatmentDetailCard> {equalTo("metadata.id", metadata.id)}.findFirst()
+                CARD_TYPE_AGP -> r.where<AgpCard> {equalTo("metadata.id", metadata.id)}.findFirst()
+                CARD_TYPE_IOB_COB -> r.where<IobCobCard> {equalTo("metadata.id", metadata.id)}.findFirst()
+                CARD_TYPE_MODAL_DAY -> r.where<ModalDayCard> {equalTo("metadata.id", metadata.id)}.findFirst()
+                CARD_TYPE_TREATMENT -> r.where<TreatmentDetailCard> {equalTo("metadata.id", metadata.id)}.findFirst()
+                CARD_TYPE_OVERVIEW -> r.where<TreatmentOverviewCard> {equalTo("metadata.id", metadata.id)}.findFirst()
                 else -> null
             }
         }

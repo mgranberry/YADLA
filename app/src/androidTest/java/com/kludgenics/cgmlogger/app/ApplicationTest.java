@@ -12,13 +12,6 @@ import com.kludgenics.cgmlogger.app.util.PathParser;
 public class ApplicationTest extends ApplicationTestCase<Application> {
     public ApplicationTest() {
         super(Application.class);
-        String path = "m0,0";
-        PathParser.createNodesFromPathData(path);
-        FlatBufferBuilder b = new FlatBufferBuilder(100);
-        int o = PathParser.populateFlatBufferFromPathData(b, path);
-        int i = PathParser.populateFlatBufferFromPathData(b, path);
-        int m = PathParser.populateFlatBufferFromPathData(b, path);
-
     }
 
 }

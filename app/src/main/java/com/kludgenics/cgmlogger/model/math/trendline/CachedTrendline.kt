@@ -1,6 +1,8 @@
 package com.kludgenics.cgmlogger.model.math.trendline
 
 import android.content.Context
+import com.google.flatbuffers.FlatBufferBuilder
+import com.kludgenics.cgmlogger.app.util.PathParser
 import com.kludgenics.cgmlogger.extension.dateTime
 import com.kludgenics.cgmlogger.extension.where
 import com.kludgenics.cgmlogger.model.realm.glucose.BloodGlucoseRecord
@@ -25,7 +27,7 @@ import java.util.concurrent.Future
  * Created by matthiasgranberry on 7/18/15.
  */
 
-@RealmClass public open class CachedPeriod(public open var trendLine: String = "",
+@RealmClass public open class CachedPeriod(public open var trendPath: ByteArray = ByteArray(0),
                                            public open var highCount: Int = 0,
                                            public open var lowCount: Int = 0,
                                            public open var inRangeCount: Int = 0,
@@ -107,14 +109,14 @@ public object PeriodUtil: AnkoLogger {
                     updated?.invoke(f)
                     info("ending bg")
                 }
-                CachedPeriod(date = result.date, trendLine = result.trendLine, high = result.high, highCount = result.highCount,
+                CachedPeriod(date = result.date, trendPath = result.trendPath, high = result.high, highCount = result.highCount,
                         inRangeCount = result.inRangeCount, low = result.low,
                         lowCount = result.lowCount, totalCount = result.totalCount,
                         period = result.period)
             } else {
                 info("Current result cache is valid.  Returning cache.")
 
-                CachedPeriod(date = result.date, trendLine = result.trendLine, high = result.high,
+                CachedPeriod(date = result.date, trendPath = result.trendPath, high = result.high,
                         highCount = result.highCount, inRangeCount = result.inRangeCount,
                         low = result.low, lowCount = result.lowCount,
                         totalCount = result.totalCount, period = result.period)
@@ -125,7 +127,7 @@ public object PeriodUtil: AnkoLogger {
     private fun calculateAndCachePeriod(dateTime: DateTime, period: Period): CachedPeriod {
         val result = DailyTrendline(dateTime, period, 80.0, 180.0)
         result.use {
-            val cache = CachedPeriod(date = result.dateTime.toDate(), trendLine = result.trendLine,
+            val cache = CachedPeriod(date = result.dateTime.toDate(), trendPath = result.trendPath,
                     high = result.high, highCount = result.highCount,
                     inRangeCount = result.inRangeCount, low = result.low, lowCount = result.lowCount,
                     totalCount = result.totalCount, period = result.period.days)
@@ -174,8 +176,8 @@ class DailyTrendline(val dateTime: DateTime, val period: Period, val low: Double
         realm.close()
     }
 
-    private fun stringFromValues (values: List<BloodGlucoseRecord>): String {
-        return if (values.isNotEmpty()) buildString {
+    private fun pathDataBufferFromValues(values: List<BloodGlucoseRecord>): ByteArray {
+        val pathString = if (values.isNotEmpty()) buildString {
             append("M0,${SPEC_HEIGHT - values.first().value}L")
             val timeLimit = dateTime.plus(period)
             val timeStart = dateTime
@@ -193,9 +195,12 @@ class DailyTrendline(val dateTime: DateTime, val period: Period, val low: Double
                 lastTime = currentTime
             }
         } else ""
+        val fbb = FlatBufferBuilder(500)
+        PathParser.populateFlatBufferFromPathData(fbb, pathString)
+        return fbb.sizedByteArray()
     }
 
-    public val trendLine: String by lazy(LazyThreadSafetyMode.NONE) { stringFromValues(periodValues) }
+    public val trendPath: ByteArray by lazy(LazyThreadSafetyMode.NONE) { pathDataBufferFromValues(periodValues) }
     public val highCount: Int by lazy(LazyThreadSafetyMode.NONE) { highValues.count() }
     public val lowCount: Int by lazy(LazyThreadSafetyMode.NONE) { lowValues.count() }
     public val inRangeCount: Int by lazy(LazyThreadSafetyMode.NONE) { inRangeValues.count() }

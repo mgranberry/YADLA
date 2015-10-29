@@ -8,6 +8,7 @@ import android.view.Gravity
 import android.view.ViewGroup
 import android.widget.TextView
 import com.kludgenics.cgmlogger.app.R
+import com.kludgenics.cgmlogger.app.util.PathParser
 import com.kludgenics.cgmlogger.app.view.DailyBgChartView
 import com.kludgenics.cgmlogger.app.view.dailyBgChartView
 import com.kludgenics.cgmlogger.model.math.bgi.BgiUtil
@@ -43,11 +44,11 @@ public class TrendlineAdapter(val periods: List<Pair<DateTime, Period>>): Recycl
             if (!it.isCancelled && it == holder.periodFuture) { // don't update the wrong view
                 try {
                     val per = holder.periodFuture?.get(20, TimeUnit.SECONDS)
-                    val trendLine = per?.trendLine
+                    val trendPath = PathParser.copyFromPathDataBuffer(per?.trendPath)
                     val date = per?.dateTime
                     if (!it.isCancelled && it == holder.periodFuture && holder.adapterPosition >= 0) {
                         holder.trendView.context.onUiThread {
-                            holder.chartView?.trendPathString = trendLine ?: ""
+                            holder.chartView?.trendPathData = trendPath ?: emptyArray()
                             holder.chartView?.requestLayout()
                             holder.chartView?.invalidate()
 
@@ -68,10 +69,10 @@ public class TrendlineAdapter(val periods: List<Pair<DateTime, Period>>): Recycl
                 }
             }
         })
-        val trendLine = per.trendLine
+        val trendPath = PathParser.copyFromPathDataBuffer(per.trendPath)
         val date = per.dateTime;
         holder.chartView!!.context.onUiThread {
-            holder.chartView?.trendPathString = trendLine
+            holder.chartView?.trendPathData = trendPath
             holder.chartView?.requestLayout()
             holder.chartView?.invalidate()
             holder.textView?.text = "${fmt.print(date)}: ${bgri?.adrr}"

@@ -1,10 +1,13 @@
 package com.kludgenics.cgmlogger.model.math.agp
 
 import android.content.Context
+import com.google.flatbuffers.FlatBufferBuilder
+import com.kludgenics.cgmlogger.app.util.PathParser
 import com.kludgenics.cgmlogger.extension.where
+import com.kludgenics.cgmlogger.model.flatbuffers.path.AgpPathBuffer
+import com.kludgenics.cgmlogger.model.flatbuffers.path.PathDataBuffer
 import io.realm.Realm
 import io.realm.RealmObject
-import io.realm.annotations.Ignore
 import io.realm.annotations.RealmClass
 import org.jetbrains.anko.AnkoLogger
 import org.jetbrains.anko.async
@@ -12,6 +15,9 @@ import org.jetbrains.anko.asyncResult
 import org.jetbrains.anko.info
 import org.joda.time.DateTime
 import org.joda.time.Period
+import java.io.File
+import java.io.FileOutputStream
+import java.nio.ByteBuffer
 import java.util.*
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
@@ -21,45 +27,16 @@ import java.util.concurrent.Future
  * Created by matthiasgranberry on 7/5/15.
  */
 
-@RealmClass public open class CachedDatePeriodAgp(public open var outer: String = "",
-                                                  public open var inner: String = "",
-                                                  public open var median: String = "",
+@RealmClass public open class CachedDatePeriodAgp(public open var outer: ByteArray = ByteArray(0),
+                                                  public open var inner: ByteArray = ByteArray(0),
+                                                  public open var median: ByteArray = ByteArray(0),
                                                   public open var date: Date = Date(),
                                                   public open var period: Int = 30): RealmObject() {
-    @Ignore
-    public var svgHeight: Float = DailyAgp.SPEC_HEIGHT
-    @Ignore
-    public var svgWidth: Float = DailyAgp.SPEC_WIDTH
-    @Ignore
-    public var target: Float = 100f
-    @Ignore
-    public var high: Float = 180f
-    @Ignore
-    public var low: Float = 80f
 }
 
 public var CachedDatePeriodAgp.dateTime: DateTime
     get() = DateTime(date)
     set(value) { date = value.toDate() }
-
-
-public val CachedDatePeriodAgp.svg: String
-    get() =
-    """
-<?xml version="1.0" encoding="utf-8" standalone="no"?>
-<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
-<svg height="${svgHeight}pt" version="1.1" viewBox="0 0 240 400" width="${svgWidth}pt" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-    <g id="agp">
-        <path d="$outer" fill="#2d95c2"/>
-        <path d="$inner" fill="#005882"/>
-        <path d="$median" stroke="#bce6ff" fill-opacity="0.0" stroke-with="3"/>
-
-        <line x1="0" y1="${400 - target}" y2="${400 - target}" x2="360" stroke="green"/>
-        <line x1="0" y1="${400 - high}" y2="${400 - high}" x2="360" stroke="yellow"/>
-        <line x1="0" y1="${400 - low}" y2="${400 - low}" x2="360" stroke="red"/>
-    </g>
-</svg>
-"""
 
 public object AgpUtil: AnkoLogger {
     val executor: ExecutorService =
@@ -134,8 +111,19 @@ public object AgpUtil: AnkoLogger {
         info ("$period Calculating agp: $dateTime, $period")
         val currentAgp = DailyAgp(dateTime, period)
         info("$period Storing cached AGP")
-        val ro = CachedDatePeriodAgp(currentAgp.pathStrings[0], currentAgp.pathStrings[1],
-                currentAgp.pathStrings[2], date = dateTime.toDate(), period = period.days)
+        val buffer = ByteBuffer.wrap(ByteArray(500))
+        var fb = FlatBufferBuilder(buffer)
+        PathParser.populateFlatBufferFromPathData(fb, currentAgp.pathStrings[0])
+        val outer = fb.sizedByteArray()
+        buffer.clear()
+        fb = FlatBufferBuilder(buffer)
+        PathParser.populateFlatBufferFromPathData(fb, currentAgp.pathStrings[1])
+        val inner = fb.sizedByteArray()
+        buffer.clear()
+        fb = FlatBufferBuilder(buffer)
+        PathParser.populateFlatBufferFromPathData(fb, currentAgp.pathStrings[2])
+        val median = fb.sizedByteArray()
+        val ro = CachedDatePeriodAgp(outer, inner, median, date = dateTime.toDate(), period = period.days)
         info("$period acquiring realm in caca")
         val realm = Realm.getDefaultInstance()
         info("$period acquired realm")

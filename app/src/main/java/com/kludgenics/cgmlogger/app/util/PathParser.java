@@ -16,6 +16,10 @@ package com.kludgenics.cgmlogger.app.util;
 import android.graphics.Path;
 import android.util.Log;
 
+import com.google.flatbuffers.FlatBufferBuilder;
+import com.kludgenics.cgmlogger.model.flatbuffers.path.PathDataBuffer;
+import com.kludgenics.cgmlogger.model.flatbuffers.path.PathDataNodeBuffer;
+
 import java.util.ArrayList;
 import java.nio.ByteBuffer;
 
@@ -70,6 +74,37 @@ public class PathParser {
             return path;
         }
         return null;
+    }
+
+    public static void populateFlatBufferFromPathData(FlatBufferBuilder builder,
+                                                     String pathData) {
+        PathDataNode[] nodes = createNodesFromPathData(pathData);
+        int[] nodeOffsets = new int[nodes.length];
+
+        for (int i = 0; i < nodes.length; i++) {
+            PathDataNode node = nodes[i];
+            int vector = PathDataNodeBuffer.createParamsVector(builder, node.mParams);
+            nodeOffsets[i] = PathDataNodeBuffer.createPathDataNodeBuffer(builder, (byte) node.mType, vector);
+        }
+
+        int nodesOffset = PathDataBuffer.createNodesVector(builder, nodeOffsets);
+        int path = PathDataBuffer.createPathDataBuffer(builder, nodesOffset);
+        PathDataBuffer.finishPathDataBufferBuffer(builder, path);
+    }
+
+
+    public static PathDataNode[] copyFromPathDataBuffer(byte[] source) {
+        if (source == null || source.length < 8) {
+            return new PathDataNode[0];
+        }
+        PathDataBuffer buffer = PathDataBuffer.getRootAsPathDataBuffer(ByteBuffer.wrap(source));
+        PathDataNode[] copy = new PathParser.PathDataNode[buffer.nodesLength()];
+        PathDataNodeBuffer node = new PathDataNodeBuffer();
+        for (int i = 0; i <buffer.nodesLength(); i++) {
+            buffer.nodes(node, i);
+            copy[i] = new PathDataNode(node);
+        }
+        return copy;
     }
 
     /**
@@ -280,8 +315,8 @@ public class PathParser {
      * An array of PathDataNode can represent the whole "d" attribute.
      */
     public static class PathDataNode {
-        private char mType;
-        private float[] mParams;
+        char mType;
+        float[] mParams;
 
         private PathDataNode(char type, float[] params) {
             mType = type;
@@ -293,8 +328,13 @@ public class PathParser {
             mParams = copyOfRange(n.mParams, 0, n.mParams.length);
         }
 
-        public static void nodesToByteBuffer(PathDataNode[] node, ByteBuffer path) {
-
+        PathDataNode(PathDataNodeBuffer n) {
+            mType = (char) n.command();
+            float[] params = new float[n.paramsLength()];
+            for (int i = 0; i < params.length; i++) {
+                params[i] = n.params(i);
+            }
+            mParams = params;
         }
 
         /**

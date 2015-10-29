@@ -9,13 +9,18 @@ import android.view.ViewGroup
 import android.widget.TextView
 import com.kludgenics.cgmlogger.app.DetailActivity
 import com.kludgenics.cgmlogger.app.R
+import com.kludgenics.cgmlogger.app.util.PathParser
 import com.kludgenics.cgmlogger.app.view.AgpChartView
 import com.kludgenics.cgmlogger.app.view.BgRiChartView
 import com.kludgenics.cgmlogger.app.view.agpChartView
+import com.kludgenics.cgmlogger.model.flatbuffers.path.AgpPathBuffer
 import com.kludgenics.cgmlogger.model.math.agp.AgpUtil
 import com.kludgenics.cgmlogger.model.math.agp.CachedDatePeriodAgp
 import org.jetbrains.anko.*
 import org.joda.time.Period
+import java.io.File
+import java.io.FileOutputStream
+import java.nio.ByteBuffer
 import java.util.concurrent.CancellationException
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.Future
@@ -40,16 +45,17 @@ public class AgpAdapter(val periods: List<Period>): RecyclerView.Adapter<AgpAdap
             if (!it.isCancelled && it == holder.agpFuture) { // don't update the wrong view
                 try {
                     val agp = holder.agpFuture?.get(20, TimeUnit.SECONDS)
-                    val inner = agp?.inner
-                    val median = agp?.median
-                    val outer = agp?.outer
+
+                    val inner = PathParser.copyFromPathDataBuffer(agp?.inner)
+                    val outer = PathParser.copyFromPathDataBuffer(agp?.outer)
+                    val median = PathParser.copyFromPathDataBuffer(agp?.median)
                     //val end = agp?.dateTime
                     val days = agp?.period
                     if (!it.isCancelled && it == holder.agpFuture && holder.adapterPosition >= 0) {
                         holder.agpView.context.onUiThread {
-                            holder.chartView?.outerPathString = outer ?: ""
-                            holder.chartView?.innerPathString = inner ?: ""
-                            holder.chartView?.medianPathString = median ?: ""
+                            holder.chartView?.outerPathData = outer
+                            holder.chartView?.innerPathData = inner
+                            holder.chartView?.medianPathData = median
                             holder.chartView?.requestLayout()
                             holder.chartView?.invalidate()
                             holder.textView?.text = if (days?.compareTo(1) == 0) "$days day" else "$days days"
@@ -67,15 +73,15 @@ public class AgpAdapter(val periods: List<Period>): RecyclerView.Adapter<AgpAdap
                 }
             }
         })
-        val inner = agp.inner
-        val median = agp.median
-        val outer = agp.outer
+        val inner = PathParser.copyFromPathDataBuffer(agp.inner)
+        val outer = PathParser.copyFromPathDataBuffer(agp.outer)
+        val median = PathParser.copyFromPathDataBuffer(agp.median)
         //val end = agp.dateTime
         val days = agp.period
         holder.agpView.context.onUiThread {
-            holder.chartView?.outerPathString = outer
-            holder.chartView?.innerPathString = inner
-            holder.chartView?.medianPathString = median
+            holder.chartView?.outerPathData = outer
+            holder.chartView?.innerPathData = inner
+            holder.chartView?.medianPathData = median
             holder.chartView?.requestLayout()
             holder.chartView?.invalidate()
             holder.textView?.text = if (days.compareTo(1) == 0) "$days day" else "$days days"

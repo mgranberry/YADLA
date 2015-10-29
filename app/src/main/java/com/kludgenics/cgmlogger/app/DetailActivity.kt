@@ -10,7 +10,10 @@ import com.crashlytics.android.answers.ContentViewEvent
 import com.crashlytics.android.answers.CustomEvent
 import com.kludgenics.cgmlogger.app.adapter.TrendlineAdapter
 import com.kludgenics.cgmlogger.app.service.TaskService
+import com.kludgenics.cgmlogger.app.util.PathParser
 import com.kludgenics.cgmlogger.app.view.AgpChartView
+import com.kludgenics.cgmlogger.model.flatbuffers.path.AgpPathBuffer
+import com.kludgenics.cgmlogger.model.flatbuffers.path.PathDataBuffer
 import com.kludgenics.cgmlogger.model.math.agp.AgpUtil
 import org.jetbrains.anko.AnkoLogger
 import org.jetbrains.anko.ctx
@@ -18,6 +21,7 @@ import org.jetbrains.anko.find
 import org.jetbrains.anko.onUiThread
 import org.joda.time.DateTime
 import org.joda.time.Period
+import java.nio.ByteBuffer
 
 public class DetailActivity : BaseActivity(), AnkoLogger {
     override protected val navigationId = R.id.nav_home
@@ -32,23 +36,28 @@ public class DetailActivity : BaseActivity(), AnkoLogger {
         with(agp) {
             val cachedAgp = AgpUtil.getLatestCached(ctx, period,
                     updated = {
-                try {
-                    val newAgp = it.get()
-                    val inner = newAgp.inner
-                    val median = newAgp.median
-                    val outer = newAgp.outer
-                    onUiThread {
-                        agp.innerPathString = inner
-                        agp.medianPathString = median
-                        agp.outerPathString = outer
-                        agp.invalidate()
-                    }
-                } catch (e: Exception) {
-                }
-            })
-            innerPathString = cachedAgp.inner
-            medianPathString = cachedAgp.median
-            outerPathString = cachedAgp.outer
+                        try {
+                            val newAgp = it.get()
+
+                            val inner = PathParser.copyFromPathDataBuffer(newAgp.inner)
+                            val outer = PathParser.copyFromPathDataBuffer(newAgp.outer)
+                            val median = PathParser.copyFromPathDataBuffer(newAgp.median)
+                            onUiThread {
+                                agp.innerPathData = inner
+                                agp.medianPathData = median
+                                agp.outerPathData = outer
+                                agp.invalidate()
+                            }
+                        } catch (e: Exception) {
+                        }
+                    })
+            val inner = PathParser.copyFromPathDataBuffer(cachedAgp.inner)
+            val outer = PathParser.copyFromPathDataBuffer(cachedAgp.outer)
+            val median = PathParser.copyFromPathDataBuffer(cachedAgp.median)
+
+            innerPathData = inner
+            medianPathData = median
+            outerPathData = outer
             highLine = 180
             targetLine = 110
             lowLine = 80

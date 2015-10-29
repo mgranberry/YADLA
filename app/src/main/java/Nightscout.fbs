@@ -1,0 +1,22 @@
+namespace com.kludgenics.cgmlogger.model.flatbuffers.path;
+
+table PathDataNodeBuffer {
+    command: byte;
+    params: [float];
+}
+
+table PathDataBuffer {
+    nodes: [PathDataNodeBuffer];
+}
+
+table AgpPathBuffer {
+    outer: PathDataBuffer;
+    inner: PathDataBuffer;
+    median: PathDataBuffer;
+}
+
+table TrendlineBuffer {
+    trend: PathDataBuffer;
+}
+
+root_type PathDataBuffer;

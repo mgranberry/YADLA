@@ -7,6 +7,7 @@ table PathDataNodeBuffer {
 
 table PathDataBuffer {
     nodes: [PathDataNodeBuffer];
+    points: int = 0;
 }
 
 table AgpPathBuffer {
@@ -17,6 +18,32 @@ table AgpPathBuffer {
 
 table TrendlineBuffer {
     trend: PathDataBuffer;
+}
+
+enum BloodGlucoseType: byte { SGV = 0 }
+enum BloodGlucoseUnit: byte { MGDL = 0, MMOL_L = 1 }
+
+table BloodGlucose {
+    value: float;
+    date: long;
+    type: BloodGlucoseType;
+    unit: BloodGlucoseUnit;
+}
+
+table BloodGlucoseDay {
+    start: long;
+    end: long;
+    average: float;
+    median: float;
+    riMax: float;
+    hbgi: float;
+    riMin: float;
+    lbgi: float;
+    stdDev: float;
+    countLow: int=0;
+    countHigh: int=0;
+    values: [BloodGlucose];
+    trendline: PathDataBuffer;
 }
 
 root_type PathDataBuffer;

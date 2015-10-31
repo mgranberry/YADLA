@@ -15,18 +15,22 @@ public class PathDataBuffer extends Table {
   public PathDataNodeBuffer nodes(int j) { return nodes(new PathDataNodeBuffer(), j); }
   public PathDataNodeBuffer nodes(PathDataNodeBuffer obj, int j) { int o = __offset(4); return o != 0 ? obj.__init(__indirect(__vector(o) + j * 4), bb) : null; }
   public int nodesLength() { int o = __offset(4); return o != 0 ? __vector_len(o) : 0; }
+  public int points() { int o = __offset(6); return o != 0 ? bb.getInt(o + bb_pos) : 0; }
 
   public static int createPathDataBuffer(FlatBufferBuilder builder,
-      int nodes) {
-    builder.startObject(1);
+      int nodes,
+      int points) {
+    builder.startObject(2);
+    PathDataBuffer.addPoints(builder, points);
     PathDataBuffer.addNodes(builder, nodes);
     return PathDataBuffer.endPathDataBuffer(builder);
   }
 
-  public static void startPathDataBuffer(FlatBufferBuilder builder) { builder.startObject(1); }
+  public static void startPathDataBuffer(FlatBufferBuilder builder) { builder.startObject(2); }
   public static void addNodes(FlatBufferBuilder builder, int nodesOffset) { builder.addOffset(0, nodesOffset, 0); }
   public static int createNodesVector(FlatBufferBuilder builder, int[] data) { builder.startVector(4, data.length, 4); for (int i = data.length - 1; i >= 0; i--) builder.addOffset(data[i]); return builder.endVector(); }
   public static void startNodesVector(FlatBufferBuilder builder, int numElems) { builder.startVector(4, numElems, 4); }
+  public static void addPoints(FlatBufferBuilder builder, int points) { builder.addInt(1, points, 0); }
   public static int endPathDataBuffer(FlatBufferBuilder builder) {
     int o = builder.endObject();
     return o;

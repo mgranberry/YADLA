@@ -17,6 +17,8 @@ import org.jetbrains.anko.info
 import java.io.File
 import io.fabric.sdk.android.Fabric;
 import com.crashlytics.android.Crashlytics;
+import com.kludgenics.cgmlogger.extension.transaction
+
 /**
  * Created by matthiasgranberry on 5/28/15.
  */
@@ -28,19 +30,22 @@ public class LoggerApplication : Application(), AnkoLogger {
         Fabric.with(this, Crashlytics());
         // should throw as migration is required
         debug("trying realm for migration")
-        val configuration = RealmConfiguration.Builder(this).build()
+        val configuration = RealmConfiguration.Builder(this)
+                .deleteRealmIfMigrationNeeded()
+                .build()
         Realm.setDefaultConfiguration(configuration)
         Realm.getDefaultInstance().close()
         // delete old cache entries for testing
 
         if (false) {
             val arr = Realm.getDefaultInstance()
-            arr.beginTransaction()
-            arr.where<CachedDatePeriodAgp> { this }.findAll().clear()
-            arr.where<CachedBgi> { this }.findAll().clear()
-            arr.where<CachedPeriod> { this }.findAll().clear()
-            arr.commitTransaction()
-            arr.close()
+            arr.use {
+                arr.transaction {
+                    arr.where<CachedDatePeriodAgp> { this }.findAll().clear()
+                    arr.where<CachedBgi> { this }.findAll().clear()
+                    arr.where<CachedPeriod> { this }.findAll().clear()
+                }
+            }
         }
 
         async {

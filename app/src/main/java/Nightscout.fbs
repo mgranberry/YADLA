@@ -7,7 +7,6 @@ table PathDataNodeBuffer {
 
 table PathDataBuffer {
     nodes: [PathDataNodeBuffer];
-    points: int = 0;
 }
 
 table AgpPathBuffer {
@@ -30,20 +29,32 @@ table BloodGlucose {
     unit: BloodGlucoseUnit;
 }
 
+table BloodGlucosePeriod {
+    average: float = 0;
+    median: float = 0;
+    rhMax: float = 0;
+    rlMax: float = 0;
+    hbgi: float = 0;
+    lbgi: float = 0;
+    adrr: float = 0;
+    stdDev: float = 0;
+    countLow: int = 0;
+    countHigh: int = 0;
+}
+
 table BloodGlucoseDay {
-    start: long;
-    end: long;
-    average: float;
-    median: float;
-    riMax: float;
-    hbgi: float;
-    riMin: float;
-    lbgi: float;
-    stdDev: float;
-    countLow: int=0;
-    countHigh: int=0;
+    period: BloodGlucosePeriod;
     values: [BloodGlucose];
     trendline: PathDataBuffer;
 }
 
-root_type PathDataBuffer;
+union Any {
+    BloodGlucoseDay,
+    PathDataBuffer
+}
+
+table Entry {
+    record: Any;
+}
+
+root_type Entry;

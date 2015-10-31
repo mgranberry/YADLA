@@ -76,7 +76,7 @@ public class PathParser {
         return null;
     }
 
-    public static void populateFlatBufferFromPathData(FlatBufferBuilder builder,
+    public static int populateFlatBufferFromPathData(FlatBufferBuilder builder,
                                                      String pathData) {
         PathDataNode[] nodes = createNodesFromPathData(pathData);
         int[] nodeOffsets = new int[nodes.length];
@@ -89,7 +89,8 @@ public class PathParser {
 
         int nodesOffset = PathDataBuffer.createNodesVector(builder, nodeOffsets);
         int path = PathDataBuffer.createPathDataBuffer(builder, nodesOffset);
-        PathDataBuffer.finishPathDataBufferBuffer(builder, path);
+        builder.finish(path);
+        return path;
     }
 
 

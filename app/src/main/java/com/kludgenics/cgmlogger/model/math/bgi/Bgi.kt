@@ -33,16 +33,16 @@ object Bgi {
             9.0 to "Moderate",
             500.0 to "High")
 
-    private fun rf(bg: Double): Double {
+    public fun rf(bg: Double): Double {
         return 1.509 * (Math.pow(Math.log(bg), 1.084) - 5.381)
     }
 
-    private fun rl(bg: Double): Double {
+    public fun rl(bg: Double): Double {
         val rv = rf(bg)
         return if (rv < 0) -10 * rv else 0.0
     }
 
-    private fun rh(bg: Double): Double {
+    public fun rh(bg: Double): Double {
         val rv = rf(bg)
         return if (rv > 0) 10 * rv else 0.0
     }

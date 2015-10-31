@@ -5,6 +5,7 @@ import com.google.flatbuffers.FlatBufferBuilder
 import com.kludgenics.cgmlogger.app.util.PathParser
 import com.kludgenics.cgmlogger.extension.dateTime
 import com.kludgenics.cgmlogger.extension.where
+import com.kludgenics.cgmlogger.model.flatbuffers.path.Entry
 import com.kludgenics.cgmlogger.model.realm.glucose.BloodGlucoseRecord
 import io.realm.Realm
 import io.realm.RealmObject
@@ -196,7 +197,7 @@ class DailyTrendline(val dateTime: DateTime, val period: Period, val low: Double
             }
         } else ""
         val fbb = FlatBufferBuilder(500)
-        PathParser.populateFlatBufferFromPathData(fbb, pathString)
+        fbb.finish(PathParser.populateFlatBufferFromPathData(fbb, pathString))
         return fbb.sizedByteArray()
     }
 

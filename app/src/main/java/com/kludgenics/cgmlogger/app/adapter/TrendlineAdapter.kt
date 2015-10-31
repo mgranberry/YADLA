@@ -38,7 +38,6 @@ public class TrendlineAdapter(val periods: List<Pair<DateTime, Period>>): Recycl
     }
 
     override fun onBindViewHolder(holder: TrendlineViewHolder, id: Int) {
-        val bgri = BgiUtil.getLatestCached(periods[id].first, periods[id].second)
         val per = PeriodUtil.getLatestCached(holder.trendView.context, periods[id].first, periods[id].second, {
             holder.periodFuture = it
             if (!it.isCancelled && it == holder.periodFuture) { // don't update the wrong view
@@ -53,7 +52,7 @@ public class TrendlineAdapter(val periods: List<Pair<DateTime, Period>>): Recycl
                             holder.chartView?.invalidate()
 
                             if (date != null) {
-                                holder.textView?.text = "${fmt.print(date)}: ${bgri?.adrr}"
+                                holder.textView?.text = "${fmt.print(date)}"
                             }
                             notifyItemChanged(holder.layoutPosition)
                             info("notifyItemChanged(${holder.adapterPosition}) (${holder.itemId} ${per?.date} ${per?.period})")
@@ -75,7 +74,7 @@ public class TrendlineAdapter(val periods: List<Pair<DateTime, Period>>): Recycl
             holder.chartView?.trendPathData = trendPath
             holder.chartView?.requestLayout()
             holder.chartView?.invalidate()
-            holder.textView?.text = "${fmt.print(date)}: ${bgri?.adrr}"
+            holder.textView?.text = "${fmt.print(date)}"
         }
     }
 

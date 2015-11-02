@@ -57,7 +57,7 @@ public fun RealmList<BloodGlucoseRecord>.createBloodGlucosePeriod(builder: FlatB
     val hbgi = Bgi.hbgi(this).toFloat()
     val lbgi = Bgi.lbgi(this).toFloat()
     val adrr = Bgi.adrr(this).toFloat()
-    val stdDev = this.map { val d = it.value - average; d*d }.average().toFloat()
+    val stdDev = Math.sqrt(this.map { val d = it.value - average; d*d }.average()).toFloat()
     val countLow = where().lessThanOrEqualTo("lowThreshold", lowThreshold).findAll().size
     val countHigh = where().greaterThanOrEqualTo("highThreshold", highThreshold).findAll().size
 

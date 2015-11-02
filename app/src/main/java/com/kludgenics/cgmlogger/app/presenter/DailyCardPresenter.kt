@@ -5,12 +5,13 @@ import com.kludgenics.cgmlogger.extension.dateTime
 import com.kludgenics.cgmlogger.extension.transaction
 import com.kludgenics.cgmlogger.extension.where
 import com.kludgenics.cgmlogger.model.realm.cards.*
-import com.kludgenics.cgmlogger.model.realm.glucose.BgByDay
+import com.kludgenics.cgmlogger.model.realm.glucose.BgByPeriod
 import com.kludgenics.cgmlogger.model.realm.glucose.BloodGlucoseRecord
 import com.kludgenics.cgmlogger.model.treatment.Treatment
 import io.realm.Realm
 import io.realm.RealmChangeListener
 import io.realm.RealmResults
+import org.jetbrains.anko.async
 import org.joda.time.DateTime
 import org.joda.time.Period
 import java.io.Closeable
@@ -19,19 +20,17 @@ import java.util.*
 /**
  * Created by matthias on 10/29/15.
  */
-class DailyCardPresenter(val period: Period): Closeable {
+class DailyCardPresenter(val period: Period, val listId: Int): Closeable {
 
     private val realm = Realm.getDefaultInstance()
     val bgListener = RealmChangeListener { onBgChanged() }
     val treatmentListener = RealmChangeListener { onTreatmentChanged() }
     private var bgQuery: RealmResults<BloodGlucoseRecord> = updateBgQuery()
     private var treatmentQuery: RealmResults<Treatment> = updateTreatmentQuery()
-    private val cardList: CardList
-
-    init {
-        cardList = realm.create <CardList> {
-            id = realm.where<CardList> { this }.max("id").toLong() + 1
-        }
+    private val cardList: CardList = realm.where <CardList> {
+        equalTo("id", listId)
+    }.findFirst() ?: realm.create<CardList> {
+        id = listId
     }
 
     fun updateBgQuery(): RealmResults<BloodGlucoseRecord> {
@@ -53,33 +52,33 @@ class DailyCardPresenter(val period: Period): Closeable {
     }
 
     private fun updateCards() {
-        val endTime = DateTime.now().withTimeAtStartOfDay().plusDays(1)
-        val startTime = (endTime - period) - Period.days(1)
-        val deleteList = ArrayList<CardMetadata>()
-        for (cardMetaData in cardList.cards) {
-            val card = Card.retrieve(cardMetaData)
-            when (card) {
-                is ModalDayCard -> {
-                    if (card.day.dateTime < startTime)
-                        deleteList.add(card.metadata)
+        async {
+            val realm = Realm.getDefaultInstance()
+            val endTime = DateTime.now().withTimeAtStartOfDay().plusDays(1)
+            val startTime = (endTime - period) - Period.days(1)
+            val deleteList = ArrayList<CardMetadata>()
+            val updateList = ArrayList<CardMetadata>()
+            for (cardMetaData in cardList.cards) {
+                val card = Card.retrieve(cardMetaData)
+                when (card) {
+                    is ModalCard -> {
+                        if (card.day.dateTime < startTime)
+                            deleteList.add(card.metadata)
+                    }
                 }
             }
-        }
-        /// @TODO verify that this actually works
-        val newCard = if (endTime > cardList.cards.first().lastUpdated?.dateTime?.withTimeAtStartOfDay()?.plusDays(1))
-                null
-            else
-                createBgCard(endTime)
-        realm.transaction {
-            cardList.cards.removeAll(deleteList)
-            //newCard ?: cardList.cards.add(0, newCard)
+
+            realm.transaction {
+                cardList.cards.removeAll(deleteList)
+                //newCard ?: cardList.cards.add(0, newCard)
+            }
         }
     }
 
     public fun createBgCard(startTime: DateTime) {
-        val day = realm.where<BgByDay> { equalTo("day", startTime.millis) }.findFirst()
+        val day = realm.where<BgByPeriod> { equalTo("day", startTime.millis) }.findFirst()
         if (day != null) {
-            cardList.cards.newMetadata(realm) {
+            cardList.cards.newCard(realm) {
 
             }
         }

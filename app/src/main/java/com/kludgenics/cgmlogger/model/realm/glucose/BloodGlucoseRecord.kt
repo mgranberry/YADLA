@@ -4,11 +4,8 @@ import com.google.flatbuffers.FlatBufferBuilder
 import com.kludgenics.cgmlogger.app.util.PathParser
 import com.kludgenics.cgmlogger.model.flatbuffers.path.BloodGlucosePeriod
 import com.kludgenics.cgmlogger.model.math.bgi.Bgi
-import com.kludgenics.cgmlogger.model.math.trendline.DailyTrendline
 import io.realm.RealmList
 import io.realm.RealmObject
-import io.realm.RealmQuery
-import io.realm.RealmResults
 import io.realm.annotations.PrimaryKey
 import io.realm.annotations.Required
 import org.joda.time.DateTime

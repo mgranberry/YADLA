@@ -8,6 +8,6 @@ import io.realm.RealmObject
  */
 
 public open class CardList: RealmObject() {
-    public open var id: Long = 0
+    public open var id: Int = 0
     public open var cards: RealmList<CardMetadata> = RealmList()
 }

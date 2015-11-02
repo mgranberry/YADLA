@@ -16,6 +16,8 @@ import com.kludgenics.cgmlogger.app.view.agpChartView
 import com.kludgenics.cgmlogger.model.flatbuffers.path.AgpPathBuffer
 import com.kludgenics.cgmlogger.model.math.agp.AgpUtil
 import com.kludgenics.cgmlogger.model.math.agp.CachedDatePeriodAgp
+import io.realm.Realm
+import io.realm.RealmChangeListener
 import org.jetbrains.anko.*
 import org.joda.time.Period
 import java.io.File
@@ -30,6 +32,11 @@ import java.util.concurrent.TimeUnit
  * Created by matthiasgranberry on 5/31/15.
  */
 public class AgpAdapter(val periods: List<Period>): RecyclerView.Adapter<AgpAdapter.ViewHolder>(), AnkoLogger {
+    val realm = Realm.getDefaultInstance()
+    val l = RealmChangeListener { notifyDataSetChanged() }
+    init {
+        realm.addChangeListener(l)
+    }
 
     class ViewHolder(var agpView: CardView,
                      var chartView: AgpChartView? = null,

@@ -4,7 +4,7 @@ import android.content.Context
 import com.crashlytics.android.answers.Answers
 import com.crashlytics.android.answers.CustomEvent
 import com.kludgenics.cgmlogger.extension.where
-import com.kludgenics.cgmlogger.model.glucose.BgPostprocesser
+import com.kludgenics.cgmlogger.model.glucose.BgPostprocessor
 import com.kludgenics.cgmlogger.model.realm.glucose.BloodGlucoseRecord
 import com.kludgenics.cgmlogger.model.nightscout.NightscoutApiEndpoint
 import com.kludgenics.cgmlogger.model.nightscout.SgvEntry
@@ -60,9 +60,9 @@ class NightscoutEntryTask(override val ctx: Context,
         val fi = l.first() as SgvEntry
         val li = l.last() as SgvEntry
         debug("Invalidating caches")
-        BgPostprocesser.invalidateCaches(realm, DateTime(li.getDate()), DateTime(fi.getDate()))
+        BgPostprocessor.invalidateCaches(realm, DateTime(li.getDate()), DateTime(fi.getDate()))
         debug("Beginning daily grouping")
-        BgPostprocesser.groupByDay(realm, DateTime(li.getDate()), DateTime(fi.getDate()))
+        BgPostprocessor.updatePeriods(realm, DateTime(li.getDate()), DateTime(fi.getDate()))
         debug("Finished daily grouping")
     }
 }

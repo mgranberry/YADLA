@@ -10,7 +10,7 @@ public open class IobCobCard : RealmObject(), Card {
     @Required
     public open var day: Date = Date()
 
-    public open var duration: Long = 0
+    public open var durationMillis: Long = 0
 
     @Required
     public open var iobPoly = ByteArray(0)
@@ -20,4 +20,6 @@ public open class IobCobCard : RealmObject(), Card {
 
     @Required
     public open var bgTrendline = ByteArray(0)
+
+    public open var predictionLine = ByteArray(0)
 }

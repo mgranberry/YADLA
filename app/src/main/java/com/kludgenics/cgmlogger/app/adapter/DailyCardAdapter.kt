@@ -9,7 +9,7 @@ import com.kludgenics.cgmlogger.app.util.PathParser
 import com.kludgenics.cgmlogger.app.view.DailyBgChartView
 import com.kludgenics.cgmlogger.extension.dateTime
 import com.kludgenics.cgmlogger.model.realm.cards.Card
-import com.kludgenics.cgmlogger.model.realm.cards.ModalDayCard
+import com.kludgenics.cgmlogger.model.realm.cards.ModalCard
 import com.kludgenics.cgmlogger.model.realm.cards.TreatmentDetailCard
 import org.jetbrains.anko.AnkoLogger
 import org.jetbrains.anko.info
@@ -20,6 +20,7 @@ import org.joda.time.format.DateTimeFormat
  */
 
 class DailyCardAdapter(): RealmCardAdapter<DailyCardAdapter.ViewHolder>(), AnkoLogger {
+
     val fmt = DateTimeFormat.forPattern("EEE MMM dd")
 
     class ViewHolder(val trendView: CardView,
@@ -39,7 +40,7 @@ class DailyCardAdapter(): RealmCardAdapter<DailyCardAdapter.ViewHolder>(), AnkoL
         val metadata = results?.cards?.get(position)
         val card = Card.retrieve(metadata)
         when (card) {
-            is ModalDayCard -> {
+            is ModalCard -> {
                 info("Displaying ModalDayCard: ${card.metadata.cardtType} ${card.day} (${card.metadata.lastUpdated})")
                 holder.textView.text = "${fmt.print(card.day.dateTime)}"
                 holder.chartView.visibility = View.VISIBLE

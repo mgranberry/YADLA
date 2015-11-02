@@ -212,9 +212,11 @@ public class TaskService : GcmTaskService(), AnkoLogger {
     }
 
     override fun onDestroy() {
-        info ("onDestroy()")
-        tasks.clear()
-        super.onDestroy()
+        synchronized(tasks) {
+            info ("onDestroy()")
+            tasks.clear()
+            super.onDestroy()
+        }
     }
 
     public class IntegerTypeAdapter: TypeAdapter<Int>() {

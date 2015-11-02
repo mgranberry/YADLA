@@ -20,12 +20,10 @@ public open class CardMetadata: RealmObject() {
     public open var cardtType: Int = -1
 }
 
-public fun RealmList<CardMetadata>.newMetadata(realm: Realm, init: CardMetadata.() -> Unit) {
-    realm.transaction {
-        this@newMetadata.add(realm.createInsideTransaction<CardMetadata> {
-            id = realm.where<CardMetadata> { this }.max("id").toInt() + 1
-            lastUpdated = Date()
-            this.init()
-        })
-    }
+public inline fun RealmList<CardMetadata>.newCard(realm: Realm, init: CardMetadata.() -> Unit) {
+    add(realm.createInsideTransaction<CardMetadata> {
+        id = realm.where<CardMetadata>().max("id").toInt() + 1
+        lastUpdated = Date()
+        init()
+    })
 }

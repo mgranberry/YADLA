@@ -9,11 +9,12 @@ import org.joda.time.DateTime
 import java.util.*
 
 
-fun Realm.transaction (init: Realm.() -> Unit) {
+inline fun <reified T> Realm.transaction(init: Realm.() -> T): T {
     beginTransaction()
     try {
-        init()
+        val result = init()
         commitTransaction()
+        return result
     } catch (e: RuntimeException) {
         cancelTransaction()
         throw RealmException("Error during transaction.", e)
@@ -48,6 +49,10 @@ inline fun <reified T: RealmObject> Realm.update(key: String, value: String, f: 
 
 inline fun <reified T: RealmObject> Realm.where(init: RealmQuery<T>.() -> RealmQuery<T>): RealmQuery<T> {
     return where(T::class.java).init()
+}
+
+inline fun <reified T: RealmObject> Realm.where(): RealmQuery<T> {
+    return where(T::class.java)
 }
 
 inline fun <reified T: RealmObject> RealmResults<T>.where(init: RealmQuery<T>.() -> RealmQuery<T>): RealmQuery<T> {

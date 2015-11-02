@@ -25,7 +25,7 @@ interface Card {
                     return when (metadata.cardtType) {
                         CARD_TYPE_AGP -> r.where<AgpCard> { equalTo("metadata.id", metadata.id) }.findFirst()
                         CARD_TYPE_IOB_COB -> r.where<IobCobCard> { equalTo("metadata.id", metadata.id) }.findFirst()
-                        CARD_TYPE_MODAL_DAY -> r.where<ModalDayCard> { equalTo("metadata.id", metadata.id) }.findFirst()
+                        CARD_TYPE_MODAL_DAY -> r.where<ModalCard> { equalTo("metadata.id", metadata.id) }.findFirst()
                         CARD_TYPE_TREATMENT -> r.where<TreatmentDetailCard> { equalTo("metadata.id", metadata.id) }.findFirst()
                         CARD_TYPE_OVERVIEW -> r.where<TreatmentOverviewCard> { equalTo("metadata.id", metadata.id) }.findFirst()
                         else -> null

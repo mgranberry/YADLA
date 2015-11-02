@@ -7,13 +7,21 @@ import android.support.v7.widget.RecyclerView
 import android.view.Menu
 import android.view.MenuItem
 import com.kludgenics.cgmlogger.app.adapter.AgpAdapter
-import com.kludgenics.cgmlogger.app.service.LocationIntentService
 import com.kludgenics.cgmlogger.app.service.TaskService
-import org.jetbrains.anko.*
+import org.jetbrains.anko.AnkoLogger
+import org.jetbrains.anko.ctx
+import org.jetbrains.anko.find
+import org.jetbrains.anko.onClick
 import org.joda.time.Period
 
 public class MainActivity : BaseActivity(), AnkoLogger {
     override protected val navigationId = R.id.nav_home
+
+    // Note: Your consumer key and secret should be obfuscated in your source code before shipping.
+    companion object {
+        const val TWITTER_KEY = "XpH1SOqMSaH3v8P7A9e0RFBHm";
+        const val TWITTER_SECRET = "BYYqmgAxxSyzfxbkYomajXZNvthMmvMLrdhhOChwHiUqGtln94";
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

@@ -15,6 +15,8 @@ import com.kludgenics.cgmlogger.model.math.bgi.BgiUtil
 import com.kludgenics.cgmlogger.model.math.trendline.CachedPeriod
 import com.kludgenics.cgmlogger.model.math.trendline.PeriodUtil
 import com.kludgenics.cgmlogger.model.math.trendline.dateTime
+import io.realm.Realm
+import io.realm.RealmChangeListener
 import org.jetbrains.anko.*
 import org.joda.time.DateTime
 import org.joda.time.Period
@@ -28,6 +30,11 @@ import java.util.concurrent.TimeUnit
  * Created by matthiasgranberry on 5/31/15.
  */
 public class TrendlineAdapter(val periods: List<Pair<DateTime, Period>>): RecyclerView.Adapter<TrendlineAdapter.TrendlineViewHolder>(), AnkoLogger {
+    val realm = Realm.getDefaultInstance()
+    val l = RealmChangeListener { notifyDataSetChanged() }
+    init {
+        realm.addChangeListener(l)
+    }
 
     val fmt = DateTimeFormat.forPattern("EEE MMM dd")
 

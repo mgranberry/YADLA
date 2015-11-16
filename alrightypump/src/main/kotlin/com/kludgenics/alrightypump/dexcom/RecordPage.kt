@@ -105,6 +105,94 @@ public data class EgvData(public override val header: PageHeader,
     }
 }
 
+public data class CalRecord(public val systemSeconds: Long, public val displaySeconds: Long,
+                            public val slope: Double, public val intercept: Double,
+                            public val scale: Double, public val decay: Double,
+                            public val nRecs: Int, public val subRecords: List<CalRecord.CalSubRecord>) : Record {
+    public data class CalSubRecord(public val systemSecondsEntered: Long,
+                                   public val systemSecondsApplied: Long,
+                                   public val calBg: Int, public val calRaw: Int) {
+        companion object {
+            public fun parse (buffer: Buffer): CalSubRecord {
+                val systemSecondsEntered = buffer.readIntLe().toLong() and 0xFFFFFFFF
+                val calBg = buffer.readIntLe()
+                val calRaw = buffer.readIntLe()
+                val systemSecondsApplied = buffer.readIntLe().toLong() and 0xFFFFFFFF
+                return CalSubRecord(systemSecondsEntered, systemSecondsApplied, calBg, calRaw)
+            }
+        }
+    }
+
+    companion object {
+        public fun parse (buffer: Buffer): CalRecord {
+            val systemSeconds = buffer.readIntLe().toLong() and 0xFFFFFFFF
+            val displaySeconds = buffer.readIntLe().toLong() and 0xFFFFFFFF
+            val slope = java.lang.Double.longBitsToDouble(buffer.readLongLe())
+            val intercept = java.lang.Double.longBitsToDouble(buffer.readLongLe())
+            val scale = java.lang.Double.longBitsToDouble(buffer.readLongLe())
+            buffer.skip(3)
+            val decay = java.lang.Double.longBitsToDouble(buffer.readLongLe())
+            val nRecs = buffer.readByte().toInt() and 0xFF
+            val subRecords = ArrayList<CalSubRecord>(nRecs)
+            for (i in 1 .. nRecs)
+                subRecords.add(CalSubRecord.parse(buffer))
+            return CalRecord(systemSeconds, displaySeconds, slope, intercept, scale, decay, nRecs, subRecords)
+        }
+    }
+}
+
+public data class CalData(public override val header: PageHeader,
+                          public override val records: List<CalRecord>): RecordPage<CalRecord> {
+    companion object {
+        public fun parse(buffer: Buffer): CalData {
+            val header = PageHeader.parse(buffer)
+            val records = ArrayList<CalRecord>(header.size.toInt())
+            for (i in 1 .. header.size)
+                records.add(CalRecord.parse(buffer))
+            return CalData(header, records)
+        }
+    }
+}
+
+public data class InsertionRecord(public val systemSeconds: Long, public val displaySeconds: Long,
+                                  public val insertionSeconds: Long, public val insertionState: Int,
+                                  public val crc: Int): Record {
+    companion object {
+        const val REMOVED = 1
+        const val EXPIRED = 2
+        const val RESIDUAL_DEVIATION = 3
+        const val COUNTS_DEVIATION = 4
+        const val SECOND_SESSION = 5
+        const val OFF_TIME_LOSS = 6
+        const val STARTED = 7
+        const val BAD_TRANSMITTER = 8
+        const val MANUFACTURING_MODE = 9
+
+        public fun parse (buffer: Buffer): InsertionRecord {
+            val systemSeconds = buffer.readIntLe().toLong() and 0xFFFFFFFF
+            val displaySeconds = buffer.readIntLe().toLong() and 0xFFFFFFFF
+            val insertionSeconds = buffer.readIntLe().toLong() and 0xFFFFFFFF
+            val insertionState = buffer.readByte().toInt() and 0xFF
+            val crc = buffer.readShortLe().toInt() and 0xFFFF
+            return InsertionRecord(systemSeconds, displaySeconds, insertionSeconds, insertionState,
+                    crc)
+        }
+    }
+}
+
+public data class InsertionData(public override val header: PageHeader,
+                          public override val records: List<InsertionRecord>): RecordPage<InsertionRecord> {
+    companion object {
+        public fun parse(buffer: Buffer): InsertionData {
+            val header = PageHeader.parse(buffer)
+            val records = ArrayList<InsertionRecord>(header.size.toInt())
+            for (i in 1 .. header.size)
+                records.add(InsertionRecord.parse(buffer))
+            return InsertionData(header, records)
+        }
+    }
+}
+
 public data class SgvRecord(public val systemSeconds: Int, public val displaySeconds: Int,
                             public val unfiltered: Int, public val filtered: Int,
                             public val rssi: Int, public val crc: Int) : Record {

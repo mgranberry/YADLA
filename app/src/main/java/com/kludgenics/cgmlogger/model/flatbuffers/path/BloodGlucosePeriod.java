@@ -22,6 +22,8 @@ public class BloodGlucosePeriod extends Table {
   public float stdDev() { int o = __offset(18); return o != 0 ? bb.getFloat(o + bb_pos) : 0; }
   public int countLow() { int o = __offset(20); return o != 0 ? bb.getInt(o + bb_pos) : 0; }
   public int countHigh() { int o = __offset(22); return o != 0 ? bb.getInt(o + bb_pos) : 0; }
+  public float lowThreshold() { int o = __offset(24); return o != 0 ? bb.getFloat(o + bb_pos) : 80; }
+  public float highThreshold() { int o = __offset(26); return o != 0 ? bb.getFloat(o + bb_pos) : 180; }
 
   public static int createBloodGlucosePeriod(FlatBufferBuilder builder,
       float average,
@@ -33,8 +35,12 @@ public class BloodGlucosePeriod extends Table {
       float adrr,
       float stdDev,
       int countLow,
-      int countHigh) {
-    builder.startObject(10);
+      int countHigh,
+      float lowThreshold,
+      float highThreshold) {
+    builder.startObject(12);
+    BloodGlucosePeriod.addHighThreshold(builder, highThreshold);
+    BloodGlucosePeriod.addLowThreshold(builder, lowThreshold);
     BloodGlucosePeriod.addCountHigh(builder, countHigh);
     BloodGlucosePeriod.addCountLow(builder, countLow);
     BloodGlucosePeriod.addStdDev(builder, stdDev);
@@ -48,7 +54,7 @@ public class BloodGlucosePeriod extends Table {
     return BloodGlucosePeriod.endBloodGlucosePeriod(builder);
   }
 
-  public static void startBloodGlucosePeriod(FlatBufferBuilder builder) { builder.startObject(10); }
+  public static void startBloodGlucosePeriod(FlatBufferBuilder builder) { builder.startObject(12); }
   public static void addAverage(FlatBufferBuilder builder, float average) { builder.addFloat(0, average, 0); }
   public static void addMedian(FlatBufferBuilder builder, float median) { builder.addFloat(1, median, 0); }
   public static void addRhMax(FlatBufferBuilder builder, float rhMax) { builder.addFloat(2, rhMax, 0); }
@@ -59,6 +65,8 @@ public class BloodGlucosePeriod extends Table {
   public static void addStdDev(FlatBufferBuilder builder, float stdDev) { builder.addFloat(7, stdDev, 0); }
   public static void addCountLow(FlatBufferBuilder builder, int countLow) { builder.addInt(8, countLow, 0); }
   public static void addCountHigh(FlatBufferBuilder builder, int countHigh) { builder.addInt(9, countHigh, 0); }
+  public static void addLowThreshold(FlatBufferBuilder builder, float lowThreshold) { builder.addFloat(10, lowThreshold, 80); }
+  public static void addHighThreshold(FlatBufferBuilder builder, float highThreshold) { builder.addFloat(11, highThreshold, 180); }
   public static int endBloodGlucosePeriod(FlatBufferBuilder builder) {
     int o = builder.endObject();
     return o;

@@ -12,9 +12,13 @@ import com.kludgenics.cgmlogger.app.adapter.TrendlineAdapter
 import com.kludgenics.cgmlogger.app.service.TaskService
 import com.kludgenics.cgmlogger.app.util.PathParser
 import com.kludgenics.cgmlogger.app.view.AgpChartView
+import com.kludgenics.cgmlogger.extension.where
 import com.kludgenics.cgmlogger.model.flatbuffers.path.AgpPathBuffer
 import com.kludgenics.cgmlogger.model.flatbuffers.path.PathDataBuffer
 import com.kludgenics.cgmlogger.model.math.agp.AgpUtil
+import com.kludgenics.cgmlogger.model.realm.glucose.BgByPeriod
+import io.realm.Realm
+import io.realm.RealmResults
 import org.jetbrains.anko.AnkoLogger
 import org.jetbrains.anko.ctx
 import org.jetbrains.anko.find
@@ -39,9 +43,9 @@ public class DetailActivity : BaseActivity(), AnkoLogger {
                         try {
                             val newAgp = it.get()
 
-                            val inner = PathParser.copyFromPathDataBuffer(newAgp.inner)
-                            val outer = PathParser.copyFromPathDataBuffer(newAgp.outer)
-                            val median = PathParser.copyFromPathDataBuffer(newAgp.median)
+                            val inner = PathParser.copyFromPathDataBufferBytes(newAgp.inner)
+                            val outer = PathParser.copyFromPathDataBufferBytes(newAgp.outer)
+                            val median = PathParser.copyFromPathDataBufferBytes(newAgp.median)
                             onUiThread {
                                 agp.innerPathData = inner
                                 agp.medianPathData = median
@@ -51,9 +55,9 @@ public class DetailActivity : BaseActivity(), AnkoLogger {
                         } catch (e: Exception) {
                         }
                     })
-            val inner = PathParser.copyFromPathDataBuffer(cachedAgp.inner)
-            val outer = PathParser.copyFromPathDataBuffer(cachedAgp.outer)
-            val median = PathParser.copyFromPathDataBuffer(cachedAgp.median)
+            val inner = PathParser.copyFromPathDataBufferBytes(cachedAgp.inner)
+            val outer = PathParser.copyFromPathDataBufferBytes(cachedAgp.outer)
+            val median = PathParser.copyFromPathDataBufferBytes(cachedAgp.median)
 
             innerPathData = inner
             medianPathData = median
@@ -65,8 +69,12 @@ public class DetailActivity : BaseActivity(), AnkoLogger {
         }
 
         val recycler = find<RecyclerView>(R.id.recycler)
-        recycler.adapter = TrendlineAdapter((0..period.days)
-                .map { (DateTime().minus(Period.days(it))).withTimeAtStartOfDay() to Period.days(1) })
+        val realm = Realm.getDefaultInstance()
+        val results = realm.where<BgByPeriod> {
+            greaterThanOrEqualTo("start", DateTime().minus(period).minusDays(1).millis)
+            equalTo("duration", 86400000L)
+        }.findAllSorted("start", RealmResults.SORT_ORDER_DESCENDING)
+        recycler.adapter = TrendlineAdapter(results)
         recycler.layoutManager = LinearLayoutManager(ctx)
     }
 

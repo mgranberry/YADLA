@@ -60,9 +60,11 @@ class NightscoutEntryTask(override val ctx: Context,
         val fi = l.first() as SgvEntry
         val li = l.last() as SgvEntry
         debug("Invalidating caches")
-        BgPostprocessor.invalidateCaches(realm, DateTime(li.getDate()), DateTime(fi.getDate()))
+        val startDt = DateTime(li.getDate()).withTimeAtStartOfDay()
+        val endDt = DateTime(fi.getDate()).withTimeAtStartOfDay()
+        BgPostprocessor.invalidateCaches(realm, startDt, endDt)
         debug("Beginning daily grouping")
-        BgPostprocessor.updatePeriods(realm, DateTime(li.getDate()), DateTime(fi.getDate()))
+        BgPostprocessor.updatePeriods(realm, startDt.millis, endDt.plusDays(1).millis)
         debug("Finished daily grouping")
     }
 }

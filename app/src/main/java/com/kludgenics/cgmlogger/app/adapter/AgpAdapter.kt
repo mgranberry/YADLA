@@ -53,9 +53,9 @@ public class AgpAdapter(val periods: List<Period>): RecyclerView.Adapter<AgpAdap
                 try {
                     val agp = holder.agpFuture?.get(20, TimeUnit.SECONDS)
 
-                    val inner = PathParser.copyFromPathDataBuffer(agp?.inner)
-                    val outer = PathParser.copyFromPathDataBuffer(agp?.outer)
-                    val median = PathParser.copyFromPathDataBuffer(agp?.median)
+                    val inner = PathParser.copyFromPathDataBufferBytes(agp?.inner)
+                    val outer = PathParser.copyFromPathDataBufferBytes(agp?.outer)
+                    val median = PathParser.copyFromPathDataBufferBytes(agp?.median)
                     //val end = agp?.dateTime
                     val days = agp?.period
                     if (!it.isCancelled && it == holder.agpFuture && holder.adapterPosition >= 0) {
@@ -80,9 +80,9 @@ public class AgpAdapter(val periods: List<Period>): RecyclerView.Adapter<AgpAdap
                 }
             }
         })
-        val inner = PathParser.copyFromPathDataBuffer(agp.inner)
-        val outer = PathParser.copyFromPathDataBuffer(agp.outer)
-        val median = PathParser.copyFromPathDataBuffer(agp.median)
+        val inner = PathParser.copyFromPathDataBufferBytes(agp.inner)
+        val outer = PathParser.copyFromPathDataBufferBytes(agp.outer)
+        val median = PathParser.copyFromPathDataBufferBytes(agp.median)
         //val end = agp.dateTime
         val days = agp.period
         holder.agpView.context.onUiThread {

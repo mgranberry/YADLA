@@ -1,42 +1,64 @@
 package com.kludgenics.cgmlogger.model.glucose
 
-import android.util.Log
-import com.kludgenics.cgmlogger.extension.createInsideTransaction
-import com.kludgenics.cgmlogger.extension.dateTime
-import com.kludgenics.cgmlogger.extension.group
 import com.kludgenics.cgmlogger.extension.where
 import com.kludgenics.cgmlogger.model.math.agp.AgpUtil
 import com.kludgenics.cgmlogger.model.math.bgi.BgiUtil
-import com.kludgenics.cgmlogger.model.math.bgi.CachedBgi
 import com.kludgenics.cgmlogger.model.math.trendline.PeriodUtil
 import com.kludgenics.cgmlogger.model.realm.glucose.BgByPeriod
 import com.kludgenics.cgmlogger.model.realm.glucose.BloodGlucoseRecord
-import com.kludgenics.cgmlogger.model.realm.glucose.refreshRecords
+import com.kludgenics.cgmlogger.model.realm.glucose.populateData
 import io.realm.Realm
 import io.realm.RealmResults
+import org.jetbrains.anko.AnkoLogger
+import org.jetbrains.anko.info
 import org.joda.time.DateTime
+import org.joda.time.Duration
 
 /**
  * Created by matthiasgranberry on 6/7/15.
  */
 
-object BgPostprocessor {
+object BgPostprocessor: AnkoLogger {
 
-    fun invalidateCaches (realm: Realm, start: DateTime, end: DateTime) {
+    fun invalidateCaches(realm: Realm, start: DateTime, end: DateTime) {
         AgpUtil.invalidate(start, end, realm)
         PeriodUtil.invalidate(start, end, realm)
         BgiUtil.invalidate(start, end, realm)
     }
 
-    fun updatePeriods(realm: Realm, start: DateTime, end: DateTime) {
-        Log.d("BgPostProcesser", "start: $start, end: $end")
-        val bgPeriods = realm.where<BgByPeriod>().findAll()
-        bgPeriods.filter {
+    fun updatePeriods(realm: Realm, start: Long, end: Long) {
+        info("start: ${DateTime(start)}, ${DateTime(end)}")
+        val bgPeriods = realm.where<BgByPeriod> {
+            equalTo("duration", 86400000L)
+            between("start", start, end)
+        }.findAll().groupBy { DateTime(it.start).withTimeAtStartOfDay().millis }
+        bgPeriods.forEach { info("Preexisting period: ${DateTime(it.key)}") }
+        val BGs = sortedMapOf<Long, MutableList<BloodGlucoseRecord>>()
+        realm.where<BloodGlucoseRecord> {
+            between("date", start, end)
+        }.findAllSorted("date", RealmResults.SORT_ORDER_ASCENDING)
+                .groupByTo(BGs) { DateTime(it.date).withTimeAtStartOfDay().millis }
+        BGs.filter { it.key !in bgPeriods }
+                .forEach {
+                    info("Creating ${DateTime(it.key)}")
+                    val record = BgByPeriod()
+                    record.start = it.key
+                    val item = realm.copyToRealm(record)
+                    item.bgRecords.addAll(it.value)
+                    if (item.bgRecords.size > 0)
+                        item.populateData()
+                }
+        bgPeriods.flatMap { it.value }.filter {
             val periodEnd = it.start + it.duration
-            (it.start <= end.millis) && (periodEnd >= start.millis)
-        }.forEach { it.refreshRecords() }
-        Log.d("BgPostProcesser", "end")
-
+            (it.start <= end) && (periodEnd >= start)
+        }.forEach {
+            info("Refreshing ${DateTime(it.start)} to ${DateTime(it.start) + Duration(it.duration)}")
+            it.bgRecords.clear()
+            it.bgRecords.addAll(BGs.getOrImplicitDefault(it.start))
+            it.data = it.populateData()
+            info("Refreshed")
+        }
+        info("end")
     }
 
 }

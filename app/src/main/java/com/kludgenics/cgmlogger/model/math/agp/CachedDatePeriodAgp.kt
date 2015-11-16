@@ -62,7 +62,7 @@ public object AgpUtil: AnkoLogger {
         cachedItems.forEach {
             val itemTime = it.dateTime
             val itemStart = it.dateTime.minus(Period.days(it.period))
-            if ( (itemStart <= start && itemTime >= start && itemTime <= end) || (itemStart >= start && itemTime <= end))
+            if ( (itemStart <= start && itemTime >= start && itemTime < end) || (itemStart >= start && itemTime < end))
                 removeList.add(it)
         }
         removeList.forEach { it.removeFromRealm() }

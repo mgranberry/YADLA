@@ -14,7 +14,7 @@ import kotlin.properties.Delegates
 public class AgpChartView(context: Context, attrs: AttributeSet?, defStyle: Int) : ChartXAxis,
         AnkoLogger, AbstractBgChartView(context, attrs, defStyle) {
 
-    private val cornerEffect by lazy(LazyThreadSafetyMode.NONE) { CornerPathEffect(dip(10)) }
+    private val cornerEffect by lazy(LazyThreadSafetyMode.NONE) { CornerPathEffect(dip(4)) }
 
     public constructor(context: Context, attrs: AttributeSet?) : this(context, attrs, 0) {
     }

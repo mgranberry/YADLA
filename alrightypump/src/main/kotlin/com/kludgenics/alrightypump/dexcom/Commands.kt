@@ -1,5 +1,6 @@
 package com.kludgenics.alrightypump.dexcom
 
+import okio.Buffer
 import okio.ByteString
 
 /**
@@ -8,10 +9,10 @@ import okio.ByteString
 
 interface DexcomCommand: Payload {
     override val command: Int
-    override val payload: ByteArray
+    override val payload: Buffer
 }
 
-class NullCommand(payload: ByteArray) : DexcomCommand, UnsupportedPayload(NullCommand.COMMAND, payload) {
+class NullCommand(payload: Buffer) : DexcomCommand, UnsupportedPayload(NullCommand.COMMAND, payload) {
 
     companion object {
         public val COMMAND: Int = 0
@@ -21,7 +22,7 @@ class NullCommand(payload: ByteArray) : DexcomCommand, UnsupportedPayload(NullCo
 
 }
 
-class AckCommand(payload: ByteArray) : DexcomCommand, UnsupportedPayload(AckCommand.COMMAND, payload) {
+class AckCommand(payload: Buffer) : DexcomCommand, UnsupportedPayload(AckCommand.COMMAND, payload) {
 
    companion object {
         public val COMMAND: Int = 1
@@ -31,7 +32,7 @@ class AckCommand(payload: ByteArray) : DexcomCommand, UnsupportedPayload(AckComm
 
 }
 
-class NakCommand(payload: ByteArray) : DexcomCommand, UnsupportedPayload(NakCommand.COMMAND, payload) {
+class NakCommand(payload: Buffer) : DexcomCommand, UnsupportedPayload(NakCommand.COMMAND, payload) {
 
     companion object {
         public val COMMAND: Int = 2
@@ -41,7 +42,7 @@ class NakCommand(payload: ByteArray) : DexcomCommand, UnsupportedPayload(NakComm
 
 }
 
-class InvalidCommand(payload: ByteArray) : DexcomCommand, UnsupportedPayload(InvalidCommand.COMMAND, payload) {
+class InvalidCommand(payload: Buffer) : DexcomCommand, UnsupportedPayload(InvalidCommand.COMMAND, payload) {
 
     companion object {
         public val COMMAND: Int = 3
@@ -51,7 +52,7 @@ class InvalidCommand(payload: ByteArray) : DexcomCommand, UnsupportedPayload(Inv
 
 }
 
-class InvalidParam(payload: ByteArray) : DexcomCommand, UnsupportedPayload(InvalidParam.COMMAND, payload) {
+class InvalidParam(payload: Buffer) : DexcomCommand, UnsupportedPayload(InvalidParam.COMMAND, payload) {
 
     companion object {
         public val COMMAND: Int = 4
@@ -61,7 +62,7 @@ class InvalidParam(payload: ByteArray) : DexcomCommand, UnsupportedPayload(Inval
 
 }
 
-class IncompletePacket(payload: ByteArray) : DexcomCommand, UnsupportedPayload(IncompletePacket.COMMAND, payload) {
+class IncompletePacket(payload: Buffer) : DexcomCommand, UnsupportedPayload(IncompletePacket.COMMAND, payload) {
 
     companion object {
         public val COMMAND: Int = 5
@@ -71,7 +72,7 @@ class IncompletePacket(payload: ByteArray) : DexcomCommand, UnsupportedPayload(I
 
 }
 
-class ReceiverError(payload: ByteArray) : DexcomCommand, UnsupportedPayload(ReceiverError.COMMAND, payload) {
+class ReceiverError(payload: Buffer) : DexcomCommand, UnsupportedPayload(ReceiverError.COMMAND, payload) {
 
     companion object {
         public val COMMAND: Int = 6
@@ -81,7 +82,7 @@ class ReceiverError(payload: ByteArray) : DexcomCommand, UnsupportedPayload(Rece
 
 }
 
-class InvalidMode(payload: ByteArray) : DexcomCommand, UnsupportedPayload(InvalidMode.COMMAND, payload) {
+class InvalidMode(payload: Buffer) : DexcomCommand, UnsupportedPayload(InvalidMode.COMMAND, payload) {
 
     companion object {
         public val COMMAND: Int = 7
@@ -91,7 +92,7 @@ class InvalidMode(payload: ByteArray) : DexcomCommand, UnsupportedPayload(Invali
 
 }
 
-class Ping() : DexcomCommand, UnsupportedPayload(Ping.COMMAND, ByteArray(0)) {
+class Ping(payload: Buffer = Buffer()) : DexcomCommand, UnsupportedPayload(Ping.COMMAND, payload) {
 
     companion object {
         public val COMMAND: Int = 10
@@ -101,7 +102,7 @@ class Ping() : DexcomCommand, UnsupportedPayload(Ping.COMMAND, ByteArray(0)) {
 
 }
 
-class ReadFirmwareHeader(payload: ByteArray = ByteArray(0)) : DexcomCommand, XmlPayload(ReadFirmwareHeader.COMMAND, payload) {
+class ReadFirmwareHeader(payload: Buffer = Buffer()) : DexcomCommand, XmlPayload(ReadFirmwareHeader.COMMAND, payload) {
 
     companion object {
         public val COMMAND: Int = 11
@@ -112,7 +113,7 @@ class ReadFirmwareHeader(payload: ByteArray = ByteArray(0)) : DexcomCommand, Xml
 }
 
 
-class ReadDatabasePartitionInfo(payload: ByteArray) : DexcomCommand, UnsupportedPayload(ReadDatabasePartitionInfo.COMMAND, payload) {
+class ReadDatabasePartitionInfo(payload: Buffer) : DexcomCommand, XmlPayload(ReadDatabasePartitionInfo.COMMAND, payload) {
 
     companion object {
         public val COMMAND: Int = 15
@@ -122,7 +123,7 @@ class ReadDatabasePartitionInfo(payload: ByteArray) : DexcomCommand, Unsupported
 
 }
 
-class ReadDataPageRange(payload: ByteArray) : DexcomCommand, UnsupportedPayload(ReadDataPageRange.COMMAND, payload) {
+class ReadDataPageRange(payload: Buffer) : DexcomCommand, UnsupportedPayload(ReadDataPageRange.COMMAND, payload) {
 
     companion object {
         public val COMMAND: Int = 16
@@ -132,7 +133,7 @@ class ReadDataPageRange(payload: ByteArray) : DexcomCommand, UnsupportedPayload(
 
 }
 
-class ReadDataPages(payload: ByteArray) : DexcomCommand, UnsupportedPayload(ReadDataPages.COMMAND, payload) {
+class ReadDataPages(payload: Buffer) : DexcomCommand, UnsupportedPayload(ReadDataPages.COMMAND, payload) {
 
     companion object {
         public val COMMAND: Int = 17
@@ -142,7 +143,7 @@ class ReadDataPages(payload: ByteArray) : DexcomCommand, UnsupportedPayload(Read
 
 }
 
-class ReadDataPageHeader(payload: ByteArray) : DexcomCommand, UnsupportedPayload(ReadDataPageHeader.COMMAND, payload) {
+class ReadDataPageHeader(payload: Buffer) : DexcomCommand, UnsupportedPayload(ReadDataPageHeader.COMMAND, payload) {
 
     companion object {
         public val COMMAND: Int = 18
@@ -152,7 +153,7 @@ class ReadDataPageHeader(payload: ByteArray) : DexcomCommand, UnsupportedPayload
 
 }
 
-class ReadLanguage(payload: ByteArray) : DexcomCommand, UnsupportedPayload(ReadLanguage.COMMAND, payload) {
+class ReadLanguage(payload: Buffer) : DexcomCommand, UnsupportedPayload(ReadLanguage.COMMAND, payload) {
 
     companion object {
         public val COMMAND: Int = 27
@@ -162,7 +163,7 @@ class ReadLanguage(payload: ByteArray) : DexcomCommand, UnsupportedPayload(ReadL
 
 }
 
-class ReadDisplayTimeOffset(payload: ByteArray) : DexcomCommand, UnsupportedPayload(ReadDisplayTimeOffset.COMMAND, payload) {
+class ReadDisplayTimeOffset(payload: Buffer) : DexcomCommand, UnsupportedPayload(ReadDisplayTimeOffset.COMMAND, payload) {
 
     companion object {
         public val COMMAND: Int = 29
@@ -172,7 +173,7 @@ class ReadDisplayTimeOffset(payload: ByteArray) : DexcomCommand, UnsupportedPayl
 
 }
 
-class ReadSystemTime(payload: ByteArray) : DexcomCommand, UnsupportedPayload(ReadSystemTime.COMMAND, payload) {
+class ReadSystemTime(payload: Buffer) : DexcomCommand, UnsupportedPayload(ReadSystemTime.COMMAND, payload) {
 
     companion object {
         public val COMMAND: Int = 34
@@ -182,7 +183,7 @@ class ReadSystemTime(payload: ByteArray) : DexcomCommand, UnsupportedPayload(Rea
 
 }
 
-class ReadSystemTimeOffset(payload: ByteArray) : DexcomCommand, UnsupportedPayload(ReadSystemTimeOffset.COMMAND, payload) {
+class ReadSystemTimeOffset(payload: Buffer) : DexcomCommand, UnsupportedPayload(ReadSystemTimeOffset.COMMAND, payload) {
 
     companion object {
         public val COMMAND: Int = 35
@@ -192,7 +193,7 @@ class ReadSystemTimeOffset(payload: ByteArray) : DexcomCommand, UnsupportedPaylo
 
 }
 
-class ReadGlucoseUnit(payload: ByteArray) : DexcomCommand, UnsupportedPayload(ReadGlucoseUnit.COMMAND, payload) {
+class ReadGlucoseUnit(payload: Buffer) : DexcomCommand, UnsupportedPayload(ReadGlucoseUnit.COMMAND, payload) {
 
     companion object {
         public val COMMAND: Int = 37
@@ -202,7 +203,7 @@ class ReadGlucoseUnit(payload: ByteArray) : DexcomCommand, UnsupportedPayload(Re
 
 }
 
-class ReadClockMode(payload: ByteArray) : DexcomCommand, UnsupportedPayload(ReadClockMode.COMMAND, payload) {
+class ReadClockMode(payload: Buffer) : DexcomCommand, UnsupportedPayload(ReadClockMode.COMMAND, payload) {
 
     companion object {
         public val COMMAND: Int = 41
@@ -212,7 +213,7 @@ class ReadClockMode(payload: ByteArray) : DexcomCommand, UnsupportedPayload(Read
 
 }
 
-open class XmlPayload(override public val command: Int, override val payload: ByteArray):
+open class XmlPayload(override public val command: Int, override val payload: Buffer):
         UnsupportedPayload(command, payload) {
 
     override fun toString(): String {
@@ -220,9 +221,9 @@ open class XmlPayload(override public val command: Int, override val payload: By
     }
 }
 
-open class UnsupportedPayload(override public val command: Int, override val payload: ByteArray) : Payload {
+open class UnsupportedPayload(override public val command: Int, override val payload: Buffer) : Payload {
     val payloadString: ByteString
-        get() = ByteString.of(payload, 0, payload.size)
+        get() = payload.snapshot()
 
     override fun toString(): String {
         return "${this.javaClass.simpleName}(command: ${command.toInt()}, payload: ${payloadString.hex()})"

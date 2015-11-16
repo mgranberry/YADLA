@@ -7,6 +7,7 @@ import java.util.*
  * Created by matthias on 11/15/15.
  */
 
+
 interface RecordPage<E: Record> {
     companion object {
         const val MANUFACTURING_DATA = 0
@@ -22,6 +23,22 @@ interface RecordPage<E: Record> {
         const val METER_DATA = 10
         const val USER_EVENT_DATA = 11
         const val USER_SETTING_DATA = 12
+
+        public fun parse (buffer: Buffer): RecordPage<*>? {
+            buffer.require(9)
+            val type = buffer.getByte(8).toInt() and 0xFF
+            return when (type) {
+                // MANUFACTURING_DATA -> ManufacturingData.parse(buffer)
+                SENSOR_DATA -> SgvData.parse(buffer)
+                EGV_DATA -> EgvData.parse(buffer)
+                CAL_SET -> CalData.parse(buffer)
+                INSERTION_TIME -> InsertionData.parse(buffer)
+                METER_DATA -> MeterData.parse(buffer)
+                USER_EVENT_DATA -> UserEventData.parse(buffer)
+                USER_SETTING_DATA -> UserSettingsData.parse(buffer)
+                else -> null
+            }
+        }
     }
     val header: PageHeader
     val records: List<E>

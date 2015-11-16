@@ -18,9 +18,10 @@ public open class DexcomG4Packet(public val command: Int,
         val crcSink = DexcomCrcSink(buff)
         val crcBuffer = Okio.buffer(crcSink)
         crcBuffer.writeByte(DexcomG4Frame.syncByte.toInt())
-        crcBuffer.writeShortLe(payload.payload.size + 6)
+        val payloadSnapshot = payload.payload.snapshot()
+        crcBuffer.writeShortLe(payloadSnapshot.size() + 6)
         crcBuffer.writeByte(command.toInt())
-        crcBuffer.write(payload.payload)
+        crcBuffer.write(payloadSnapshot)
         crcBuffer.flush()
         buff.writeShortLe(crcSink.crc)
         return buff

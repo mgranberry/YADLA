@@ -1,13 +1,13 @@
 package com.kludgenics.alrightypump.dexcom
 
-import okio.ByteString
+import okio.Buffer
 
 /**
  * Created by matthias on 11/5/15.
  */
 interface Payload {
     companion object {
-        fun parseResponse(originalCommand: Int, command: Int, payload: ByteArray): Payload {
+        fun parseResponse(originalCommand: Int, command: Int, payload: Buffer): Payload {
             return when (command) {
                 AckCommand.COMMAND -> when (originalCommand) {
                     NullCommand.COMMAND -> NullCommand(payload)
@@ -42,6 +42,6 @@ interface Payload {
     }
 
     val command: Int
-    val payload: ByteArray
+    val payload: Buffer
 }
 

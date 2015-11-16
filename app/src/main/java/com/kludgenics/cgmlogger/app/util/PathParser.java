@@ -93,12 +93,7 @@ public class PathParser {
         return path;
     }
 
-
-    public static PathDataNode[] copyFromPathDataBuffer(byte[] source) {
-        if (source == null || source.length < 8) {
-            return new PathDataNode[0];
-        }
-        PathDataBuffer buffer = PathDataBuffer.getRootAsPathDataBuffer(ByteBuffer.wrap(source));
+    public static PathDataNode[] copyFromPathDataBuffer(PathDataBuffer buffer) {
         PathDataNode[] copy = new PathParser.PathDataNode[buffer.nodesLength()];
         PathDataNodeBuffer node = new PathDataNodeBuffer();
         for (int i = 0; i <buffer.nodesLength(); i++) {
@@ -106,6 +101,15 @@ public class PathParser {
             copy[i] = new PathDataNode(node);
         }
         return copy;
+    }
+
+
+    public static PathDataNode[] copyFromPathDataBufferBytes(byte[] source) {
+        if (source == null || source.length < 8) {
+            return new PathDataNode[0];
+        }
+        PathDataBuffer buffer = PathDataBuffer.getRootAsPathDataBuffer(ByteBuffer.wrap(source));
+        return copyFromPathDataBuffer(buffer);
     }
 
     /**

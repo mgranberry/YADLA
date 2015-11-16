@@ -48,8 +48,8 @@ public fun RealmList<BloodGlucoseRecord>.createPathDataBuffer(builder: FlatBuffe
 }
 
 public fun RealmList<BloodGlucoseRecord>.createBloodGlucosePeriod(builder: FlatBufferBuilder,
-                                                                  lowThreshold: Float = 80f,
-                                                                  highThreshold: Float = 180f): Int {
+                                                                  lowThreshold: Double = 80.0,
+                                                                  highThreshold: Double = 180.0): Int {
     val average: Float = where().average("value").toFloat()
     val median = this[size / 2].value.toFloat()
     val rhMax = Bgi.rh(where().findAllSorted("value", false).first().value).toFloat()
@@ -58,9 +58,10 @@ public fun RealmList<BloodGlucoseRecord>.createBloodGlucosePeriod(builder: FlatB
     val lbgi = Bgi.lbgi(this).toFloat()
     val adrr = Bgi.adrr(this).toFloat()
     val stdDev = Math.sqrt(this.map { val d = it.value - average; d*d }.average()).toFloat()
-    val countLow = where().lessThanOrEqualTo("lowThreshold", lowThreshold).findAll().size
-    val countHigh = where().greaterThanOrEqualTo("highThreshold", highThreshold).findAll().size
+    val countLow = where().lessThanOrEqualTo("value", lowThreshold).findAll().size
+    val countHigh = where().greaterThanOrEqualTo("value", highThreshold).findAll().size
 
     return BloodGlucosePeriod.createBloodGlucosePeriod(builder, average, median, rhMax,
-            rlMax, hbgi, lbgi, adrr, stdDev, countLow, countHigh)
+            rlMax, hbgi, lbgi, adrr, stdDev, countLow, countHigh, lowThreshold.toFloat(),
+            highThreshold.toFloat())
 }

@@ -11,16 +11,22 @@ import com.kludgenics.cgmlogger.app.R
 import com.kludgenics.cgmlogger.app.util.PathParser
 import com.kludgenics.cgmlogger.app.view.DailyBgChartView
 import com.kludgenics.cgmlogger.app.view.dailyBgChartView
+import com.kludgenics.cgmlogger.model.flatbuffers.path.BloodGlucoseDay
+import com.kludgenics.cgmlogger.model.flatbuffers.path.BloodGlucosePeriod
 import com.kludgenics.cgmlogger.model.math.bgi.BgiUtil
 import com.kludgenics.cgmlogger.model.math.trendline.CachedPeriod
 import com.kludgenics.cgmlogger.model.math.trendline.PeriodUtil
 import com.kludgenics.cgmlogger.model.math.trendline.dateTime
+import com.kludgenics.cgmlogger.model.realm.glucose.BgByPeriod
 import io.realm.Realm
 import io.realm.RealmChangeListener
+import io.realm.RealmList
+import io.realm.RealmResults
 import org.jetbrains.anko.*
 import org.joda.time.DateTime
 import org.joda.time.Period
 import org.joda.time.format.DateTimeFormat
+import java.nio.ByteBuffer
 import java.util.concurrent.CancellationException
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.Future
@@ -29,11 +35,12 @@ import java.util.concurrent.TimeUnit
 /**
  * Created by matthiasgranberry on 5/31/15.
  */
-public class TrendlineAdapter(val periods: List<Pair<DateTime, Period>>): RecyclerView.Adapter<TrendlineAdapter.TrendlineViewHolder>(), AnkoLogger {
+public class TrendlineAdapter(val periods: RealmResults<BgByPeriod>): RecyclerView.Adapter<TrendlineAdapter.TrendlineViewHolder>(), AnkoLogger {
     val realm = Realm.getDefaultInstance()
     val l = RealmChangeListener { notifyDataSetChanged() }
     init {
-        realm.addChangeListener(l)
+        periods.forEach { it.addChangeListener(l) }
+        periods.addChangeListener(l)
     }
 
     val fmt = DateTimeFormat.forPattern("EEE MMM dd")
@@ -45,43 +52,19 @@ public class TrendlineAdapter(val periods: List<Pair<DateTime, Period>>): Recycl
     }
 
     override fun onBindViewHolder(holder: TrendlineViewHolder, id: Int) {
-        val per = PeriodUtil.getLatestCached(holder.trendView.context, periods[id].first, periods[id].second, {
-            holder.periodFuture = it
-            if (!it.isCancelled && it == holder.periodFuture) { // don't update the wrong view
-                try {
-                    val per = holder.periodFuture?.get(20, TimeUnit.SECONDS)
-                    val trendPath = PathParser.copyFromPathDataBuffer(per?.trendPath)
-                    val date = per?.dateTime
-                    if (!it.isCancelled && it == holder.periodFuture && holder.adapterPosition >= 0) {
-                        holder.trendView.context.onUiThread {
-                            holder.chartView?.trendPathData = trendPath ?: emptyArray()
-                            holder.chartView?.requestLayout()
-                            holder.chartView?.invalidate()
-
-                            if (date != null) {
-                                holder.textView?.text = "${fmt.print(date)}"
-                            }
-                            notifyItemChanged(holder.layoutPosition)
-                            info("notifyItemChanged(${holder.adapterPosition}) (${holder.itemId} ${per?.date} ${per?.period})")
-                        }
-                    }
-                } catch (c: CancellationException) {
-                    info("future cancelled for ${periods[id]}")
-                } catch (e: InterruptedException) {
-                    info("future interrupted for ${periods[id]}")
-                } catch (e: ExecutionException) {
-                    error("Error in agp callback: $e")
-                    error("${e.getStackTraceString()}")
-                }
+        try {
+            val md = BloodGlucoseDay.getRootAsBloodGlucoseDay(ByteBuffer.wrap(periods[id].data))
+            val trendPath = PathParser.copyFromPathDataBuffer(md.trendline())
+            val date = periods[id].start;
+            holder.chartView!!.context.onUiThread {
+                holder.chartView?.trendPathData = trendPath
+                holder.chartView?.requestLayout()
+                holder.chartView?.invalidate()
+                holder.textView?.text = "${fmt.print(date)} ${md.period().adrr()} ${md.period().average()}"
             }
-        })
-        val trendPath = PathParser.copyFromPathDataBuffer(per.trendPath)
-        val date = per.dateTime;
-        holder.chartView!!.context.onUiThread {
-            holder.chartView?.trendPathData = trendPath
-            holder.chartView?.requestLayout()
-            holder.chartView?.invalidate()
-            holder.textView?.text = "${fmt.print(date)}"
+        } catch (e: IndexOutOfBoundsException) {
+            info(e)
+            // empty days are the cause of this.
         }
     }
 

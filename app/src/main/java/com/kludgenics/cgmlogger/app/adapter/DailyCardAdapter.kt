@@ -44,7 +44,7 @@ class DailyCardAdapter(): RealmCardAdapter<DailyCardAdapter.ViewHolder>(), AnkoL
                 info("Displaying ModalDayCard: ${card.metadata.cardtType} ${card.day} (${card.metadata.lastUpdated})")
                 holder.textView.text = "${fmt.print(card.day.dateTime)}"
                 holder.chartView.visibility = View.VISIBLE
-                holder.chartView.trendPathData = PathParser.copyFromPathDataBuffer(card.trendline) ?: emptyArray()
+                holder.chartView.trendPathData = PathParser.copyFromPathDataBufferBytes(card.trendline) ?: emptyArray()
                 holder.chartView.requestLayout()
             }
             is TreatmentDetailCard -> {

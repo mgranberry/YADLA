@@ -40,6 +40,8 @@ table BloodGlucosePeriod {
     stdDev: float = 0;
     countLow: int = 0;
     countHigh: int = 0;
+    lowThreshold: float = 80;
+    highThreshold: float = 180;
 }
 
 table BloodGlucoseDay {

@@ -12,7 +12,6 @@ public class SerialConnection(private val port: SerialPort) : Closeable {
         port.baudRate = 115200
         port.openPort()
         port.setComPortTimeouts(SerialPort.TIMEOUT_WRITE_BLOCKING or SerialPort.TIMEOUT_READ_SEMI_BLOCKING, 100, 0);
-
         val array = ByteArray(port.bytesAvailable())
         port.readBytes(array, array.size.toLong())
     }
@@ -33,18 +32,17 @@ public class SerialConnection(private val port: SerialPort) : Closeable {
 
     private inner class SerialCommSource(private val timeout: AsyncTimeout) : Source {
 
-        override fun read(sink: Buffer, byteCount: Long): Long {
-            timeout.enter()
-            println("$byteCount ${port.bytesAvailable()}")
-            val toRead = Math.max(Math.min(byteCount, port.bytesAvailable().toLong()), byteCount)
-            println("SerialCommSource: read($sink, $byteCount): toRead=$toRead")
-            if (toRead == 0L)
-                throw  IOException()
-            val bytes = ByteArray(toRead.toInt())
-            val bytesRead = port.readBytes(bytes, toRead)
-            println("SerialCommSource: read($sink, $byteCount): toRead=$toRead actual=$bytesRead")
+        val byteBuffer = ByteArray(2048)
 
-            sink.write(bytes, 0, bytesRead)
+        override fun read(sink: Buffer, byteCount: Long): Long {
+            if (byteCount > Integer.MAX_VALUE)
+                throw IllegalArgumentException("byteCount > Integer.MAX_VALUE: " + byteCount)
+            timeout.enter()
+            // println("$byteCount ${port.bytesAvailable()}")
+            val toRead = Math.min(byteBuffer.size.toLong(), byteCount)
+            val bytesRead = port.readBytes(byteBuffer, toRead)
+            //println("SerialCommSource: read($sink, $byteCount): actual=$bytesRead")
+            sink.write(byteBuffer, 0, bytesRead)
             timeout.exit()
             return bytesRead.toLong()
         }
@@ -64,8 +62,10 @@ public class SerialConnection(private val port: SerialPort) : Closeable {
         }
 
         override fun write(source: Buffer, byteCount: Long) {
+            if (byteCount > Integer.MAX_VALUE)
+                throw IllegalArgumentException("byteCount > Integer.MAX_VALUE: " + byteCount)
             timeout.enter()
-            println("Writing $byteCount bytes")
+            //println("Writing $byteCount bytes")
             port.writeBytes(source.readByteArray(byteCount), byteCount)
             timeout.exit()
         }

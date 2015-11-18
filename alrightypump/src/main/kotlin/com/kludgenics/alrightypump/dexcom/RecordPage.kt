@@ -19,7 +19,7 @@ interface RecordPage<E: Record> {
         const final val SENSOR_DATA = 3
         const final val EGV_DATA = 4
         const final val CAL_SET = 5
-        const final val DEVIATION = 6
+        const final val ABERRATION = 6
         const final val INSERTION_TIME = 7
         const final val RECEIVER_LOG_DATA = 8
         const final val RECEIVER_ERROR_DATA = 9
@@ -109,6 +109,7 @@ public data class EgvRecord(public override val systemSeconds: Long,
                             public val glucose: Int,
                             public val rawGlucose: Int,
                             public val trendArrow: Int,
+                            public val noise: Int,
                             public val crc: Int, public val skipped: Boolean): Record {
     companion object {
         public fun parse (buffer: Buffer) : EgvRecord {
@@ -118,9 +119,11 @@ public data class EgvRecord(public override val systemSeconds: Long,
             val rawGlucose = buffer.readShortLe().toInt() and 0xFFFF
             val glucose = rawGlucose and 0x3FF
             val skipped = (rawGlucose and 0x8000 != 0)
-            val trendArrow = buffer.readByte().toInt() and 0x0F
+            val trendNoise = buffer.readByte().toInt()
+            val trendArrow = trendNoise and 0x0F
+            val noise = (trendNoise and 0x70) shr 4
             val crc = buffer.readShortLe().toInt() and 0xFFFF
-            return EgvRecord(systemSeconds, displaySeconds, glucose, rawGlucose, trendArrow, crc, skipped)
+            return EgvRecord(systemSeconds, displaySeconds, glucose, rawGlucose, trendArrow, noise, crc, skipped)
         }
     }
 }
@@ -139,12 +142,12 @@ public data class EgvData(public override val header: PageHeader,
     }
 }
 
-public data class CalRecord(public override val systemSeconds: Long,
+public data class CalSetRecord(public override val systemSeconds: Long,
                             public override val displaySeconds: Long,
                             public val slope: Double, public val intercept: Double,
                             public val scale: Double, public val unk1: Int,
                             public val unk2: Int, public val unk3: Int, public val decay: Double,
-                            public val nRecs: Int, public val subRecords: List<CalRecord.CalSubRecord>) : Record {
+                            public val nRecs: Int, public val subRecords: List<CalSetRecord.CalSubRecord>) : Record {
     public data class CalSubRecord(public val systemSecondsEntered: Long,
                                    public val systemSecondsApplied: Long,
                                    public val calBg: Int, public val calRaw: Int, public val unknown: Int) {
@@ -161,34 +164,36 @@ public data class CalRecord(public override val systemSeconds: Long,
     }
 
     companion object {
-        public fun parse (buffer: Buffer): CalRecord {
-            val systemSeconds = buffer.readIntLe().toLong() and 0xFFFFFFFF
-            val displaySeconds = buffer.readIntLe().toLong() and 0xFFFFFFFF
-            val slope = java.lang.Double.longBitsToDouble(buffer.readLongLe())
-            val intercept = java.lang.Double.longBitsToDouble(buffer.readLongLe())
-            val scale = java.lang.Double.longBitsToDouble(buffer.readLongLe()) // 32
-            val unk1 = buffer.readByte().toInt() and 0xFF
-            val unk2 = buffer.readByte().toInt() and 0xFF
-            val unk3 = buffer.readByte().toInt() and 0xFF
-            val decay = java.lang.Double.longBitsToDouble(buffer.readLongLe()) // 42
-            val nRecs = buffer.readByte().toInt() and 0xFF // 43
+        public fun parse (buffer: Buffer, recordSize: Long): CalSetRecord {
+            val calBuffer = Buffer()
+            calBuffer.write(buffer, recordSize)
+            val systemSeconds = calBuffer.readIntLe().toLong() and 0xFFFFFFFF
+            val displaySeconds = calBuffer.readIntLe().toLong() and 0xFFFFFFFF
+            val slope = java.lang.Double.longBitsToDouble(calBuffer.readLongLe())
+            val intercept = java.lang.Double.longBitsToDouble(calBuffer.readLongLe())
+            val scale = java.lang.Double.longBitsToDouble(calBuffer.readLongLe()) // 32
+            val unk1 = calBuffer.readByte().toInt() and 0xFF
+            val unk2 = calBuffer.readByte().toInt() and 0xFF
+            val unk3 = calBuffer.readByte().toInt() and 0xFF
+            val decay = java.lang.Double.longBitsToDouble(calBuffer.readLongLe()) // 42
+            val nRecs = calBuffer.readByte().toInt() and 0xFF // 43
             val subRecords = ArrayList<CalSubRecord>(nRecs)
             for (i in 1 .. nRecs)
-                subRecords.add(CalSubRecord.parse(buffer))
-            return CalRecord(systemSeconds, displaySeconds, slope, intercept, scale, unk1, unk2, unk3, decay, nRecs, subRecords)
+                subRecords.add(CalSubRecord.parse(calBuffer))
+            return CalSetRecord(systemSeconds, displaySeconds, slope, intercept, scale, unk1, unk2, unk3, decay, nRecs, subRecords)
         }
     }
 }
 
 public data class CalData(public override val header: PageHeader,
-                          public override val records: List<CalRecord>): RecordPage<CalRecord> {
+                          public override val records: List<CalSetRecord>): RecordPage<CalSetRecord> {
     companion object {
         public fun parse(buffer: Buffer): CalData {
             val header = PageHeader.parse(buffer)
-            val records = ArrayList<CalRecord>(header.size.toInt())
+            val records = ArrayList<CalSetRecord>(header.size.toInt())
             for (i in 1 .. header.size) {
-                val record = CalRecord.parse(buffer)
-                if (0L != record.systemSeconds) // skip 0 entries
+                val record = CalSetRecord.parse(buffer, if (header.revision == 3) 249 else 148)
+                //if (0L != record.systemSeconds) // skip 0 entries
                     records.add(record)
             }
             return CalData(header, records)

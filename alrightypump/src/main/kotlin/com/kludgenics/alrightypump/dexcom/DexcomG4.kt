@@ -12,13 +12,16 @@ import kotlin.Iterator
 open class DexcomG4(private val source: BufferedSource,
                private val sink: BufferedSink): ContinuousGlucoseMonitor {
 
-    public val version: String by lazy { requestVersion() }
+    public val egvs: Iterator<EgvRecord> get() = DataPageIterator(RecordPage.EGV_DATA)
+    public val sgvs: Iterator<SgvRecord> get() = DataPageIterator(RecordPage.SENSOR_DATA)
+    public val events: Iterator<UserEventRecord> get() = DataPageIterator(RecordPage.USER_EVENT_DATA)
+    public val settings: Iterator<UserSettingsRecord> get() = DataPageIterator(RecordPage.USER_SETTING_DATA)
+    public val calibrations: Iterator<CalSetRecord> get() = DataPageIterator(RecordPage.CAL_SET)
+    public val meters: Iterator<MeterRecord> get() = DataPageIterator(RecordPage.METER_DATA)
+    public val insertions: Iterator<InsertionRecord> get() = DataPageIterator(RecordPage.INSERTION_TIME)
 
-    private fun requestVersion(): String {
-        val command = ReadFirmwareHeader()
-        val response = commandResponse<XmlDexcomResponse>(command)
-        return response.payloadString.utf8()
-    }
+    public val version: String by lazy { requestVersion() }
+    public val databasePartitionInfo: String by lazy { readDatabasePartitionInfo() }
 
     private inner class DataPageIterator<T: Record>(private val type: Int) : Iterator<T> {
         var pageIterator: Iterator<T>? = null
@@ -63,14 +66,17 @@ open class DexcomG4(private val source: BufferedSource,
         }
     }
 
-    public val egvs: Iterator<EgvRecord> get() = DataPageIterator(RecordPage.EGV_DATA)
-    public val sgvs: Iterator<SgvRecord> get() = DataPageIterator(RecordPage.SENSOR_DATA)
-    public val events: Iterator<UserEventRecord> get() = DataPageIterator(RecordPage.USER_EVENT_DATA)
-    public val settings: Iterator<UserSettingsRecord> get() = DataPageIterator(RecordPage.USER_SETTING_DATA)
-    public val calibrations: Iterator<CalRecord> get() = DataPageIterator(RecordPage.CAL_SET)
-    public val meters: Iterator<MeterRecord> get() = DataPageIterator(RecordPage.METER_DATA)
-    public val insertions: Iterator<InsertionRecord> get() = DataPageIterator(RecordPage.INSERTION_TIME)
+    private fun readDatabasePartitionInfo(): String {
+        val command = ReadDatabasePartitionInfo()
+        val response = commandResponse<XmlDexcomResponse>(command)
+        return response.payloadString.utf8()
+    }
 
+    private fun requestVersion(): String {
+        val command = ReadFirmwareHeader()
+        val response = commandResponse<XmlDexcomResponse>(command)
+        return response.payloadString.utf8()
+    }
 
     public fun <R: Record> readDataPage(recordType: Int, start: Int): RecordPage<R>? {
         val result = commandResponse<ReadDataPagesResponse>(ReadDataPages(recordType, start, 1))

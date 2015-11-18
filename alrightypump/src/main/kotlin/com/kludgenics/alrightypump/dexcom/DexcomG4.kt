@@ -75,7 +75,7 @@ open class DexcomG4(private val source: BufferedSource,
     public fun <R: Record> readDataPage(recordType: Int, start: Int): RecordPage<R>? {
         val result = commandResponse<ReadDataPagesResponse>(ReadDataPages(recordType, start, 1))
         val page = result.pages.first()
-        println(page.header)
+        // println(page.header)
         if (page.header.recordType == recordType)
             @Suppress("UNCHECKED_CAST")
             return page as RecordPage<R>
@@ -90,10 +90,11 @@ open class DexcomG4(private val source: BufferedSource,
 
     public fun <R: ResponsePayload>commandResponse(command: DexcomCommand): R {
         val packet = DexcomG4Packet(command.command, command).packet.snapshot()
-        println("Writing ${packet.hex()}")
+        // println("Writing ${packet.hex()}")
         sink.write(packet)
         val response = DexcomG4Response.parse(source, command.command)
-        println(response.payload)
+        assert(response.valid)
+        // println(response.payload)
         return response.payload as R
     }
 }

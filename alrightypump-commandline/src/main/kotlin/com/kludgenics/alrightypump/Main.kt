@@ -20,20 +20,18 @@ fun main (args: Array<String>) {
 
                 val pgs = g4.readDataPageRange(RecordPage.EGV_DATA)
                 println("pages: $pgs")
-                //val egvs = g4.egvs.asSequence().filterNot{it.skipped}.toArrayList()
-                //val sgvs = g4.sgvs.asSequence().toArrayList()
-                //val zipped = egvs.asSequence().zip(sgvs.asSequence())
-                //println(zipped.count())
-                //zipped.forEach { println("${it.first.displayTime} ${it.second.displayTime}" ) }
+                val egvs = g4.egvs.asSequence().filterNot{it.skipped}
+                val sgvs = g4.sgvs.asSequence()
+                val zipped = egvs.zip(sgvs.asSequence())
+                zipped.forEach { } //println("${it.first.displayTime} ${it.second.displayTime}" ) }
                 //val firstFive = egvs.asSequence().take(5)
                 //egvs.asSequence().filter { !it.skipped }
                 //        .forEach { println("${it.displayTime.toDateTime()} ${it.rawGlucose} ${it.glucose} ${it.skipped}"); println(it) }
-                g4.calibrations.forEach { println(it); println(it.displayTime) }
-                g4.events.forEach { println(it); println(it.displayTime.toDateTime())}
-                g4.insertions.forEach { println(it); println(it.displayTime) ; println(it.systemTime) }
-                // g4.meters.forEach { println(it) }
-                // g4.settings.forEach { println(it) }
-                //g4.sgvs.forEach { println(it); println(it.displayTime.toDateTime()) }
+                g4.calibrations.forEach { /*println(it); println(it.displayTime)*/ }
+                g4.events.forEach { /*println(it); println(it.displayTime.toDateTime())*/}
+                g4.insertions.forEach { /*println(it); println(it.displayTime) ; println(it.systemTime)*/ }
+                g4.meters.forEach { /*println(it)*/ }
+                g4.settings.forEach { /*println(it)*/ }
             }
         }
     }

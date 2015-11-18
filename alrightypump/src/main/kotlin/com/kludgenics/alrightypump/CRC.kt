@@ -67,8 +67,6 @@ open class CrcSource(delegate: Source, initialCrc: Int, val finalXor: Int): Forw
     private val buffer = Buffer()
 
     override fun read(sink: Buffer, byteCount: Long): Long {
-        println("CrcSource.read($sink, $byteCount)")
-        println("sink size: ${sink.size()}")
         val bytes = sink.readByteArray(Math.min(sink.size(), byteCount))
         _crc = CRC.updateChecksum(_crc, bytes)
         buffer.write(bytes)

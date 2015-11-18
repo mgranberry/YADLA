@@ -6,7 +6,7 @@ package com.kludgenics.alrightypump.dexcom
 
 interface DexcomG4Frame {
     companion object {
-        val syncByte: Byte = 0x01
+        const final val syncByte: Byte = 0x01
     }
 }
 

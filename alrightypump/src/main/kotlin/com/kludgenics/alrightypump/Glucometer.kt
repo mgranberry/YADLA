@@ -12,7 +12,6 @@ interface Glucometer {
     val chronology: Chronology
     val outOfRangeHigh: Double
     val outOfRangeLow: Double
-
 }
 
 

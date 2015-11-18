@@ -13,20 +13,20 @@ import java.util.*
 
 interface RecordPage<E: Record> {
     companion object {
-        const val MANUFACTURING_DATA = 0
-        const val FIRMWARE_PARAMETER_DATA = 1
-        const val PC_SOFTWARE_PARAMETER = 2
-        const val SENSOR_DATA = 3
-        const val EGV_DATA = 4
-        const val CAL_SET = 5
-        const val DEVIATION = 6
-        const val INSERTION_TIME = 7
-        const val RECEIVER_LOG_DATA = 8
-        const val RECEIVER_ERROR_DATA = 9
-        const val METER_DATA = 10
-        const val USER_EVENT_DATA = 11
-        const val USER_SETTING_DATA = 12
-        val epoch = Instant.parse("2009-01-01T00:00:00")
+        const final val MANUFACTURING_DATA = 0
+        const final val FIRMWARE_PARAMETER_DATA = 1
+        const final val PC_SOFTWARE_PARAMETER = 2
+        const final val SENSOR_DATA = 3
+        const final val EGV_DATA = 4
+        const final val CAL_SET = 5
+        const final val DEVIATION = 6
+        const final val INSERTION_TIME = 7
+        const final val RECEIVER_LOG_DATA = 8
+        const final val RECEIVER_ERROR_DATA = 9
+        const final val METER_DATA = 10
+        const final val USER_EVENT_DATA = 11
+        const final val USER_SETTING_DATA = 12
+        final val EPOCH = Instant.parse("2009-01-01T00:00:00")
 
         public fun parse (buffer: Buffer): RecordPage<*>? {
             buffer.require(9)
@@ -60,7 +60,7 @@ interface Record {
     val displayTime: Instant get() = toInstant(displaySeconds)
 
     fun toInstant(dexcomTimestamp: Long): Instant {
-        return RecordPage.epoch + Duration(dexcomTimestamp * 1000)
+        return RecordPage.EPOCH + Duration(dexcomTimestamp * 1000)
     }
 }
 
@@ -130,6 +130,7 @@ public data class EgvData(public override val header: PageHeader,
     companion object {
         public fun parse(buffer: Buffer): EgvData {
             val header = PageHeader.parse(buffer)
+            println(header)
             val records = ArrayList<EgvRecord>(header.size.toInt())
             for (i in 1 .. header.size)
                 records.add(EgvRecord.parse(buffer))
@@ -202,15 +203,15 @@ public data class InsertionRecord(public override val systemSeconds: Long,
     val insertionTime: Instant get() = toInstant(insertionSeconds.toLong())
 
     companion object {
-        const val REMOVED = 1
-        const val EXPIRED = 2
-        const val RESIDUAL_DEVIATION = 3
-        const val COUNTS_DEVIATION = 4
-        const val SECOND_SESSION = 5
-        const val OFF_TIME_LOSS = 6
-        const val STARTED = 7
-        const val BAD_TRANSMITTER = 8
-        const val MANUFACTURING_MODE = 9
+        const final val REMOVED = 1
+        const final val EXPIRED = 2
+        const final val RESIDUAL_DEVIATION = 3
+        const final val COUNTS_DEVIATION = 4
+        const final val SECOND_SESSION = 5
+        const final val OFF_TIME_LOSS = 6
+        const final val STARTED = 7
+        const final val BAD_TRANSMITTER = 8
+        const final val MANUFACTURING_MODE = 9
 
         public fun parse (buffer: Buffer): InsertionRecord {
             val systemSeconds = buffer.readIntLe().toLong() and 0xFFFFFFFF
@@ -306,21 +307,21 @@ public data class UserEventRecord(public override val systemSeconds: Long,
                                   public val eventSeconds: Long, public val eventValue: Int,
                                   public val crc: Int): Record {
     companion object {
-        const val EVENT_TYPE_CARBS = 1
-        const val EVENT_TYPE_INSULIN = 2
-        const val EVENT_TYPE_HEALTH = 3
-        const val EVENT_TYPE_EXERCISE = 4
+        const final val EVENT_TYPE_CARBS = 1
+        const final val EVENT_TYPE_INSULIN = 2
+        const final val EVENT_TYPE_HEALTH = 3
+        const final val EVENT_TYPE_EXERCISE = 4
 
-        const val EVENT_SUBTYPE_HEALTH_ILLNESS = 1
-        const val EVENT_SUBTYPE_HEALTH_STRESS = 2
-        const val EVENT_SUBTYPE_HEALTH_HIGH_SYMPTOMS = 3
-        const val EVENT_SUBTYPE_HEALTH_LOW_SYMPTOMS = 4
-        const val EVENT_SUBTYPE_HEALTH_CYCLE = 5
-        const val EVENT_SUBTYPE_HEALTH_ALCOHOL = 6
+        const final val EVENT_SUBTYPE_HEALTH_ILLNESS = 1
+        const final val EVENT_SUBTYPE_HEALTH_STRESS = 2
+        const final val EVENT_SUBTYPE_HEALTH_HIGH_SYMPTOMS = 3
+        const final val EVENT_SUBTYPE_HEALTH_LOW_SYMPTOMS = 4
+        const final val EVENT_SUBTYPE_HEALTH_CYCLE = 5
+        const final val EVENT_SUBTYPE_HEALTH_ALCOHOL = 6
 
-        const val EVENT_SUBTYPE_EXERCISE_LIGHT = 1
-        const val EVENT_SUBTYPE_EXERCISE_MEDIUM = 2
-        const val EVENT_SUBTYPE_EXERCISE_HEAVY = 3
+        const final val EVENT_SUBTYPE_EXERCISE_LIGHT = 1
+        const final val EVENT_SUBTYPE_EXERCISE_MEDIUM = 2
+        const final val EVENT_SUBTYPE_EXERCISE_HEAVY = 3
 
         public fun parse (buffer: Buffer): UserEventRecord {
             buffer.require(16)
@@ -362,6 +363,7 @@ public data class UserSettingsRecord(public override val systemSeconds: Long,
                                      public val alarmProfile: Int, public val setUpState: Int,
                                      public val reserved: Int, public val crc: Int): Record {
     companion object {
+        @JvmStatic
         public fun parse (buffer: Buffer): UserSettingsRecord {
             buffer.require(48)
             val systemSeconds = buffer.readIntLe().toLong() and 0xFFFFFFFFF

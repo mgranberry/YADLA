@@ -24,7 +24,7 @@ class NullResponse(payload: Buffer) : UnsupportedDexcomResponse(payload) {
 
 class AckResponse(payload: Buffer) : UnsupportedDexcomResponse(payload) {
 
-   companion object {
+    companion object {
         public val COMMAND: Int = 1
     }
 
@@ -125,7 +125,7 @@ class ReadDatabasePartitionInfo : DexcomCommand {
 
 }
 
-class ReadDatabasePartitionInfoResponse(payload: Buffer): XmlDexcomResponse(payload) {
+class ReadDatabasePartitionInfoResponse(payload: Buffer) : XmlDexcomResponse(payload) {
     override val command: Int
         get() = ReadDatabasePartitionInfo.COMMAND
 }
@@ -143,6 +143,7 @@ class ReadDataPageRange(val recordType: Int) : DexcomCommand {
 class ReadDataPageRangeResponse(payload: Buffer) : ResponsePayload {
     public val start: Int
     public val end: Int
+
     init {
         payload.require(8)
         start = payload.readIntLe()
@@ -166,9 +167,10 @@ class ReadDataPages(val recordType: Int, val start: Int, val count: Int = 1) : D
 
 class ReadDataPagesResponse(payload: Buffer, count: Int = 1) : ResponsePayload {
     public val pages: List<RecordPage<*>>
+
     init {
         pages = ArrayList<RecordPage<*>>(count)
-        for (i in 1 .. count) {
+        for (i in 1..count) {
             @Suppress("UNCHECKED_CAST")
             val page = RecordPage.parse(payload) as? RecordPage<*>
             if (page != null)
@@ -287,7 +289,7 @@ class ReadClockModeResponse(payload: Buffer) : UnsupportedDexcomResponse(payload
         get() = ReadClockMode.COMMAND
 }
 
-abstract class XmlDexcomResponse(payload: Buffer):
+abstract class XmlDexcomResponse(payload: Buffer) :
         UnsupportedDexcomResponse(payload) {
 
     override fun toString(): String {

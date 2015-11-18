@@ -73,5 +73,5 @@ class DexcomG4Response(public val originalCommand: Int,
     }
 
     public val valid: Boolean get() =
-        (expectedCrc == calculatedCrc) && command != NakResponse.COMMAND
+    (expectedCrc == calculatedCrc) && command != NakResponse.COMMAND
 }

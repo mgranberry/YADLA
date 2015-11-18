@@ -4,9 +4,9 @@ import com.kludgenics.alrightypump.DexcomCrcSink
 import okio.*
 
 public open class DexcomG4Packet(public val command: Int,
-                     public val requestPayload: DexcomCommand,
-                     public val calculatedCrc: Int? = null,
-                     public val expectedCrc: Int? = null): Source {
+                                 public val requestPayload: DexcomCommand,
+                                 public val calculatedCrc: Int? = null,
+                                 public val expectedCrc: Int? = null) : Source {
 
     private var closed = false
     private val timeout = Timeout.NONE

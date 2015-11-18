@@ -60,7 +60,7 @@ object CRC {
     }
 }
 
-open class CrcSource(delegate: Source, initialCrc: Int, val finalXor: Int): ForwardingSource(delegate) {
+open class CrcSource(delegate: Source, initialCrc: Int, val finalXor: Int) : ForwardingSource(delegate) {
     private var _crc = initialCrc
     public val crc: Int get() = (_crc xor finalXor) and 0xffff
 
@@ -74,7 +74,7 @@ open class CrcSource(delegate: Source, initialCrc: Int, val finalXor: Int): Forw
     }
 }
 
-open class CrcSink(delegate: Sink, initialCrc: Int, val finalXor: Int): ForwardingSink(delegate) {
+open class CrcSink(delegate: Sink, initialCrc: Int, val finalXor: Int) : ForwardingSink(delegate) {
     private var _crc = initialCrc
     public val crc: Int get() = (_crc xor finalXor) and 0xffff
 
@@ -88,10 +88,10 @@ open class CrcSink(delegate: Sink, initialCrc: Int, val finalXor: Int): Forwardi
     }
 }
 
-class DexcomCrcSource(delegate: Source): CrcSource(delegate,
+class DexcomCrcSource(delegate: Source) : CrcSource(delegate,
         CRC.DEXCOM_INITIAL_REMAINDER,
         CRC.DEXCOM_FINAL_XOR)
 
-class DexcomCrcSink(delegate: Sink): CrcSink(delegate,
+class DexcomCrcSink(delegate: Sink) : CrcSink(delegate,
         CRC.DEXCOM_INITIAL_REMAINDER,
         CRC.DEXCOM_FINAL_XOR)

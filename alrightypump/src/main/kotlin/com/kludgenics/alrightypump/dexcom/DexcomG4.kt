@@ -10,7 +10,7 @@ import kotlin.Iterator
  */
 
 open class DexcomG4(private val source: BufferedSource,
-               private val sink: BufferedSink): ContinuousGlucoseMonitor {
+                    private val sink: BufferedSink) : ContinuousGlucoseMonitor {
 
     public val egvs: Iterator<EgvRecord> get() = DataPageIterator(RecordPage.EGV_DATA)
     public val sgvs: Iterator<SgvRecord> get() = DataPageIterator(RecordPage.SENSOR_DATA)
@@ -23,11 +23,12 @@ open class DexcomG4(private val source: BufferedSource,
     public val version: String by lazy { requestVersion() }
     public val databasePartitionInfo: String by lazy { readDatabasePartitionInfo() }
 
-    private inner class DataPageIterator<T: Record>(private val type: Int) : Iterator<T> {
+    private inner class DataPageIterator<T : Record>(private val type: Int) : Iterator<T> {
         var pageIterator: Iterator<T>? = null
         var pageIndex: Int
         val start: Int
         val end: Int
+
         init {
             val (startIdx, endIdx) = readDataPageRange(type)
             start = endIdx
@@ -78,7 +79,7 @@ open class DexcomG4(private val source: BufferedSource,
         return response.payloadString.utf8()
     }
 
-    public fun <R: Record> readDataPage(recordType: Int, start: Int): RecordPage<R>? {
+    public fun <R : Record> readDataPage(recordType: Int, start: Int): RecordPage<R>? {
         val result = commandResponse<ReadDataPagesResponse>(ReadDataPages(recordType, start, 1))
         val page = result.pages.first()
         // println(page.header)
@@ -94,7 +95,7 @@ open class DexcomG4(private val source: BufferedSource,
         return range.start to range.end
     }
 
-    public fun <R: ResponsePayload>commandResponse(command: DexcomCommand): R {
+    public fun <R : ResponsePayload> commandResponse(command: DexcomCommand): R {
         val packet = DexcomG4Packet(command.command, command).packet.snapshot()
         // println("Writing ${packet.hex()}")
         sink.write(packet)

@@ -14,12 +14,12 @@ interface DeviceRecord {
     val source: String
 }
 
-open class SmbgRecord (override public val date: DateTime,
-                       override public val value: GlucoseValue,
-                       override public val source: String) : GlucoseRecord, DeviceRecord
-
-open class CgmRecord (override public val date: DateTime,
+open class SmbgRecord(override public val date: DateTime,
                       override public val value: GlucoseValue,
-                      public val unfiltered: GlucoseValue?,
-                      public val filtered: GlucoseValue?,
                       override public val source: String) : GlucoseRecord, DeviceRecord
+
+open class CgmRecord(override public val date: DateTime,
+                     override public val value: GlucoseValue,
+                     public val unfiltered: GlucoseValue?,
+                     public val filtered: GlucoseValue?,
+                     override public val source: String) : GlucoseRecord, DeviceRecord

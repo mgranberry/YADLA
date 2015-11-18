@@ -17,16 +17,16 @@ interface GlucoseUnit {
 interface GlucoseValue {
     val glucose: Double
     val mgdl: Double get() = if (unit == GlucoseUnit.MGDL)
-           glucose
-        else if (unit == GlucoseUnit.MMOL)
-            glucose * GlucoseUnit.MMOL_MGDL_FACTOR
-        else throw InvalidStateException("unsupported glucose unit: ${unit}")
+        glucose
+    else if (unit == GlucoseUnit.MMOL)
+        glucose * GlucoseUnit.MMOL_MGDL_FACTOR
+    else throw InvalidStateException("unsupported glucose unit: ${unit}")
 
     val mmol: Double get() = if (unit == GlucoseUnit.MGDL)
-            glucose / GlucoseUnit.MMOL_MGDL_FACTOR
-        else if (unit == GlucoseUnit.MMOL)
-            glucose
-        else throw InvalidStateException("unsupported glucose unit: ${unit}")
+        glucose / GlucoseUnit.MMOL_MGDL_FACTOR
+    else if (unit == GlucoseUnit.MMOL)
+        glucose
+    else throw InvalidStateException("unsupported glucose unit: ${unit}")
 
     val unit: Int
 

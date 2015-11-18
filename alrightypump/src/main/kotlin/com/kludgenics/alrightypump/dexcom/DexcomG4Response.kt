@@ -8,18 +8,46 @@ import okio.BufferedSource
  * Created by matthias on 11/7/15.
  */
 
-interface DexcomResponse {
-    val command: Int
-    val payload: Payload
-    val valid: Boolean
-}
 
-class DexcomG4Response(originalCommand: Int, command: Int, payload: Payload, calculatedCrc: Int? = null,
-                       expectedCrc: Int? = null): DexcomG4Packet(command, payload, calculatedCrc,
-        expectedCrc), DexcomResponse
-{
+class DexcomG4Response(public val originalCommand: Int,
+                       public val command: Int,
+                       public val payload: ResponsePayload,
+                       public val calculatedCrc: Int? = null,
+                       public val expectedCrc: Int? = null) {
     companion object {
-        public fun parse(source: BufferedSource, originalCommand: Int): DexcomResponse {
+        fun parsePayload(originalCommand: Int, command: Int, payload: Buffer): ResponsePayload {
+            return when (command) {
+                AckResponse.COMMAND -> when (originalCommand) {
+                    NullResponse.COMMAND -> NullResponse(payload)
+                    AckResponse.COMMAND -> AckResponse(payload)
+                    NakResponse.COMMAND -> NakResponse(payload)
+                    InvalidCommandResponse.COMMAND -> InvalidCommandResponse(payload)
+                    InvalidParam.COMMAND -> InvalidParam(payload)
+                    IncompletePacket.COMMAND -> IncompletePacket(payload)
+                    ReceiverError.COMMAND -> ReceiverError(payload)
+                    InvalidMode.COMMAND -> InvalidMode(payload)
+                    Ping.COMMAND -> Ping()
+                    ReadFirmwareHeader.COMMAND -> ReadFirmwareHeaderResponse(payload)
+                    ReadDatabasePartitionInfo.COMMAND -> ReadDatabasePartitionInfoResponse(payload)
+                    ReadDataPageRange.COMMAND -> ReadDataPageRangeResponse(payload)
+                    ReadDataPages.COMMAND -> ReadDataPagesResponse(payload)
+                    ReadDataPageHeader.COMMAND -> ReadDataPageHeaderResponse(payload)
+                    ReadLanguage.COMMAND -> ReadLanguageResponse(payload)
+                    ReadDisplayTimeOffset.COMMAND -> ReadDisplayTimeOffsetResponse(payload)
+                    ReadSystemTime.COMMAND -> ReadSystemTimeResponse(payload)
+                    ReadSystemTimeOffset.COMMAND -> ReadSystemTimeOffsetResponse(payload)
+                    ReadGlucoseUnit.COMMAND -> ReadGlucoseUnitResponse(payload)
+                    ReadClockMode.COMMAND -> ReadClockModeResponse(payload)
+                    else ->
+                        InvalidCommandResponse(payload)
+                }
+                NakResponse.COMMAND -> NakResponse(payload)
+                else ->
+                    InvalidCommandResponse(payload)
+            }
+        }
+
+        public fun parse(source: BufferedSource, originalCommand: Int): DexcomG4Response {
             source.require(6)
             source.skip(source.indexOf(DexcomG4Frame.syncByte))
             source.require(6)
@@ -36,14 +64,14 @@ class DexcomG4Response(originalCommand: Int, command: Int, payload: Payload, cal
             source.require(payloadLength)
             val payloadBuffer = Buffer()
             source.buffer().copyTo(payloadBuffer, 0, payloadLength)
-            val payload = Payload.parseResponse(originalCommand, command, payloadBuffer)
-            crc = CRC.updateChecksum(crc, payload.payload.snapshot().toByteArray())
+            val payload = parsePayload(originalCommand, command, payloadBuffer)
+            crc = CRC.updateChecksum(crc, source.buffer().readByteArray(payloadLength))
             val calculatedCrc = crc xor CRC.DEXCOM_FINAL_XOR
             val expectedCrc = source.readShortLe().toInt() and 0xFFFF
             return DexcomG4Response(originalCommand, command, payload, calculatedCrc, expectedCrc)
         }
     }
 
-    public override val valid: Boolean get() =
-        (expectedCrc == calculatedCrc) && command != NakCommand.COMMAND
+    public val valid: Boolean get() =
+        (expectedCrc == calculatedCrc) && command != NakResponse.COMMAND
 }

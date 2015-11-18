@@ -1,6 +1,9 @@
 package com.kludgenics.alrightypump.dexcom
 
 import okio.Buffer
+import org.joda.time.DateTime
+import org.joda.time.Duration
+import org.joda.time.Instant
 import java.util.*
 
 /**
@@ -23,6 +26,7 @@ interface RecordPage<E: Record> {
         const val METER_DATA = 10
         const val USER_EVENT_DATA = 11
         const val USER_SETTING_DATA = 12
+        val epoch = Instant.parse("2009-01-01T00:00:00")
 
         public fun parse (buffer: Buffer): RecordPage<*>? {
             buffer.require(9)
@@ -50,6 +54,14 @@ interface XMLPage {
 }
 
 interface Record {
+    val systemSeconds: Long
+    val displaySeconds: Long
+    val systemTime: Instant get() = toInstant(systemSeconds)
+    val displayTime: Instant get() = toInstant(displaySeconds)
+
+    fun toInstant(dexcomTimestamp: Long): Instant {
+        return RecordPage.epoch + Duration(dexcomTimestamp * 1000)
+    }
 }
 
 public data class PageHeader(public val index: Long,
@@ -92,19 +104,23 @@ public data class ManufacturingData(public override val header: PageHeader,
     }
 }
 
-public data class EgvRecord(public val systemSeconds: Long, public val displaySeconds: Long,
-                            public val glucose: Int, public val trendArrow: Int,
+public data class EgvRecord(public override val systemSeconds: Long,
+                            public override val displaySeconds: Long,
+                            public val glucose: Int,
+                            public val rawGlucose: Int,
+                            public val trendArrow: Int,
                             public val crc: Int, public val skipped: Boolean): Record {
     companion object {
         public fun parse (buffer: Buffer) : EgvRecord {
             buffer.require(13)
             val systemSeconds = buffer.readIntLe().toLong() and 0xFFFFFFFFF
             val displaySeconds = buffer.readIntLe().toLong() and 0xFFFFFFFF
-            val glucose = buffer.readShortLe().toInt() and 0xFFFF
-            val skipped = glucose and 0x0800 != 0 || (glucose and 0x3FF < 20)
+            val rawGlucose = buffer.readShortLe().toInt() and 0xFFFF
+            val glucose = rawGlucose and 0x3FF
+            val skipped = (rawGlucose and 0x8000 != 0)
             val trendArrow = buffer.readByte().toInt() and 0x0F
             val crc = buffer.readShortLe().toInt() and 0xFFFF
-            return EgvRecord(systemSeconds, displaySeconds, glucose, trendArrow, crc, skipped)
+            return EgvRecord(systemSeconds, displaySeconds, glucose, rawGlucose, trendArrow, crc, skipped)
         }
     }
 }
@@ -122,20 +138,23 @@ public data class EgvData(public override val header: PageHeader,
     }
 }
 
-public data class CalRecord(public val systemSeconds: Long, public val displaySeconds: Long,
+public data class CalRecord(public override val systemSeconds: Long,
+                            public override val displaySeconds: Long,
                             public val slope: Double, public val intercept: Double,
-                            public val scale: Double, public val decay: Double,
+                            public val scale: Double, public val unk1: Int,
+                            public val unk2: Int, public val unk3: Int, public val decay: Double,
                             public val nRecs: Int, public val subRecords: List<CalRecord.CalSubRecord>) : Record {
     public data class CalSubRecord(public val systemSecondsEntered: Long,
                                    public val systemSecondsApplied: Long,
-                                   public val calBg: Int, public val calRaw: Int) {
+                                   public val calBg: Int, public val calRaw: Int, public val unknown: Int) {
         companion object {
             public fun parse (buffer: Buffer): CalSubRecord {
                 val systemSecondsEntered = buffer.readIntLe().toLong() and 0xFFFFFFFF
                 val calBg = buffer.readIntLe()
                 val calRaw = buffer.readIntLe()
                 val systemSecondsApplied = buffer.readIntLe().toLong() and 0xFFFFFFFF
-                return CalSubRecord(systemSecondsEntered, systemSecondsApplied, calBg, calRaw)
+                val unknown = buffer.readByte().toInt() and 0xFF
+                return CalSubRecord(systemSecondsEntered, systemSecondsApplied, calBg, calRaw, unknown)
             }
         }
     }
@@ -146,14 +165,16 @@ public data class CalRecord(public val systemSeconds: Long, public val displaySe
             val displaySeconds = buffer.readIntLe().toLong() and 0xFFFFFFFF
             val slope = java.lang.Double.longBitsToDouble(buffer.readLongLe())
             val intercept = java.lang.Double.longBitsToDouble(buffer.readLongLe())
-            val scale = java.lang.Double.longBitsToDouble(buffer.readLongLe())
-            buffer.skip(3)
-            val decay = java.lang.Double.longBitsToDouble(buffer.readLongLe())
-            val nRecs = buffer.readByte().toInt() and 0xFF
+            val scale = java.lang.Double.longBitsToDouble(buffer.readLongLe()) // 32
+            val unk1 = buffer.readByte().toInt() and 0xFF
+            val unk2 = buffer.readByte().toInt() and 0xFF
+            val unk3 = buffer.readByte().toInt() and 0xFF
+            val decay = java.lang.Double.longBitsToDouble(buffer.readLongLe()) // 42
+            val nRecs = buffer.readByte().toInt() and 0xFF // 43
             val subRecords = ArrayList<CalSubRecord>(nRecs)
             for (i in 1 .. nRecs)
                 subRecords.add(CalSubRecord.parse(buffer))
-            return CalRecord(systemSeconds, displaySeconds, slope, intercept, scale, decay, nRecs, subRecords)
+            return CalRecord(systemSeconds, displaySeconds, slope, intercept, scale, unk1, unk2, unk3, decay, nRecs, subRecords)
         }
     }
 }
@@ -164,16 +185,22 @@ public data class CalData(public override val header: PageHeader,
         public fun parse(buffer: Buffer): CalData {
             val header = PageHeader.parse(buffer)
             val records = ArrayList<CalRecord>(header.size.toInt())
-            for (i in 1 .. header.size)
-                records.add(CalRecord.parse(buffer))
+            for (i in 1 .. header.size) {
+                val record = CalRecord.parse(buffer)
+                if (0L != record.systemSeconds) // skip 0 entries
+                    records.add(record)
+            }
             return CalData(header, records)
         }
     }
 }
 
-public data class InsertionRecord(public val systemSeconds: Long, public val displaySeconds: Long,
-                                  public val insertionSeconds: Long, public val insertionState: Int,
+public data class InsertionRecord(public override val systemSeconds: Long,
+                                  public override val displaySeconds: Long,
+                                  public val insertionSeconds: Int, public val insertionState: Int,
                                   public val crc: Int): Record {
+    val insertionTime: Instant get() = toInstant(insertionSeconds.toLong())
+
     companion object {
         const val REMOVED = 1
         const val EXPIRED = 2
@@ -188,7 +215,7 @@ public data class InsertionRecord(public val systemSeconds: Long, public val dis
         public fun parse (buffer: Buffer): InsertionRecord {
             val systemSeconds = buffer.readIntLe().toLong() and 0xFFFFFFFF
             val displaySeconds = buffer.readIntLe().toLong() and 0xFFFFFFFF
-            val insertionSeconds = buffer.readIntLe().toLong() and 0xFFFFFFFF
+            val insertionSeconds = buffer.readIntLe()
             val insertionState = buffer.readByte().toInt() and 0xFF
             val crc = buffer.readShortLe().toInt() and 0xFFFF
             return InsertionRecord(systemSeconds, displaySeconds, insertionSeconds, insertionState,
@@ -210,14 +237,15 @@ public data class InsertionData(public override val header: PageHeader,
     }
 }
 
-public data class SgvRecord(public val systemSeconds: Int, public val displaySeconds: Int,
+public data class SgvRecord(public override val systemSeconds: Long,
+                            public override val displaySeconds: Long,
                             public val unfiltered: Int, public val filtered: Int,
                             public val rssi: Int, public val crc: Int) : Record {
     companion object {
         public fun parse (buffer: Buffer): SgvRecord {
             buffer.require(16)
-            val systemSeconds = buffer.readIntLe()
-            val displaySeconds = buffer.readIntLe()
+            val systemSeconds = buffer.readIntLe().toLong() and 0xFFFFFFFF
+            val displaySeconds = buffer.readIntLe().toLong() and 0xFFFFFFFF
             val unfiltered = buffer.readIntLe()
             val filtered = buffer.readIntLe()
             val rssi = buffer.readShortLe().toInt() and 0xFFFF
@@ -240,16 +268,19 @@ public data class SgvData(public override val header: PageHeader,
     }
 }
 
-public data class MeterRecord(public val systemSeconds: Int, public val displaySeconds: Int,
-                              public val meterValue: Int, public val meterSeconds: Int,
+public data class MeterRecord(public override val systemSeconds: Long,
+                              public override val displaySeconds: Long,
+                              public val meterValue: Int, public val meterSeconds: Long,
                               public val crc: Int): Record {
+    val meterTime: Instant get() = toInstant(meterSeconds)
+
     companion object {
         public fun parse(buffer: Buffer): MeterRecord {
             buffer.require(16)
-            val systemSeconds = buffer.readIntLe()
-            val displaySeconds = buffer.readIntLe()
+            val systemSeconds = buffer.readIntLe().toLong() and 0xFFFFFFFF
+            val displaySeconds = buffer.readIntLe().toLong() and 0xFFFFFFFF
             val meterValue = buffer.readShortLe().toInt() and 0xFFFF
-            val meterSeconds = buffer.readIntLe()
+            val meterSeconds = buffer.readIntLe().toLong() and 0xFFFFFFFF
             val crc = buffer.readShortLe().toInt() and 0xFFFF
             return MeterRecord(systemSeconds, displaySeconds, meterValue, meterSeconds, crc)
         }
@@ -269,7 +300,8 @@ public data class MeterData(public override val header: PageHeader,
     }
 }
 
-public data class UserEventRecord(public val systemSeconds: Long, public val displaySeconds: Long,
+public data class UserEventRecord(public override val systemSeconds: Long,
+                                  public override val displaySeconds: Long,
                                   public val eventType: Int, public val eventSubtype: Int,
                                   public val eventSeconds: Long, public val eventValue: Int,
                                   public val crc: Int): Record {
@@ -318,9 +350,11 @@ public data class UserEventData(public override val header: PageHeader,
         }
     }
 }
-public data class UserSettingsRecord(public val systemSeconds: Long, public val displaySeconds: Long,
-                                     public val systemOffset: Long, public val displayOffset: Long,
-                                     public val transmitterId: Int, public val enableFlags: Int,
+
+public data class UserSettingsRecord(public override val systemSeconds: Long,
+                                     public override val displaySeconds: Long,
+                                     public val systemOffset: Long, public val displayOffset: Int,
+                                     public val transmitterId: Long, public val enableFlags: Long,
                                      public val highAlarmValue: Int, public val highAlarmSnooze: Int,
                                      public val lowAlarmValue: Int, public val lowAlarmSnooze: Int,
                                      public val riseRateValue: Int, public val fallRateValue: Int,
@@ -333,9 +367,9 @@ public data class UserSettingsRecord(public val systemSeconds: Long, public val 
             val systemSeconds = buffer.readIntLe().toLong() and 0xFFFFFFFFF
             val displaySeconds = buffer.readIntLe().toLong() and 0xFFFFFFFF
             val systemOffset = buffer.readIntLe().toLong() and 0xFFFFFFFF
-            val displayOffset = buffer.readIntLe().toLong() and 0xFFFFFFFF
-            val transmitterId =  buffer.readIntLe()
-            val enableFlags = buffer.readShortLe().toInt() and 0xFFFF
+            val displayOffset = buffer.readIntLe()
+            val transmitterId =  buffer.readIntLe().toLong() and 0xFFFFFFFF
+            val enableFlags = buffer.readIntLe().toLong() and 0xFFFFFFFF
             val highAlarmValue = buffer.readShortLe().toInt() and 0xFFFF
             val highAlarmSnooze = buffer.readShortLe().toInt() and 0xFFFF
             val lowAlarmValue = buffer.readShortLe().toInt() and 0xFFFF

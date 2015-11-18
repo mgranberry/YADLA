@@ -3,13 +3,18 @@ package com.kludgenics.alrightypump
 import com.fazecast.jSerialComm.SerialPort
 import okio.*
 import java.io.Closeable
+import java.io.IOException
 
 
 public class SerialConnection(private val port: SerialPort) : Closeable {
 
     init {
-        port.setComPortTimeouts(SerialPort.TIMEOUT_READ_BLOCKING, 0, 0);
+        port.baudRate = 115200
         port.openPort()
+        port.setComPortTimeouts(SerialPort.TIMEOUT_WRITE_BLOCKING or SerialPort.TIMEOUT_READ_SEMI_BLOCKING, 100, 0);
+
+        val array = ByteArray(port.bytesAvailable())
+        port.readBytes(array, array.size.toLong())
     }
 
     @JvmOverloads
@@ -30,15 +35,18 @@ public class SerialConnection(private val port: SerialPort) : Closeable {
 
         override fun read(sink: Buffer, byteCount: Long): Long {
             timeout.enter()
-
-            val toRead = Math.max(Math.min(byteCount, port.bytesAvailable().toLong()), 0)
-            if (toRead > 0)
-                println("SerialCommSource: read($sink, $byteCount): toRead=$toRead")
+            println("$byteCount ${port.bytesAvailable()}")
+            val toRead = Math.max(Math.min(byteCount, port.bytesAvailable().toLong()), byteCount)
+            println("SerialCommSource: read($sink, $byteCount): toRead=$toRead")
+            if (toRead == 0L)
+                throw  IOException()
             val bytes = ByteArray(toRead.toInt())
-            port.readBytes(bytes, toRead)
-            sink.write(bytes)
+            val bytesRead = port.readBytes(bytes, toRead)
+            println("SerialCommSource: read($sink, $byteCount): toRead=$toRead actual=$bytesRead")
+
+            sink.write(bytes, 0, bytesRead)
             timeout.exit()
-            return toRead
+            return bytesRead.toLong()
         }
 
         override fun timeout(): Timeout {

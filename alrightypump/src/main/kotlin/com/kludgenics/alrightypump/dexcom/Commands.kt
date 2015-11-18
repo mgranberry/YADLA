@@ -2,37 +2,36 @@ package com.kludgenics.alrightypump.dexcom
 
 import okio.Buffer
 import okio.ByteString
+import java.util.*
 
 /**
  * Created by matthias on 11/5/15.
  */
 
-interface DexcomCommand: Payload {
-    override val command: Int
-    override val payload: Buffer
+interface DexcomCommand {
+    val command: Int
+    val payload: Buffer get() = Buffer()
 }
 
-class NullCommand(payload: Buffer) : DexcomCommand, UnsupportedPayload(NullCommand.COMMAND, payload) {
+class NullResponse(payload: Buffer) : UnsupportedDexcomResponse(payload) {
 
     companion object {
         public val COMMAND: Int = 0
     }
 
     override public val command: Int get() = COMMAND
-
 }
 
-class AckCommand(payload: Buffer) : DexcomCommand, UnsupportedPayload(AckCommand.COMMAND, payload) {
+class AckResponse(payload: Buffer) : UnsupportedDexcomResponse(payload) {
 
    companion object {
         public val COMMAND: Int = 1
     }
 
     override public val command: Int get() = COMMAND
-
 }
 
-class NakCommand(payload: Buffer) : DexcomCommand, UnsupportedPayload(NakCommand.COMMAND, payload) {
+class NakResponse(payload: Buffer) : UnsupportedDexcomResponse(payload) {
 
     companion object {
         public val COMMAND: Int = 2
@@ -42,7 +41,7 @@ class NakCommand(payload: Buffer) : DexcomCommand, UnsupportedPayload(NakCommand
 
 }
 
-class InvalidCommand(payload: Buffer) : DexcomCommand, UnsupportedPayload(InvalidCommand.COMMAND, payload) {
+class InvalidCommandResponse(payload: Buffer) : UnsupportedDexcomResponse(payload) {
 
     companion object {
         public val COMMAND: Int = 3
@@ -52,17 +51,16 @@ class InvalidCommand(payload: Buffer) : DexcomCommand, UnsupportedPayload(Invali
 
 }
 
-class InvalidParam(payload: Buffer) : DexcomCommand, UnsupportedPayload(InvalidParam.COMMAND, payload) {
+class InvalidParam(payload: Buffer) : UnsupportedDexcomResponse(payload) {
 
     companion object {
         public val COMMAND: Int = 4
     }
 
     override public val command: Int get() = COMMAND
-
 }
 
-class IncompletePacket(payload: Buffer) : DexcomCommand, UnsupportedPayload(IncompletePacket.COMMAND, payload) {
+class IncompletePacket(payload: Buffer) : UnsupportedDexcomResponse(payload) {
 
     companion object {
         public val COMMAND: Int = 5
@@ -72,7 +70,7 @@ class IncompletePacket(payload: Buffer) : DexcomCommand, UnsupportedPayload(Inco
 
 }
 
-class ReceiverError(payload: Buffer) : DexcomCommand, UnsupportedPayload(ReceiverError.COMMAND, payload) {
+class ReceiverError(payload: Buffer) : UnsupportedDexcomResponse(payload) {
 
     companion object {
         public val COMMAND: Int = 6
@@ -82,7 +80,7 @@ class ReceiverError(payload: Buffer) : DexcomCommand, UnsupportedPayload(Receive
 
 }
 
-class InvalidMode(payload: Buffer) : DexcomCommand, UnsupportedPayload(InvalidMode.COMMAND, payload) {
+class InvalidMode(payload: Buffer) : UnsupportedDexcomResponse(payload) {
 
     companion object {
         public val COMMAND: Int = 7
@@ -92,7 +90,7 @@ class InvalidMode(payload: Buffer) : DexcomCommand, UnsupportedPayload(InvalidMo
 
 }
 
-class Ping(payload: Buffer = Buffer()) : DexcomCommand, UnsupportedPayload(Ping.COMMAND, payload) {
+class Ping : DexcomCommand, ResponsePayload {
 
     companion object {
         public val COMMAND: Int = 10
@@ -102,7 +100,7 @@ class Ping(payload: Buffer = Buffer()) : DexcomCommand, UnsupportedPayload(Ping.
 
 }
 
-class ReadFirmwareHeader(payload: Buffer = Buffer()) : DexcomCommand, XmlPayload(ReadFirmwareHeader.COMMAND, payload) {
+class ReadFirmwareHeader : DexcomCommand {
 
     companion object {
         public val COMMAND: Int = 11
@@ -112,8 +110,12 @@ class ReadFirmwareHeader(payload: Buffer = Buffer()) : DexcomCommand, XmlPayload
 
 }
 
+class ReadFirmwareHeaderResponse(payload: Buffer) : XmlDexcomResponse(payload) {
+    override val command: Int
+        get() = ReadFirmwareHeader.COMMAND
+}
 
-class ReadDatabasePartitionInfo(payload: Buffer) : DexcomCommand, XmlPayload(ReadDatabasePartitionInfo.COMMAND, payload) {
+class ReadDatabasePartitionInfo : DexcomCommand {
 
     companion object {
         public val COMMAND: Int = 15
@@ -123,27 +125,61 @@ class ReadDatabasePartitionInfo(payload: Buffer) : DexcomCommand, XmlPayload(Rea
 
 }
 
-class ReadDataPageRange(payload: Buffer) : DexcomCommand, UnsupportedPayload(ReadDataPageRange.COMMAND, payload) {
+class ReadDatabasePartitionInfoResponse(payload: Buffer): XmlDexcomResponse(payload) {
+    override val command: Int
+        get() = ReadDatabasePartitionInfo.COMMAND
+}
+
+class ReadDataPageRange(val recordType: Int) : DexcomCommand {
 
     companion object {
         public val COMMAND: Int = 16
     }
 
     override public val command: Int get() = COMMAND
-
+    override public val payload: Buffer get() = Buffer().writeByte(recordType)
 }
 
-class ReadDataPages(payload: Buffer) : DexcomCommand, UnsupportedPayload(ReadDataPages.COMMAND, payload) {
+class ReadDataPageRangeResponse(payload: Buffer) : ResponsePayload {
+    public val start: Int
+    public val end: Int
+    init {
+        payload.require(8)
+        start = payload.readIntLe()
+        end = payload.readIntLe()
+    }
 
+    override public val command: Int get() = ReadDataPageRange.COMMAND
+}
+
+/**
+ * Note: only a count of 1 is supported for responses.
+ */
+class ReadDataPages(val recordType: Int, val start: Int, val count: Int = 1) : DexcomCommand {
     companion object {
         public val COMMAND: Int = 17
     }
 
-    override public val command: Int get() = COMMAND
-
+    public override val command: Int get() = COMMAND
+    public override val payload: Buffer get() = Buffer().writeByte(recordType).writeIntLe(start).writeByte(count)
 }
 
-class ReadDataPageHeader(payload: Buffer) : DexcomCommand, UnsupportedPayload(ReadDataPageHeader.COMMAND, payload) {
+class ReadDataPagesResponse(payload: Buffer, count: Int = 1) : ResponsePayload {
+    public val pages: List<RecordPage<*>>
+    init {
+        pages = ArrayList<RecordPage<*>>(count)
+        for (i in 1 .. count) {
+            @Suppress("UNCHECKED_CAST")
+            val page = RecordPage.parse(payload) as? RecordPage<*>
+            if (page != null)
+                pages.add(page)
+        }
+    }
+
+    public override val command: Int get() = ReadDataPages.COMMAND
+}
+
+class ReadDataPageHeader : DexcomCommand {
 
     companion object {
         public val COMMAND: Int = 18
@@ -153,7 +189,13 @@ class ReadDataPageHeader(payload: Buffer) : DexcomCommand, UnsupportedPayload(Re
 
 }
 
-class ReadLanguage(payload: Buffer) : DexcomCommand, UnsupportedPayload(ReadLanguage.COMMAND, payload) {
+class ReadDataPageHeaderResponse(payload: Buffer) : UnsupportedDexcomResponse(payload) {
+    override val command: Int
+        get() = ReadDataPageHeader.COMMAND
+
+}
+
+class ReadLanguage : DexcomCommand {
 
     companion object {
         public val COMMAND: Int = 27
@@ -163,7 +205,12 @@ class ReadLanguage(payload: Buffer) : DexcomCommand, UnsupportedPayload(ReadLang
 
 }
 
-class ReadDisplayTimeOffset(payload: Buffer) : DexcomCommand, UnsupportedPayload(ReadDisplayTimeOffset.COMMAND, payload) {
+class ReadLanguageResponse(payload: Buffer) : UnsupportedDexcomResponse(payload) {
+    override val command: Int
+        get() = ReadLanguage.COMMAND
+}
+
+class ReadDisplayTimeOffset : DexcomCommand {
 
     companion object {
         public val COMMAND: Int = 29
@@ -173,7 +220,13 @@ class ReadDisplayTimeOffset(payload: Buffer) : DexcomCommand, UnsupportedPayload
 
 }
 
-class ReadSystemTime(payload: Buffer) : DexcomCommand, UnsupportedPayload(ReadSystemTime.COMMAND, payload) {
+class ReadDisplayTimeOffsetResponse(payload: Buffer) : UnsupportedDexcomResponse(payload) {
+    override val command: Int
+        get() = ReadDisplayTimeOffset.COMMAND
+}
+
+
+class ReadSystemTime : DexcomCommand {
 
     companion object {
         public val COMMAND: Int = 34
@@ -183,7 +236,12 @@ class ReadSystemTime(payload: Buffer) : DexcomCommand, UnsupportedPayload(ReadSy
 
 }
 
-class ReadSystemTimeOffset(payload: Buffer) : DexcomCommand, UnsupportedPayload(ReadSystemTimeOffset.COMMAND, payload) {
+class ReadSystemTimeResponse(payload: Buffer) : UnsupportedDexcomResponse(payload) {
+    override val command: Int
+        get() = ReadSystemTime.COMMAND
+}
+
+class ReadSystemTimeOffset : DexcomCommand {
 
     companion object {
         public val COMMAND: Int = 35
@@ -193,7 +251,12 @@ class ReadSystemTimeOffset(payload: Buffer) : DexcomCommand, UnsupportedPayload(
 
 }
 
-class ReadGlucoseUnit(payload: Buffer) : DexcomCommand, UnsupportedPayload(ReadGlucoseUnit.COMMAND, payload) {
+class ReadSystemTimeOffsetResponse(payload: Buffer) : UnsupportedDexcomResponse(payload) {
+    override val command: Int
+        get() = ReadSystemTimeOffset.COMMAND
+}
+
+class ReadGlucoseUnit : DexcomCommand {
 
     companion object {
         public val COMMAND: Int = 37
@@ -203,7 +266,13 @@ class ReadGlucoseUnit(payload: Buffer) : DexcomCommand, UnsupportedPayload(ReadG
 
 }
 
-class ReadClockMode(payload: Buffer) : DexcomCommand, UnsupportedPayload(ReadClockMode.COMMAND, payload) {
+class ReadGlucoseUnitResponse(payload: Buffer) : UnsupportedDexcomResponse(payload) {
+    override val command: Int
+        get() = ReadGlucoseUnit.COMMAND
+}
+
+
+class ReadClockMode : DexcomCommand {
 
     companion object {
         public val COMMAND: Int = 41
@@ -213,15 +282,20 @@ class ReadClockMode(payload: Buffer) : DexcomCommand, UnsupportedPayload(ReadClo
 
 }
 
-open class XmlPayload(override public val command: Int, override val payload: Buffer):
-        UnsupportedPayload(command, payload) {
+class ReadClockModeResponse(payload: Buffer) : UnsupportedDexcomResponse(payload) {
+    override val command: Int
+        get() = ReadClockMode.COMMAND
+}
+
+abstract class XmlDexcomResponse(payload: Buffer):
+        UnsupportedDexcomResponse(payload) {
 
     override fun toString(): String {
         return "${this.javaClass.simpleName}(command: ${command.toInt()}, payload: ${payloadString.utf8()})"
     }
 }
 
-open class UnsupportedPayload(override public val command: Int, override val payload: Buffer) : Payload {
+abstract class UnsupportedDexcomResponse(override val payload: Buffer) : ResponsePayload {
     val payloadString: ByteString
         get() = payload.snapshot()
 
@@ -233,7 +307,7 @@ open class UnsupportedPayload(override public val command: Int, override val pay
         if (this === other) return true
         if (other?.javaClass != javaClass) return false
 
-        other as UnsupportedPayload
+        other as UnsupportedDexcomResponse
 
         if (command != other.command) return false
         if (payload != other.payload) return false

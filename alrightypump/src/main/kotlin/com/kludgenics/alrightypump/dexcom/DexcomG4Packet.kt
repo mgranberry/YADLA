@@ -1,12 +1,10 @@
 package com.kludgenics.alrightypump.dexcom
 
 import com.kludgenics.alrightypump.DexcomCrcSink
-import com.kludgenics.alrightypump.DexcomCrcSource
 import okio.*
-import kotlin.reflect.KProperty
 
 public open class DexcomG4Packet(public val command: Int,
-                     public val payload: Payload,
+                     public val requestPayload: DexcomCommand,
                      public val calculatedCrc: Int? = null,
                      public val expectedCrc: Int? = null): Source {
 
@@ -18,7 +16,7 @@ public open class DexcomG4Packet(public val command: Int,
         val crcSink = DexcomCrcSink(buff)
         val crcBuffer = Okio.buffer(crcSink)
         crcBuffer.writeByte(DexcomG4Frame.syncByte.toInt())
-        val payloadSnapshot = payload.payload.snapshot()
+        val payloadSnapshot = requestPayload.payload.snapshot()
         crcBuffer.writeShortLe(payloadSnapshot.size() + 6)
         crcBuffer.writeByte(command.toInt())
         crcBuffer.write(payloadSnapshot)

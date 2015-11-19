@@ -1,19 +1,39 @@
 package com.kludgenics.alrightypump.dexcom
 
 import com.kludgenics.alrightypump.CRC
+import com.kludgenics.alrightypump.ResponseFrame
 import okio.Buffer
 import okio.BufferedSource
+import okio.Okio
 
 /**
  * Created by matthias on 11/7/15.
  */
 
 
-class DexcomG4Response(public val originalCommand: Int,
-                       public val command: Int,
-                       public val payload: ResponsePayload,
-                       public val calculatedCrc: Int? = null,
-                       public val expectedCrc: Int? = null) {
+class DexcomG4Response(val source: BufferedSource) : DexcomG4Frame, ResponseFrame {
+    override val expectedChecksum: Int
+    override val frame: Buffer
+    override val payloadLength: Long
+    override val command: Int get() = frame.getByte(3).toInt() and 0xFF
+    override public val valid: Boolean
+        get() = (expectedChecksum == calculatedChecksum) && command != NakResponse.COMMAND
+
+    init {
+        frame = Buffer()
+        source.require(6)
+        source.skip(source.indexOf(sync.toByte()))
+        source.require(6)
+        frame.writeByte(source.readByte().toInt())
+        val length = source.readShortLe().toInt() and 0xFFFF
+        frame.writeShortLe(length)
+        source.require(length.toLong() - 3)
+        source.read(frame, length.toLong() - 3)
+        payloadLength = length.toLong() - 6
+        expectedChecksum = footer.readShortLe().toInt() and 0xFFFF
+    }
+
+
     companion object {
         fun parsePayload(originalCommand: Int, command: Int, payload: Buffer): ResponsePayload {
             return when (command) {
@@ -47,31 +67,11 @@ class DexcomG4Response(public val originalCommand: Int,
             }
         }
 
-        public fun parse(source: BufferedSource, originalCommand: Int): DexcomG4Response {
-            source.require(6)
-            source.skip(source.indexOf(DexcomG4Frame.syncByte))
-            source.require(6)
 
-            var crc = CRC.DEXCOM_INITIAL_REMAINDER
-            val syncByte = source.readByte().toInt() and 0xFF
-            crc = CRC.updateChecksum(crc, syncByte.toByte())
-            val length = source.readShortLe().toInt() and 0xFFFF
-            crc = CRC.updateChecksum(crc, (length and 0xFF).toByte())
-            crc = CRC.updateChecksum(crc, (length shr 8).toByte())
-            val command = source.readByte().toInt() and 0xFF
-            crc = CRC.updateChecksum(crc, command.toByte())
-            val payloadLength = length.toLong() - 6
-            source.require(payloadLength)
-            val payloadBuffer = Buffer()
-            source.buffer().copyTo(payloadBuffer, 0, payloadLength)
-            val payload = parsePayload(originalCommand, command, payloadBuffer)
-            crc = CRC.updateChecksum(crc, source.buffer().readByteArray(payloadLength))
-            val calculatedCrc = crc xor CRC.DEXCOM_FINAL_XOR
-            val expectedCrc = source.readShortLe().toInt() and 0xFFFF
-            return DexcomG4Response(originalCommand, command, payload, calculatedCrc, expectedCrc)
-        }
     }
 
-    public val valid: Boolean get() =
-    (expectedCrc == calculatedCrc) && command != NakResponse.COMMAND
+    override fun toString() : String{
+        return "${this.javaClass.simpleName}(header = [${header.snapshot().hex()} l:${headerLength} r: ${headerRange}], payload = [${payload.snapshot().hex()} l: $payloadLength r: $payloadRange], footer = [${footer.snapshot().hex()} l: ${footerLength} r: ${footerRange}]}"
+    }
+
 }

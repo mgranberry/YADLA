@@ -1,7 +1,6 @@
 package com.kludgenics.alrightypump.dexcom
 
 import okio.Buffer
-import org.joda.time.DateTime
 import org.joda.time.Duration
 import org.joda.time.Instant
 import java.util.*
@@ -16,7 +15,7 @@ private val Buffer.int32Le: Int get() = this.readIntLe()
 private val Buffer.uint16Le: Int get() = this.readShortLe().toInt() and 0xFFFF
 private val Buffer.uint8: Int get() = this.readByte().toInt() and 0xFF
 
-interface RecordPage<E : Record> {
+interface RecordPage {
     companion object {
         const final val MANUFACTURING_DATA = 0
         const final val FIRMWARE_PARAMETER_DATA = 1
@@ -33,7 +32,7 @@ interface RecordPage<E : Record> {
         const final val USER_SETTING_DATA = 12
         final val EPOCH = Instant.parse("2009-01-01T00:00:00")
 
-        public fun parse(buffer: Buffer): RecordPage<*>? {
+        public fun parse(buffer: Buffer): RecordPage? {
             buffer.require(9)
             val type = buffer.getByte(8).toInt() and 0xFF
             return when (type) {
@@ -51,7 +50,7 @@ interface RecordPage<E : Record> {
     }
 
     val header: PageHeader
-    val records: List<E>
+    val records: List<Record>
 }
 
 interface XMLPage {
@@ -135,7 +134,7 @@ public data class EgvRecord(public override val systemSeconds: Long,
 }
 
 public data class EgvData(public override val header: PageHeader,
-                          public override val records: List<EgvRecord>) : RecordPage<EgvRecord> {
+                          public override val records: List<EgvRecord>) : RecordPage {
     companion object {
         public fun parse(buffer: Buffer): EgvData {
             val header = PageHeader.parse(buffer)
@@ -192,7 +191,7 @@ public data class CalSetRecord(public override val systemSeconds: Long,
 }
 
 public data class CalData(public override val header: PageHeader,
-                          public override val records: List<CalSetRecord>) : RecordPage<CalSetRecord> {
+                          public override val records: List<CalSetRecord>) : RecordPage {
     companion object {
         public fun parse(buffer: Buffer): CalData {
             val header = PageHeader.parse(buffer)
@@ -236,7 +235,7 @@ public data class InsertionRecord(public override val systemSeconds: Long,
 }
 
 public data class InsertionData(public override val header: PageHeader,
-                                public override val records: List<InsertionRecord>) : RecordPage<InsertionRecord> {
+                                public override val records: List<InsertionRecord>) : RecordPage {
     companion object {
         public fun parse(buffer: Buffer): InsertionData {
             val header = PageHeader.parse(buffer)
@@ -267,7 +266,7 @@ public data class SgvRecord(public override val systemSeconds: Long,
 }
 
 public data class SgvData(public override val header: PageHeader,
-                          public override val records: List<SgvRecord>) : RecordPage<SgvRecord> {
+                          public override val records: List<SgvRecord>) : RecordPage {
     companion object {
         public fun parse(buffer: Buffer): SgvData {
             val header = PageHeader.parse(buffer)
@@ -299,7 +298,7 @@ public data class MeterRecord(public override val systemSeconds: Long,
 }
 
 public data class MeterData(public override val header: PageHeader,
-                            public override val records: List<MeterRecord>) : RecordPage<MeterRecord> {
+                            public override val records: List<MeterRecord>) : RecordPage {
     companion object {
         public fun parse(buffer: Buffer): MeterData {
             val header = PageHeader.parse(buffer)
@@ -350,7 +349,7 @@ public data class UserEventRecord(public override val systemSeconds: Long,
 
 public data class UserEventData(public override val header: PageHeader,
                                 public override val records: List<UserEventRecord>) :
-        RecordPage<UserEventRecord> {
+        RecordPage {
     companion object {
         public fun parse(buffer: Buffer): UserEventData {
             val header = PageHeader.parse(buffer)
@@ -404,7 +403,7 @@ public data class UserSettingsRecord(public override val systemSeconds: Long,
 
 public data class UserSettingsData(public override val header: PageHeader,
                                    public override val records: List<UserSettingsRecord>) :
-        RecordPage<UserSettingsRecord> {
+        RecordPage {
     companion object {
         public fun parse(buffer: Buffer): UserSettingsData {
             val header = PageHeader.parse(buffer)

@@ -20,24 +20,25 @@ open class DexcomG4(private val source: BufferedSource,
     public val meters: Iterator<MeterRecord> get() = DataPageIterator(RecordPage.METER_DATA)
     public val insertions: Iterator<InsertionRecord> get() = DataPageIterator(RecordPage.INSERTION_TIME)
 
-    public val version: String by lazy { requestVersion() }
-    public val databasePartitionInfo: String by lazy { readDatabasePartitionInfo() }
+    public val version: String? by lazy { requestVersion() }
+    public val databasePartitionInfo: String? by lazy { readDatabasePartitionInfo() }
 
-    private inner class DataPageIterator<T : Record>(private val type: Int) : Iterator<T> {
+    private inner class DataPageIterator<T>(private val type: Int) : Iterator<T> {
         var pageIterator: Iterator<T>? = null
         var pageIndex: Int
         val start: Int
         val end: Int
 
         init {
-            val (startIdx, endIdx) = readDataPageRange(type)
+            val (startIdx, endIdx) = readDataPageRange(type) ?: 0 to 0
             start = endIdx
             end = startIdx
             pageIndex = start
         }
 
         private fun updateIterator() {
-            pageIterator = readDataPage<T>(type, pageIndex)?.records?.reversed()?.iterator()
+            val records = @Suppress("UNCHECKED_CAST")(readDataPages(type, pageIndex).flatMap { it.records } as List<T>)
+            pageIterator =  records.reversed().iterator()
             pageIndex -= 1
         }
 
@@ -67,42 +68,49 @@ open class DexcomG4(private val source: BufferedSource,
         }
     }
 
-    private fun readDatabasePartitionInfo(): String {
+    public fun ping(): Boolean {
+        val command = Ping()
+        val response = commandResponse(command)
+        return response is Ping
+    }
+
+    private fun readDatabasePartitionInfo(): String? {
         val command = ReadDatabasePartitionInfo()
-        val response = commandResponse<XmlDexcomResponse>(command)
-        return response.payloadString.utf8()
+        val response = commandResponse(command)
+        return if (response is XmlDexcomResponse) {
+            response.payloadString.utf8()
+        } else null
     }
 
-    private fun requestVersion(): String {
+    private fun requestVersion(): String? {
         val command = ReadFirmwareHeader()
-        val response = commandResponse<XmlDexcomResponse>(command)
-        return response.payloadString.utf8()
+        val response = commandResponse(command)
+        return if (response is XmlDexcomResponse)
+            response.payloadString.utf8()
+        else null
     }
 
-    public fun <R : Record> readDataPage(recordType: Int, start: Int): RecordPage<R>? {
-        val result = commandResponse<ReadDataPagesResponse>(ReadDataPages(recordType, start, 1))
-        val page = result.pages.first()
-        // println(page.header)
-        if (page.header.recordType == recordType)
-            @Suppress("UNCHECKED_CAST")
-            return page as RecordPage<R>
+    public fun readDataPages(recordType: Int, start: Int, count: Int = 1): List<RecordPage> {
+        val response = commandResponse(ReadDataPages(recordType, start, count))
+        return if (response is ReadDataPagesResponse)
+            response.pages
         else
-            return null
+            emptyList()
     }
 
-    public fun readDataPageRange(recordType: Int): Pair<Int, Int> {
-        val range = commandResponse<ReadDataPageRangeResponse>(ReadDataPageRange(recordType))
-        return range.start to range.end
+    public fun readDataPageRange(recordType: Int): Pair<Int, Int>? {
+        val response = commandResponse(ReadDataPageRange(recordType))
+        return if (response is ReadDataPageRangeResponse)
+            response.start to response.end
+        else null
     }
 
-    public fun <R : ResponsePayload> commandResponse(command: DexcomCommand): R {
-        val packet = DexcomG4Packet(command.command, command).packet.snapshot()
-        // println("Writing ${packet.hex()}")
-        sink.write(packet)
-        val response = DexcomG4Response.parse(source, command.command)
-        assert(response.valid)
-        // println(response.payload)
-        return response.payload as R
+    public fun commandResponse(command: DexcomCommand): ResponsePayload {
+        val packet = DexcomG4Command(command.command, command).frame
+        sink.write(packet, packet.size())
+        val response = DexcomG4Response(source)
+        val payload = DexcomG4Response.parsePayload(command.command, response.command, response.payload)
+        return payload
     }
 }
 

@@ -45,18 +45,34 @@ object CRC {
             0xef1f, 0xff3e, 0xcf5d, 0xdf7c, 0xaf9b, 0xbfba, 0x8fd9, 0x9ff8,
             0x6e17, 0x7e36, 0x4e55, 0x5e74, 0x2e93, 0x3eb2, 0x0ed1, 0x1ef0)
 
-    fun updateChecksum(remainder: Int, current: Byte): Int {
+    fun updateChecksum(remainder: Int, current: Byte, mask: Int = 0xFFFF): Int {
         val c = current.toInt() and 0xFF
         return (CRC_TABLE[(c xor (remainder shr 8)) and 0xFF]
-                xor ((remainder shl 8) and 0xFFFF));
+                xor ((remainder shl 8) and mask));
     }
 
-    fun updateChecksum(remainder: Int, current: ByteArray): Int {
-        var checksum = remainder
+    fun updateChecksum(current: ByteArray,
+                       initialRemainder: Int,
+                       finalXor: Int = 0,
+                       mask: Int = 0xFFFF): Int {
+        var checksum = initialRemainder
         for (i in current.indices) {
-            checksum = updateChecksum(checksum.toInt(), current[i])
+            checksum = updateChecksum(checksum.toInt(), current[i], mask)
         }
-        return checksum
+        return checksum xor finalXor
+    }
+
+    fun updateChecksum(current: Buffer,
+                       bytes: Long,
+                       initialRemainder: Int,
+                       finalXor: Int = 0,
+                       mask: Int = 0xFFFF): Int {
+        var checksum = initialRemainder
+        for (i in 1 .. bytes) {
+            val c = current.readByte().toInt() and 0xFF
+            checksum = CRC_TABLE[(c xor (checksum shr 8)) and 0xFF] xor ((checksum shl 8) and mask)
+        }
+        return checksum xor finalXor
     }
 }
 
@@ -68,7 +84,7 @@ open class CrcSource(delegate: Source, initialCrc: Int, val finalXor: Int) : For
 
     override fun read(sink: Buffer, byteCount: Long): Long {
         val bytes = sink.readByteArray(Math.min(sink.size(), byteCount))
-        _crc = CRC.updateChecksum(_crc, bytes)
+        _crc = CRC.updateChecksum(bytes, _crc, 0, 0xFFFF)
         buffer.write(bytes)
         return super.read(buffer, byteCount)
     }
@@ -82,7 +98,7 @@ open class CrcSink(delegate: Sink, initialCrc: Int, val finalXor: Int) : Forward
 
     override fun write(source: Buffer, byteCount: Long) {
         val bytes = source.readByteArray(byteCount)
-        _crc = CRC.updateChecksum(_crc, bytes)
+        _crc = CRC.updateChecksum(bytes, _crc, 0, 0xFFFF)
         buffer.write(bytes)
         super.write(buffer, byteCount)
     }

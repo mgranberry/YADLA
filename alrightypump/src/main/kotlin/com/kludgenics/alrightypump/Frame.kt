@@ -37,7 +37,7 @@ interface Frame {
     val footerRange: LongRange
         get() = headerLength + payloadLength until headerLength + payloadLength + footerLength
 
-    val crcRange: LongRange
+    val checksumRange: LongRange
         get() = 0 .. payloadRange.end
 
     val calculatedChecksum: Int
@@ -48,7 +48,7 @@ interface Frame {
                      finalXor: Int = 0,
                      mask: Int = 0xFFFF): Int {
         val temp = Buffer()
-        buffer.copyTo(temp, crcRange.start, crcRange.end - crcRange.start)
+        buffer.copyTo(temp, checksumRange.start, checksumRange.end - checksumRange.start)
         return CRC.updateChecksum(temp, temp.size(), initialRemainder, finalXor, mask)
     }
 

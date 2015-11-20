@@ -15,7 +15,7 @@ interface InsulinPump {
      * A Joda Time [Chronolgy] constructed from pump time change records, allowing for
      * the translation of raw pump events to standard time.
      */
-    val chronolgy: Chronology
+    val chronology: Chronology
 
     /**
      * Opaque list of version identifiers

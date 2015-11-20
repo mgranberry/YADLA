@@ -2,7 +2,7 @@ package com.kludgenics.alrightypump.dexcom
 
 import okio.Buffer
 
-public open class DexcomG4Command(override public val command: Int,
+public open class DexcomG4Request(override public val command: Int,
                                   public val requestPayload: DexcomCommand) : DexcomG4Frame {
 
     override val header: Buffer

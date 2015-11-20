@@ -11,7 +11,7 @@ import okio.Okio
  */
 
 
-class DexcomG4Response(val source: BufferedSource) : DexcomG4Frame, ResponseFrame {
+class DexcomG4Response(source: BufferedSource) : DexcomG4Frame, ResponseFrame {
     override val expectedChecksum: Int
     override val frame: Buffer
     override val payloadLength: Long

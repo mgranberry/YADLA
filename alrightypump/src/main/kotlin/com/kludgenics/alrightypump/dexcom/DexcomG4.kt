@@ -189,7 +189,7 @@ open class DexcomG4(private val source: BufferedSource,
     }
 
     public fun commandResponse(command: DexcomCommand): ResponsePayload {
-        val packet = DexcomG4Command(command.command, command).frame
+        val packet = DexcomG4Request(command.command, command).frame
         sink.write(packet, packet.size())
         val response = DexcomG4Response(source)
         val payload = DexcomG4Response.parsePayload(command.command, response.command, response.payload)

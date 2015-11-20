@@ -1,5 +1,6 @@
 package com.kludgenics.alrightypump.dexcom
 
+import com.kludgenics.alrightypump.*
 import okio.Buffer
 import org.joda.time.Duration
 import org.joda.time.Instant
@@ -149,10 +150,16 @@ public data class EgvData(public override val header: PageHeader,
 
 public data class CalSetRecord(public override val systemSeconds: Long,
                                public override val displaySeconds: Long,
-                               public val slope: Double, public val intercept: Double,
-                               public val scale: Double, public val unk1: Int,
-                               public val unk2: Int, public val unk3: Int, public val decay: Double,
-                               public val nRecs: Int, public val subRecords: List<CalSetRecord.CalSubRecord>) : Record {
+                               override public val slope: Double,
+                               override public val intercept: Double,
+                               override public val scale: Double,
+                               public val unk1: Int,
+                               public val unk2: Int,
+                               public val unk3: Int,
+                               override public val decay: Double,
+                               public val nRecs: Int,
+                               public val subRecords: List<CalSetRecord.CalSubRecord>) : Record, Calibration {
+
     public data class CalSubRecord(public val systemSecondsEntered: Long,
                                    public val systemSecondsApplied: Long,
                                    public val calBg: Int, public val calRaw: Int, public val unknown: Int) {
@@ -281,7 +288,16 @@ public data class SgvData(public override val header: PageHeader,
 public data class MeterRecord(public override val systemSeconds: Long,
                               public override val displaySeconds: Long,
                               public val meterValue: Int, public val meterSeconds: Long,
-                              public val crc: Int) : Record {
+                              public val crc: Int) : SmbgRecord, Record {
+    override val time: Instant
+        get() = displayTime
+    override val value: GlucoseValue
+        get() = BaseGlucoseValue(meterValue.toDouble(), GlucoseUnit.MGDL)
+    override val manual: Boolean
+        get() = true
+    override val source: String
+        get() = DexcomG4.SOURCE
+
     val meterTime: Instant get() = toInstant(meterSeconds)
 
     companion object {

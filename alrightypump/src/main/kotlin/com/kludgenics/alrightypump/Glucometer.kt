@@ -7,8 +7,8 @@ import org.joda.time.Chronology
  */
 
 interface Glucometer {
-    val smbgRecords: List<SmbgRecord>
-    val dateTimeChangeRecords: List<DateTimeChangeRecord>
+    val smbgRecords: Sequence<SmbgRecord>
+    val dateTimeChangeRecords: Sequence<DateTimeChangeRecord>
     val chronology: Chronology
     val outOfRangeHigh: Double
     val outOfRangeLow: Double

@@ -29,7 +29,7 @@ abstract class TandemFrame : Frame {
         buff.readByte()
         var checksum = 0
         while (!buff.exhausted())
-            checksum = checksum + buff.readByte()
+            checksum = checksum + (buff.readByte().toInt() and 0xFF)
         checksum and 0xFFFF
     }
 

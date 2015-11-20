@@ -16,7 +16,8 @@ class TandemResponse(source: BufferedSource) : TandemFrame() {
     override val expectedChecksum: Int
     override val frame: Buffer
     override val payloadLength: Long
-    val timestamp: Instant
+    public val timestamp: Instant
+    public val command: Int
     override public val valid: Boolean
         get() = (expectedChecksum == calculatedChecksum)
 
@@ -26,7 +27,7 @@ class TandemResponse(source: BufferedSource) : TandemFrame() {
         source.skip(source.indexOf(sync.toByte()))
         source.require(9)
         frame.writeByte(source.readByte().toInt())
-        val command = source.readByte().toInt() and 0xFF
+        command = source.readByte().toInt() and 0xFF
         val length = source.readByte().toInt() and 0xFF
         frame.writeByte(length)
         payload = Buffer()

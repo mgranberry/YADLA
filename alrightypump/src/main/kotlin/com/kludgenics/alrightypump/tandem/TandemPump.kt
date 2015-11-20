@@ -29,8 +29,13 @@ class TandemPump(private val source: BufferedSource, private val sink: BufferedS
 
     public fun commandResponse(payload: TandemPayload): TandemResponse {
         val packet = TandemRequest(payload).frame
+        println("Sending: ${packet.snapshot().hex()}")
         sink.write(packet, packet.size())
+        sink.emit()
         val response = TandemResponse(source)
         return response
+    }
+    public fun readResponse() : TandemResponse {
+        return TandemResponse(source)
     }
 }

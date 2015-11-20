@@ -3,8 +3,7 @@ package com.kludgenics.alrightypump
 import com.fazecast.jSerialComm.SerialPort
 import com.kludgenics.alrightypump.dexcom.DexcomG4
 import com.kludgenics.alrightypump.dexcom.RecordPage
-import com.kludgenics.alrightypump.tandem.TandemPump
-import com.kludgenics.alrightypump.tandem.VersionReq
+import com.kludgenics.alrightypump.tandem.*
 
 
 fun main(args: Array<String>) {
@@ -13,11 +12,24 @@ fun main(args: Array<String>) {
         println(it.descriptivePortName)
         when (it.descriptivePortName) {
             "Tandem Virtual COM Port" -> {
+                println(it.baudRate)
+                it.baudRate = 115200 * 8
+                println(it.baudRate)
                 val connection = SerialConnection(it)
+                println(it.baudRate)
+                println(it.flowControlSettings)
+
                 val tslim = TandemPump(connection.source(), connection.sink())
-                val response = tslim.commandResponse(VersionReq())
+                var response = tslim.commandResponse(VersionReq())
                 println(response.frame.snapshot().hex())
                 println(response.timestamp.toDateTime())
+                response = tslim.commandResponse(LogSizeReq())
+                val lsr = LogSizeResp(response.payload)
+                println("lsr: $lsr ${lsr.range}")
+                for (entry in lsr.range) {
+                    response = tslim.commandResponse(LogEntrySeqReq(entry))
+                    println("entry: $entry c: ${response.command} p: ${response.payload.snapshot().hex()}")
+                }
             }
             "DexCom Gen4 USB Serial" -> {
                 val connection = SerialConnection(it)

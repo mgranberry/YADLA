@@ -48,7 +48,7 @@ interface Frame {
                      finalXor: Int = 0,
                      mask: Int = 0xFFFF): Int {
         val temp = Buffer()
-        buffer.copyTo(temp, checksumRange.start, checksumRange.end - checksumRange.start)
+        buffer.copyTo(temp, checksumRange.start, checksumRange.endInclusive - checksumRange.start)
         return CRC.updateChecksum(temp, temp.size(), initialRemainder, finalXor, mask)
     }
 

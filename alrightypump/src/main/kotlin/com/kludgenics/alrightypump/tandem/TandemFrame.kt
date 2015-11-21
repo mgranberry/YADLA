@@ -8,9 +8,6 @@ import org.joda.time.Instant
  * Created by matthias on 11/19/15.
  */
 abstract class TandemFrame : Frame {
-    companion object {
-        @JvmField final val EPOCH = Instant.parse("2009-01-01T00:00:00")
-    }
 
     abstract override val header: Buffer
     abstract override val payload: Buffer

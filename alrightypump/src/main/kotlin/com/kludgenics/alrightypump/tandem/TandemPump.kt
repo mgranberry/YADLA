@@ -4,12 +4,17 @@ import com.kludgenics.alrightypump.*
 import okio.BufferedSink
 import okio.BufferedSource
 import org.joda.time.Chronology
+import org.joda.time.Instant
 import org.joda.time.chrono.ISOChronology
 
 /**
  * Created by matthias on 11/19/15.
  */
 class TandemPump(private val source: BufferedSource, private val sink: BufferedSink) : InsulinPump, Glucometer {
+    companion object {
+        @JvmField final val EPOCH = Instant.parse("2009-01-01T00:00:00")
+    }
+
     override val chronology: Chronology
         get() = ISOChronology.getInstance()
     override val supportedFeatures: Set<DeviceFeature>
@@ -35,6 +40,7 @@ class TandemPump(private val source: BufferedSource, private val sink: BufferedS
         val response = TandemResponse(source)
         return response
     }
+
     public fun readResponse() : TandemResponse {
         return TandemResponse(source)
     }

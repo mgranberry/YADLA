@@ -1,4 +1,4 @@
-package com.kludgenics.alrightypump.cloud.nightscout
+package com.kludgenics.alrightypump.cloud.nightscout.records
 
 interface Sgv : NightscoutEntry {
     override val type: String get() = "sgv"

@@ -1,5 +1,6 @@
 package com.kludgenics.cgmlogger.model.treatment
 
+import com.kludgenics.alrightypump.cloud.nightscout.records.Treatment
 import java.util.Date
 
 import io.realm.RealmObject
@@ -11,45 +12,35 @@ import org.joda.time.format.ISODateTimeFormat
 /**
  * Created by matthiasgranberry on 6/4/15.
  */
-open class Treatment : RealmObject {
+open class Treatment : Treatment, RealmObject {
     @Ignore
-    val dateParser = ISODateTimeFormat.dateTimeParser()
+    override val dateTimeString: String = super.dateTimeString
+    @Ignore
+    override val dateParser = ISODateTimeFormat.dateTimeParser()
 
     @PrimaryKey
-    open var id: String = ""
+    override var id: String = ""
     @Required
-    open var eventTime: Date = Date()
-    open var eventType: String? = null
-    open var enteredBy: String? = null
+    override var eventTime: Date = Date()
+    override var eventType: String? = null
+    override var enteredBy: String? = null
 
-    open var glucose: Double? = null
-    open var glucoseType: String? = null
+    override var glucose: Double? = null
+    override var glucoseType: String? = null
 
-    open var insulin: Double? = null
-    open var units: String? = null
+    override var insulin: Double? = null
+    override var units: String? = null
 
-    open var notes: String? = null
+    override var notes: String? = null
 
-    open var carbs: Int? = null
-    open var preBolus: Int? = null
+    override var carbs: Int? = null
+    override var preBolus: Int? = null
 
     constructor() : super() {
     }
 
     constructor(treatmentMap: Map<String, String>) {
-        id = treatmentMap.get("_id")!!
-        eventTime = dateParser.parseDateTime(treatmentMap.get("created_at")).toDate()
-        eventType = treatmentMap.get("eventType")
-        enteredBy = treatmentMap.get("enteredBy")
-
-        glucose = treatmentMap.get("glucose")?.toDouble()
-        glucoseType = treatmentMap.get("glucoseType")
-
-        insulin = treatmentMap.get("insulin")?.toDouble()
-        units = treatmentMap.get("units")
-        notes = treatmentMap.get("notes")
-        carbs = treatmentMap.get("carbs")?.toInt()
-        preBolus = treatmentMap.get("preBolus")?.toInt()
+        Treatment.fromMap(this, treatmentMap)
     }
 
     constructor(id: String, eventTime: Date, eventType: String, enteredBy: String, glucose: Double?, glucoseType: String, insulin: Double?, units: String, notes: String, carbs: Int?, preBolus: Int?) {
@@ -66,3 +57,4 @@ open class Treatment : RealmObject {
         this.preBolus = preBolus
     }
 }
+

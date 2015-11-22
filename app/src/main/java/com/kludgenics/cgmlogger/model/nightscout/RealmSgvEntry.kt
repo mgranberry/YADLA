@@ -2,7 +2,7 @@ package com.kludgenics.cgmlogger.model.nightscout
 
 import com.google.gson.annotations.Expose
 import com.google.gson.annotations.SerializedName
-import com.kludgenics.alrightypump.cloud.nightscout.Sgv
+import com.kludgenics.alrightypump.cloud.nightscout.records.Sgv
 import com.kludgenics.cgmlogger.model.glucose.BloodGlucose
 
 /**

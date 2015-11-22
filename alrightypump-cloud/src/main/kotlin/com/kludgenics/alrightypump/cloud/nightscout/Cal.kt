@@ -1,4 +1,4 @@
-package com.kludgenics.alrightypump.nightscout
+package com.kludgenics.alrightypump.cloud.nightscout
 
 /**
  * Created by matthias on 11/21/15.

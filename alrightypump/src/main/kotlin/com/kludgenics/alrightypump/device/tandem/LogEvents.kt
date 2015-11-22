@@ -1,8 +1,8 @@
-package com.kludgenics.alrightypump.tandem
+package com.kludgenics.alrightypump.device.tandem
 
-import com.kludgenics.alrightypump.BaseGlucoseValue
-import com.kludgenics.alrightypump.GlucoseUnit
-import com.kludgenics.alrightypump.GlucoseValue
+import com.kludgenics.alrightypump.therapy.BaseGlucoseValue
+import com.kludgenics.alrightypump.therapy.GlucoseUnit
+import com.kludgenics.alrightypump.therapy.GlucoseValue
 import okio.Buffer
 import okio.BufferedSource
 import org.joda.time.*

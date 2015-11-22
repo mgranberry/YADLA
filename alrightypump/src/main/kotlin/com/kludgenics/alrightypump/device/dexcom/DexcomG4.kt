@@ -1,8 +1,8 @@
-package com.kludgenics.alrightypump.dexcom
+package com.kludgenics.alrightypump.device.dexcom
 
 import com.kludgenics.alrightypump.ContinuousGlucoseMonitor
 import com.kludgenics.alrightypump.DateTimeChangeRecord
-import com.kludgenics.alrightypump.SmbgRecord
+import com.kludgenics.alrightypump.therapy.SmbgRecord
 import okio.BufferedSink
 import okio.BufferedSource
 import org.joda.time.Chronology

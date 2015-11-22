@@ -1,4 +1,4 @@
-package com.kludgenics.alrightypump.tandem
+package com.kludgenics.alrightypump.device.tandem
 
 import com.kludgenics.alrightypump.Frame
 import okio.Buffer

@@ -1,4 +1,4 @@
-package com.kludgenics.alrightypump.dexcom
+package com.kludgenics.alrightypump.device.dexcom
 
 import okio.Buffer
 

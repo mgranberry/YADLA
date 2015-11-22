@@ -1,9 +1,9 @@
 package com.kludgenics.alrightypump
 
 import com.fazecast.jSerialComm.SerialPort
-import com.kludgenics.alrightypump.dexcom.DexcomG4
-import com.kludgenics.alrightypump.dexcom.RecordPage
-import com.kludgenics.alrightypump.tandem.*
+import com.kludgenics.alrightypump.device.dexcom.DexcomG4
+import com.kludgenics.alrightypump.device.dexcom.RecordPage
+import com.kludgenics.alrightypump.device.tandem.*
 import org.joda.time.DateTime
 import org.joda.time.Duration
 

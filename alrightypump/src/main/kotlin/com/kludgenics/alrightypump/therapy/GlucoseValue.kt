@@ -1,4 +1,4 @@
-package com.kludgenics.alrightypump
+package com.kludgenics.alrightypump.therapy
 
 /**
  * Created by matthias on 11/7/15.

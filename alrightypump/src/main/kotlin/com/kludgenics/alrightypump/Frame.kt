@@ -38,7 +38,7 @@ interface Frame {
         get() = headerLength + payloadLength until headerLength + payloadLength + footerLength
 
     val checksumRange: LongRange
-        get() = 0 .. payloadRange.end
+        get() = 0 .. payloadRange.endInclusive
 
     val calculatedChecksum: Int
     val expectedChecksum: Int

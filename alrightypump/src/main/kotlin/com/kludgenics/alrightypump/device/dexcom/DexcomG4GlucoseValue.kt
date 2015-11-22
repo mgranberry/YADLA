@@ -1,7 +1,7 @@
-package com.kludgenics.alrightypump.dexcom
+package com.kludgenics.alrightypump.device.dexcom
 
-import com.kludgenics.alrightypump.GlucoseUnit
-import com.kludgenics.alrightypump.RawGlucoseValue
+import com.kludgenics.alrightypump.therapy.GlucoseUnit
+import com.kludgenics.alrightypump.therapy.RawGlucoseValue
 
 /**
  * Created by matthias on 11/19/15.

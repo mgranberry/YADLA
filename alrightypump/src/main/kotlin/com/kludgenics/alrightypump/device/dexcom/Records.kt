@@ -1,6 +1,7 @@
-package com.kludgenics.alrightypump.dexcom
+package com.kludgenics.alrightypump.device.dexcom
 
 import com.kludgenics.alrightypump.*
+import com.kludgenics.alrightypump.therapy.*
 import okio.Buffer
 import org.joda.time.Duration
 import org.joda.time.Instant

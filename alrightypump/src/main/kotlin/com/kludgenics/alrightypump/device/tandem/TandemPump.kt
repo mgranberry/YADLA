@@ -1,6 +1,7 @@
-package com.kludgenics.alrightypump.tandem
+package com.kludgenics.alrightypump.device.tandem
 
 import com.kludgenics.alrightypump.*
+import com.kludgenics.alrightypump.therapy.SmbgRecord
 import okio.BufferedSink
 import okio.BufferedSource
 import org.joda.time.Chronology

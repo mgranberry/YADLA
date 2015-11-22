@@ -12,7 +12,7 @@ import org.joda.time.chrono.ISOChronology
  */
 class TandemPump(private val source: BufferedSource, private val sink: BufferedSink) : InsulinPump, Glucometer {
     companion object {
-        @JvmField final val EPOCH = Instant.parse("2009-01-01T00:00:00")
+        @JvmField final val EPOCH = Instant.parse("2008-01-01T00:00:00")
     }
 
     override val chronology: Chronology
@@ -34,7 +34,7 @@ class TandemPump(private val source: BufferedSource, private val sink: BufferedS
 
     public fun commandResponse(payload: TandemPayload): TandemResponse {
         val packet = TandemRequest(payload).frame
-        println("Sending: ${packet.snapshot().hex()}")
+        //println("Sending: ${packet.snapshot().hex()}")
         sink.write(packet, packet.size())
         sink.emit()
         val response = TandemResponse(source)
@@ -43,5 +43,35 @@ class TandemPump(private val source: BufferedSource, private val sink: BufferedS
 
     public fun readResponse() : TandemResponse {
         return TandemResponse(source)
+    }
+
+    public fun readLogRecords(start: Int, end: Int): List<LogEvent> {
+        val records = arrayListOf<LogEvent>()
+        var nRead = 0
+        var nRequested = 0
+        for (j in start..end) {
+            val packet = TandemRequest(LogEntrySeqReq(j.toLong())).frame
+            sink.write(packet, packet.size())
+            sink.emit()
+            nRequested += 1
+            // let the pipeline fill a little and then start reading as well as writing
+            if (nRequested > nRead + 5 && source.request(1)) {
+                val response = readResponse()
+                if (response.parsedPayload is LogEvent) {
+                    nRead += 1
+                    records.add(response.parsedPayload)
+                }
+            }
+
+        }
+        while (nRead < nRequested) {
+            val response = readResponse()
+            if (response.parsedPayload is LogEvent) {
+                nRead += 1
+                records.add(response.parsedPayload)
+            }
+        }
+
+        return records
     }
 }

@@ -4,6 +4,8 @@ import com.fazecast.jSerialComm.SerialPort
 import com.kludgenics.alrightypump.dexcom.DexcomG4
 import com.kludgenics.alrightypump.dexcom.RecordPage
 import com.kludgenics.alrightypump.tandem.*
+import org.joda.time.DateTime
+import org.joda.time.Duration
 
 
 fun main(args: Array<String>) {
@@ -13,7 +15,7 @@ fun main(args: Array<String>) {
         when (it.descriptivePortName) {
             "Tandem Virtual COM Port" -> {
                 println(it.baudRate)
-                it.baudRate = 115200 * 8
+                it.baudRate = 115200 * 12
                 println(it.baudRate)
                 val connection = SerialConnection(it)
                 println(it.baudRate)
@@ -26,10 +28,27 @@ fun main(args: Array<String>) {
                 response = tslim.commandResponse(LogSizeReq())
                 val lsr = LogSizeResp(response.payload)
                 println("lsr: $lsr ${lsr.range}")
-                for (entry in lsr.range) {
-                    response = tslim.commandResponse(LogEntrySeqReq(entry))
-                    println("entry: $entry c: ${response.command} p: ${response.payload.snapshot().hex()}")
+                val start = DateTime()
+                /*for (entry in lsr.range.endInclusive - 1000 .. lsr.range.endInclusive) {
+                    val resp = tslim.commandResponse(LogEntrySeqReq(entry))
+                }*/
+                var r1 = tslim.readLogRecords((lsr.range.start).toInt(), lsr.range.endInclusive.toInt())
+                val midpoint = DateTime()
+                r1 = r1.filter{ it !is UnknownLogEvent }
+                println("Fetched ${r1.size} records in ${Duration(start, midpoint)}")
+                r1.forEach {
+                    println(it)
                 }
+                val r2 = tslim.readLogRecords((lsr.range.endInclusive - 1000).toInt(), lsr.range.endInclusive.toInt())
+                val end = DateTime()
+                println("Fetched ${r2.size} records in ${Duration(midpoint, end)}")
+                /*for (entry in lsr.range.endInclusive downTo lsr.range.start) {
+                    response = tslim.commandResponse(LogEntrySeqReq(entry))
+                    if (response.parsedPayload is IobRecord) {
+                        val payload = response.parsedPayload as IobRecord
+                        println("${payload.timestamp.toDateTime()} ${payload.iob} ${payload.javaClass.simpleName}")
+                    }
+                }*/
             }
             "DexCom Gen4 USB Serial" -> {
                 val connection = SerialConnection(it)

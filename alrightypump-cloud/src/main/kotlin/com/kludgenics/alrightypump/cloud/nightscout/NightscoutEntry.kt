@@ -1,4 +1,4 @@
-package com.kludgenics.alrightypump.nightscout
+package com.kludgenics.alrightypump.cloud.nightscout
 
 import org.joda.time.DateTime
 import org.joda.time.format.ISODateTimeFormat

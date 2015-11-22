@@ -4,12 +4,8 @@ package com.kludgenics.cgmlogger.model.glucose
  * Created by matthiasgranberry on 5/12/15.
  */
 public interface BloodGlucose {
-    public fun getId(): String
-    public fun getValue(): Double
-    public fun getDate(): Long
-    public fun getType(): String
-    public fun getUnit(): String
-
+    val unit: String
+    val value: Double
     companion object {
         public val UNIT_MGDL: String = "mg/dl"
         public val UNIT_MMOL: String = "mmol/l"
@@ -22,10 +18,10 @@ public interface BloodGlucose {
  * @return mg/dL
  */
 fun BloodGlucose.asMgDl(): Int {
-    return when (getUnit()) {
-        BloodGlucose.UNIT_MGDL -> getValue().toInt()
-        BloodGlucose.UNIT_MMOL -> (getValue() * 18.01559).toInt()
-        else -> throw IllegalArgumentException("Invalid unit ${getUnit()}")
+    return when (unit) {
+        BloodGlucose.UNIT_MGDL -> value.toInt()
+        BloodGlucose.UNIT_MMOL -> (value * 18.01559).toInt()
+        else -> throw IllegalArgumentException("Invalid unit ${unit}")
     }
 }
 
@@ -34,10 +30,10 @@ fun BloodGlucose.asMgDl(): Int {
  * @return mmol/L
  */
 fun BloodGlucose.asMmol(): Double {
-    return when (getUnit()) {
-        BloodGlucose.UNIT_MGDL -> getValue() / 18.01559
-        BloodGlucose.UNIT_MMOL -> getValue()
-        else -> throw IllegalArgumentException("Invalid unit ${getUnit()}")
+    return when (unit) {
+        BloodGlucose.UNIT_MGDL -> value / 18.01559
+        BloodGlucose.UNIT_MMOL -> value.toDouble()
+        else -> throw IllegalArgumentException("Invalid unit ${unit}")
     }
 }
 

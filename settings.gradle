@@ -1,1 +1,1 @@
-include ':app', ':alrightypump',  ':alrightypump-commandline' // , ':alrightypump-android',
+include ':app', ':alrightypump',  ':alrightypump-commandline', ':alrightypump-nightscout' // , ':alrightypump-android',

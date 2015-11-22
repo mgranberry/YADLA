@@ -16,7 +16,6 @@ import org.joda.time.Duration
  */
 public open class BloodGlucoseRecord( public open var value: Double = 0.0,
                                       public open var date: Long = 0,
-                                      public open var type: String = "",
                                       @Required
                                       public open var unit: String = "",
                                       @PrimaryKey public open var id: String = ""): RealmObject()

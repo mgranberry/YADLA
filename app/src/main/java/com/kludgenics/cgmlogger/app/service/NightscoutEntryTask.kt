@@ -7,7 +7,7 @@ import com.kludgenics.cgmlogger.extension.where
 import com.kludgenics.cgmlogger.model.glucose.BgPostprocessor
 import com.kludgenics.cgmlogger.model.realm.glucose.BloodGlucoseRecord
 import com.kludgenics.cgmlogger.model.nightscout.NightscoutApiEndpoint
-import com.kludgenics.cgmlogger.model.nightscout.SgvEntry
+import com.kludgenics.cgmlogger.model.nightscout.RealmSgvEntry
 import io.realm.Realm
 import org.jetbrains.anko.AnkoLogger
 import org.jetbrains.anko.debug
@@ -23,8 +23,8 @@ class NightscoutEntryTask(override val ctx: Context,
                           override val nightscoutEndpoint: NightscoutApiEndpoint,
                           val count: Int = 0): NightscoutTask, AnkoLogger {
 
-    override val init: NightscoutApiEndpoint.() -> List<SgvEntry>
-        get() = fun (): List<SgvEntry> {
+    override val init: NightscoutApiEndpoint.() -> List<RealmSgvEntry>
+        get() = fun (): List<RealmSgvEntry> {
             val requestCount = if (count == 0) {
                 val realm = Realm.getDefaultInstance()
                 val latestTime = DateTime(realm.use {
@@ -37,7 +37,17 @@ class NightscoutEntryTask(override val ctx: Context,
             } else count
             val entries = if (requestCount > 0) {
                 info("getting $requestCount entries")
-                getSgvEntries(requestCount, "2010")
+                var e: List<RealmSgvEntry> = emptyList()
+                try {
+                     val f = getSgvEntries(requestCount, "2010").execute()
+                     info(f)
+                     e = f.body()
+                } catch (e: Exception) {
+                    info(e)
+                    e.printStackTrace()
+                }
+                    info("got")
+                e
             } else {
                 info("already current.  skipping update.")
                 emptyList()
@@ -49,19 +59,19 @@ class NightscoutEntryTask(override val ctx: Context,
 
     override val copy: Realm.(Any) -> Unit
         get() = fun (it: Any) {
-            if (it is SgvEntry && it.sgv >= 39) {
-                copyToRealmOrUpdate(BloodGlucoseRecord(value = it.getValue(), date = it.getDate(),
-                        type = it.getType(), unit = it.getUnit(), id = it.getId()))
+            if (it is RealmSgvEntry && it.sgv >= 39) {
+                copyToRealmOrUpdate(BloodGlucoseRecord(value = it.value, date = it.date,
+                        unit = it.unit, id = it.id))
             }
         }
 
     override fun postprocess (realm: Realm, l: List<*>) {
         debug("Postprocessing $l")
-        val fi = l.first() as SgvEntry
-        val li = l.last() as SgvEntry
+        val fi = l.first() as RealmSgvEntry
+        val li = l.last() as RealmSgvEntry
         debug("Invalidating caches")
-        val startDt = DateTime(li.getDate()).withTimeAtStartOfDay()
-        val endDt = DateTime(fi.getDate()).withTimeAtStartOfDay()
+        val startDt = DateTime(li.date).withTimeAtStartOfDay()
+        val endDt = DateTime(fi.date).withTimeAtStartOfDay()
         BgPostprocessor.invalidateCaches(realm, startDt, endDt)
         debug("Beginning daily grouping")
         BgPostprocessor.updatePeriods(realm, startDt.millis, endDt.plusDays(1).millis)

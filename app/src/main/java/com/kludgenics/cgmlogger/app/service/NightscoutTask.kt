@@ -7,9 +7,7 @@ import com.kludgenics.cgmlogger.model.nightscout.NightscoutApiEndpoint
 import io.realm.Realm
 import org.jetbrains.anko.AnkoLogger
 import org.jetbrains.anko.error
-import org.jetbrains.anko.getStackTraceString
 import org.jetbrains.anko.info
-import retrofit.RetrofitError
 import java.util.concurrent.Callable
 
 /**
@@ -48,23 +46,9 @@ interface NightscoutTask: Callable<Int>, AnkoLogger {
                     realm.cancelTransaction()
                     return GcmNetworkManager.RESULT_RESCHEDULE
                 }
-            } catch (e: RetrofitError) {
-                error("Retrofit Error: $e")
-                e.printStackTrace()
-                return when (e.kind) {
-                    RetrofitError.Kind.CONVERSION -> GcmNetworkManager.RESULT_FAILURE
-                    RetrofitError.Kind.HTTP -> GcmNetworkManager.RESULT_FAILURE
-                    RetrofitError.Kind.NETWORK -> GcmNetworkManager.RESULT_RESCHEDULE
-                    RetrofitError.Kind.UNEXPECTED -> throw(e)
-                    else -> GcmNetworkManager.RESULT_FAILURE
-                }
             } catch (t: JsonParseException) {
                 error("sync failed: $t")
                 return GcmNetworkManager.RESULT_FAILURE
-            } catch (e: RuntimeException) {
-                error("failure: $e")
-                error(e.getStackTraceString())
-                throw RuntimeException(e)
             }
         }
     }

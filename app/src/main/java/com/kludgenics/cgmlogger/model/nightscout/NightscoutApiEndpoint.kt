@@ -1,5 +1,6 @@
 package com.kludgenics.cgmlogger.model.nightscout
 
+import retrofit.Call
 import retrofit.http.GET
 import retrofit.http.Query
 
@@ -8,8 +9,8 @@ import retrofit.http.Query
  */
 interface NightscoutApiEndpoint {
     @GET("/api/v1/entries/sgv.json")
-    fun getSgvEntries(@Query("count") count: Int, @Query("find[dateString][\$gte]") start: String): List<SgvEntry>
+    fun getSgvEntries(@Query("count") count: Int, @Query("find[dateString][\$gte]") start: String): Call<MutableList<RealmSgvEntry>>
 
     @GET("/api/v1/treatments")
-    fun getTreatmentsSince(@Query("find[created_at][\$gte]") start: String): List<Map<String, String>>
+    fun getTreatmentsSince(@Query("find[created_at][\$gte]") start: String): Call<MutableList<Map<String, String>>>
 }

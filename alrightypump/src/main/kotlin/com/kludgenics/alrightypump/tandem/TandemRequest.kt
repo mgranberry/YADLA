@@ -20,7 +20,7 @@ class TandemRequest(val command: TandemPayload) : TandemFrame() {
     override val footer: Buffer
         get() {
             val buff = Buffer()
-            buff.writeInt(0) // Big-Endian intentionally
+            buff.writeInt(0) // The footer is Big-Endian intentionally
             buff.writeShort(calculatedChecksum)
             return buff
         }
@@ -43,7 +43,7 @@ class VersionReq : TandemPayload {
     override public val id: Int get() = COMMAND
 }
 
-class LogEntrySeqReq(public val seqNum: Long) : TandemPayload {
+data class LogEntrySeqReq(public val seqNum: Long) : TandemPayload {
     companion object {
         public val COMMAND: Int = 151
     }
@@ -62,7 +62,8 @@ class LogEntrySeqMultiReq : TandemPayload {
     override public val id: Int get() = COMMAND
 }
 
-class LogEntrySeqMultiStopDump(public val seqNum: Long, public val howMany: Long) : TandemPayload {
+data class LogEntrySeqMultiStopDump(public val seqNum: Long,
+                                    public val howMany: Long) : TandemPayload {
     companion object {
         public val COMMAND: Int = 153
     }
@@ -106,7 +107,7 @@ class IdpListReq : TandemPayload {
     override public val id: Int get() = COMMAND
 }
 
-class IdpReq(val idp: Int) : TandemPayload {
+data class IdpReq(public val idp: Int) : TandemPayload {
     companion object {
         public val COMMAND: Int = 175
     }

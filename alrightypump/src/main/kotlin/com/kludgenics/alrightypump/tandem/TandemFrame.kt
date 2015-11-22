@@ -32,7 +32,7 @@ abstract class TandemFrame : Frame {
 
     override fun calculateChecksum(buffer: Buffer, initialRemainder: Int, finalXor: Int, mask: Int): Int {
         val temp = Buffer()
-        buffer.copyTo(temp, checksumRange.start, checksumRange.end - checksumRange.start)
+        buffer.copyTo(temp, checksumRange.start, checksumRange.endInclusive - checksumRange.start)
         var sum = 0
         while (!buffer.exhausted())
             sum += buffer.readByte()

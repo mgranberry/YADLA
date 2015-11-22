@@ -17,8 +17,8 @@ import com.kludgenics.cgmlogger.app.util.DateTimeSerializer
 import com.kludgenics.cgmlogger.model.nightscout.NightscoutApiEndpoint
 import org.jetbrains.anko.*
 import org.joda.time.DateTime
-import retrofit.RestAdapter
-import retrofit.converter.GsonConverter
+import retrofit.GsonConverterFactory
+import retrofit.Retrofit
 
 /**
  * Created by matthiasgranberry on 5/31/15.
@@ -124,8 +124,8 @@ public class TaskService : GcmTaskService(), AnkoLogger {
         }
     }
 
-    val gsonConverter: GsonConverter by lazy(LazyThreadSafetyMode.NONE) {
-        GsonConverter(GsonBuilder()
+    val gsonConverter: GsonConverterFactory by lazy(LazyThreadSafetyMode.NONE) {
+        GsonConverterFactory.create(GsonBuilder()
                 .registerTypeAdapter(Int::class.java, IntegerTypeAdapter() )
                 .registerTypeAdapter(DateTime::class.java, DateTimeSerializer())
                 .setFieldNamingPolicy(FieldNamingPolicy.IDENTITY)
@@ -193,9 +193,9 @@ public class TaskService : GcmTaskService(), AnkoLogger {
         val uri = prefs.getString(resources.getString(R.string.nightscout_uri), "")
         val enabled = prefs.getBoolean(resources.getString(R.string.nightscout_enable), false)
         val endpoint = if (enabled && !uri.isNullOrBlank())
-            RestAdapter.Builder()
-                    .setEndpoint(uri)
-                    .setConverter(gsonConverter)
+            Retrofit.Builder()
+                    .baseUrl(uri)
+                    .addConverterFactory(gsonConverter)
                     .build().create(NightscoutApiEndpoint::class.java)
             else
                 null

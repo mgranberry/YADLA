@@ -22,7 +22,7 @@ class NightscoutTreatmentTask(override val ctx: Context,
 
     override val init: NightscoutApiEndpoint.() -> List<Map<String, String>>
         get() = fun (): List<Map<String, String>> {
-            val treatments = getTreatmentsSince("2010")
+            val treatments = getTreatmentsSince("2010").execute().body()
             Answers.getInstance().logCustom(CustomEvent("Nightscout Treatment Sync")
                     .putCustomAttribute("entry_count", treatments.size))
             return treatments

@@ -1,30 +1,5 @@
 package com.kludgenics.cgmlogger.model.location.places
 
-import android.location.Location
-import android.util.Log
-import com.google.android.gms.common.api.GoogleApiClient
-import com.google.android.gms.common.api.ResultCallback
-import com.google.android.gms.location.LocationServices
-import com.google.android.gms.location.places.PlaceBuffer
-import com.google.android.gms.location.places.PlaceFilter
-import com.google.android.gms.location.places.PlaceLikelihoodBuffer
-import com.google.android.gms.location.places.Places
-import com.google.gson.GsonBuilder
-import com.google.gson.annotations.Expose
-import com.kludgenics.cgmlogger.model.glucose.BloodGlucose
-import com.kludgenics.cgmlogger.model.glucose.asMgDl
-import com.kludgenics.cgmlogger.model.location.GeoApi
-import com.kludgenics.cgmlogger.model.location.places.AutoCompleteResult
-import com.kludgenics.cgmlogger.model.location.data.GeocodedLocation
-import com.kludgenics.cgmlogger.model.location.places.GooglePlacesLocation
-import com.kludgenics.cgmlogger.model.location.Position
-import com.kludgenics.cgmlogger.extension.probabilityWithin
-import retrofit.RestAdapter
-import retrofit.converter.GsonConverter
-import retrofit.http.GET
-import retrofit.http.Query
-import java.util.Date
-
 /**
  * Created by matthiasgranberry on 5/23/15.
  */

@@ -143,7 +143,6 @@ public data class EgvData(public override val header: PageHeader,
     companion object {
         public fun parse(buffer: Buffer): EgvData {
             val header = PageHeader.parse(buffer)
-            println(header)
             val records = ArrayList<EgvRecord>(header.size.toInt())
             for (i in 1..header.size)
                 records.add(EgvRecord.parse(buffer))
@@ -162,7 +161,11 @@ public data class CalSetRecord(public override val systemSeconds: Long,
                                public val unk3: Int,
                                override public val decay: Double,
                                public val nRecs: Int,
-                               public val subRecords: List<CalSetRecord.CalSubRecord>) : DexcomRecord, Calibration {
+                               public val subRecords: List<CalSetRecord.CalSubRecord>) : DexcomRecord, Calibration, CalibrationRecord {
+    override val time: Instant
+        get() = displayTime
+    override val source: String
+        get() = DexcomG4.SOURCE
 
     public data class CalSubRecord(public val systemSecondsEntered: Long,
                                    public val systemSecondsApplied: Long,
@@ -219,7 +222,13 @@ public data class CalData(public override val header: PageHeader,
 public data class InsertionRecord(public override val systemSeconds: Long,
                                   public override val displaySeconds: Long,
                                   public val insertionSeconds: Int, public val insertionState: Int,
-                                  public val crc: Int) : DexcomRecord {
+                                  public val crc: Int) : DexcomRecord, CgmInsertionRecord {
+    override val time: Instant
+        get() = displayTime
+    override val source: String
+        get() = DexcomG4.SOURCE
+    override val removed: Boolean
+        get() = insertionSeconds == -1
     val insertionTime: Instant get() = DexcomRecord.toInstant(insertionSeconds.toLong())
 
     companion object {

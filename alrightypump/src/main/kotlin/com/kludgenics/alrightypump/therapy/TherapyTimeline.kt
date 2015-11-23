@@ -13,5 +13,5 @@ interface TherapyTimeline {
     val basalEvents: Sequence<BasalRecord>
 
     fun events(start: Instant, end: Instant = Instant.now()): Collection<Record>
-    fun merge(vararg additionalEvents: List<Record>)
+    fun merge(predicate: (Record) -> Boolean, vararg additionalEvents: Sequence<Record>)
 }

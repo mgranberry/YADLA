@@ -7,6 +7,7 @@ import io.realm.RealmObject
 import io.realm.annotations.Ignore
 import io.realm.annotations.PrimaryKey
 import io.realm.annotations.Required
+import org.joda.time.Duration
 import org.joda.time.format.ISODateTimeFormat
 
 /**
@@ -14,7 +15,7 @@ import org.joda.time.format.ISODateTimeFormat
  */
 open class Treatment : Treatment, RealmObject {
     @Ignore
-    override val dateTimeString: String = super.dateTimeString
+    override val dateTimeString: String by lazy { super.dateTimeString }
     @Ignore
     override val dateParser = ISODateTimeFormat.dateTimeParser()
 
@@ -35,6 +36,10 @@ open class Treatment : Treatment, RealmObject {
 
     override var carbs: Int? = null
     override var preBolus: Int? = null
+    override var percent: Int? = null
+    override var absolute: Double? = null
+    override var duration: Duration? = null
+    override var profile: String? = null
 
     constructor() : super() {
     }
@@ -43,7 +48,11 @@ open class Treatment : Treatment, RealmObject {
         Treatment.fromMap(this, treatmentMap)
     }
 
-    constructor(id: String, eventTime: Date, eventType: String, enteredBy: String, glucose: Double?, glucoseType: String, insulin: Double?, units: String, notes: String, carbs: Int?, preBolus: Int?) {
+    constructor(id: String, eventTime: Date, eventType: String, enteredBy: String? = null,
+                glucose: Double? = null, glucoseType: String? = null, insulin: Double? = null,
+                units: String? = null, notes: String? = null, carbs: Int? = null,
+                preBolus: Int? = null, percent: Int? = null, absolute: Double? = null,
+                duration: Duration? = null, profile: String? = null) {
         this.id = id
         this.eventTime = eventTime
         this.eventType = eventType
@@ -55,6 +64,10 @@ open class Treatment : Treatment, RealmObject {
         this.notes = notes
         this.carbs = carbs
         this.preBolus = preBolus
+        this.percent = percent
+        this.absolute = absolute
+        this.duration = duration
+        this.profile = profile
     }
 }
 

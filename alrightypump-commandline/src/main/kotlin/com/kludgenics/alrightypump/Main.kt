@@ -63,12 +63,12 @@ fun main(args: Array<String>) {
                 //val zipped = egvs.zip(sgvs.asSequence())
                 //zipped.forEach { println(it) } //println("${it.first.displayTime} ${it.second.displayTime}" ) }
                 //g4.calibrationRecords.asSequence().take(5).forEach { println(it); println(it.displayTime) }
-                //g4.eventRecords.forEach { println(it); println(it.displayTime.toDateTime()) }
+                g4.eventRecords.forEach { println(it); println(it.displayTime.toDateTime()) }
                 //g4.insertionRecords.forEach { println(it); println(it.displayTime) ; println(it.systemTime) }
                 //g4.meterRecords.forEach { println(it) }
                 //g4.settingsRecords.forEach { println(it) }
-                g4.rawEnabled = true
-                g4.cgmRecords.forEach { println("${it.time}: ${it.value.mgdl} ${it.value.rawMgdl}") }
+                //g4.rawEnabled = true
+                // g4.cgmRecords.forEach { println("${it.time}: ${it.value.mgdl} ${it.value.rawMgdl}") }
                 //g4.cgmRecords.filter{(it.value as DexcomG4GlucoseValue).calibration != null} .forEach{ println("${(it.value as DexcomG4GlucoseValue).raw} ${it.value.glucose}")}
                 //g4.calibrationRecords.forEach { println("$it ${it.displayTime}") }
             }

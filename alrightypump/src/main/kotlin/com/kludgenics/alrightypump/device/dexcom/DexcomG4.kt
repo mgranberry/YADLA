@@ -96,7 +96,7 @@ open class DexcomG4(private val source: BufferedSource,
 
     public val egvRecords: Iterator<EgvRecord> get() = DataPageIterator(RecordPage.EGV_DATA)
     public val sgvRecords: Iterator<SgvRecord> get() = DataPageIterator(RecordPage.SENSOR_DATA)
-    public val eventRecords: Iterator<UserEventRecord> get() = DataPageIterator(RecordPage.USER_EVENT_DATA)
+    public val eventRecords: Iterator<EventRecord> get() = DataPageIterator(RecordPage.USER_EVENT_DATA)
     public val settingsRecords: Iterator<UserSettingsRecord> get() = DataPageIterator(RecordPage.USER_SETTING_DATA)
     public val calibrationRecords: Iterator<CalSetRecord> get() = DataPageIterator(RecordPage.CAL_SET)
     public val meterRecords: Iterator<MeterRecord> get() = DataPageIterator(RecordPage.METER_DATA)

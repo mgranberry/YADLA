@@ -33,7 +33,6 @@ open class DexcomG4(private val source: BufferedSource,
             val bgIterator: Iterator<Pair<EgvRecord, SgvRecord?>>
 
             init {
-                println("init")
                 val bgs: Sequence<Pair<EgvRecord, SgvRecord?>>
                 if (sgvs != null && calIterator != null) {
                     val currentTime = Instant()
@@ -48,18 +47,15 @@ open class DexcomG4(private val source: BufferedSource,
                     bgs = egvs.filterNot { it.skipped }.map { it to null }
                 }
                 bgIterator = bgs.iterator()
-                println("init done")
             }
 
             override fun next(): DexcomCgmRecord {
                 val bg = bgIterator.next()
                 if (currentCal != null && bg.first.displayTime < currentCal!!.displayTime && calIterator != null) {
-                    println("finding next")
                     while (bg.first.displayTime < currentCal!!.displayTime && calIterator.hasNext())
                         currentCal = calIterator.next()
                     if (bg.first.displayTime < currentCal!!.displayTime)
                         currentCal = null
-                    println("found")
                 }
                 return DexcomCgmRecord(bg.first, bg.second, currentCal)
             }
@@ -96,11 +92,11 @@ open class DexcomG4(private val source: BufferedSource,
 
     public val egvRecords: Iterator<EgvRecord> get() = DataPageIterator(RecordPage.EGV_DATA)
     public val sgvRecords: Iterator<SgvRecord> get() = DataPageIterator(RecordPage.SENSOR_DATA)
-    public val eventRecords: Iterator<EventRecord> get() = DataPageIterator(RecordPage.USER_EVENT_DATA)
+    public val eventRecords: Sequence<EventRecord> get() = DataPageIterator<EventRecord>(RecordPage.USER_EVENT_DATA).asSequence()
     public val settingsRecords: Iterator<UserSettingsRecord> get() = DataPageIterator(RecordPage.USER_SETTING_DATA)
-    public val calibrationRecords: Iterator<CalSetRecord> get() = DataPageIterator(RecordPage.CAL_SET)
+    public val calibrationRecords: Sequence<CalSetRecord> get() = DataPageIterator<CalSetRecord>(RecordPage.CAL_SET).asSequence()
     public val meterRecords: Iterator<MeterRecord> get() = DataPageIterator(RecordPage.METER_DATA)
-    public val insertionRecords: Iterator<InsertionRecord> get() = DataPageIterator(RecordPage.INSERTION_TIME)
+    public val insertionRecords: Sequence<InsertionRecord> get() = DataPageIterator<InsertionRecord>(RecordPage.INSERTION_TIME).asSequence()
 
     public val version: String? by lazy { requestVersion() }
     public val databasePartitionInfo: String? by lazy { readDatabasePartitionInfo() }

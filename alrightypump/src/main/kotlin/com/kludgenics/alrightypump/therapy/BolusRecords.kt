@@ -11,6 +11,7 @@ interface BolusRecord: Record {
     val requestedExtended: Double
     val extendedDuration: Duration
     val delivered: Double
+    val manual: Boolean
 }
 
 interface BolusWizardRecord: Record {

@@ -5,6 +5,11 @@ import okio.Buffer
 public open class DexcomG4Request(override public val command: Int,
                                   public val requestPayload: DexcomCommand) : DexcomG4Frame {
 
+    init {
+        if (command == 53)
+            throw RuntimeException("You really don't want to use the brick command.")
+    }
+
     override val header: Buffer
         get() {
             val buff = Buffer()

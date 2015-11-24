@@ -193,7 +193,7 @@ private fun Int.asBytes(): List<Int> {
     buff.writeIntLe(this)
     while (!buff.exhausted())
         list.add(buff.readByte().toInt() and 0xFF)
-    return list.reversed()
+    return list
 }
 
 private fun Int.asShorts(): Pair<Short, Short> {
@@ -478,7 +478,7 @@ data class BolusRequest1(
         public val carbs: Int,
         public val bg: GlucoseValue,
         public override val iob: Float,
-        public val carbRatio: Long,
+        public val carbRatio: Double,
         public val rawRecord: LogEvent
 ) : LogEvent by rawRecord, IobEventRecord, BolusEventRecord {
     constructor (rawRecord: LogEvent) : this(rawRecord = rawRecord,
@@ -488,7 +488,7 @@ data class BolusRequest1(
             carbs = rawRecord.data2.asUnsignedShorts().component1(),
             bg = rawRecord.data2.asUnsignedShorts().component2().toGlucoseValue(),
             iob = rawRecord.data3.asFloat(),
-            carbRatio = rawRecord.data4.asUnsigned())
+            carbRatio = rawRecord.data4.asUnsigned() / 1000.0)
 }
 
 data class BolusRequest2(
@@ -541,7 +541,7 @@ data class IdpTdSeg(
         public val basalRate: Int?,
         public val isf: Int?,
         public val targetBg: GlucoseValue?,
-        public val carbRatio: Int?,
+        public val carbRatio: Double?,
         public val rawRecord: LogEvent) : LogEvent by rawRecord, IdpRecord {
     constructor (rawRecord: LogEvent) : this(rawRecord = rawRecord,
             idp = rawRecord.data1.asBytes().component1(),
@@ -555,7 +555,7 @@ data class IdpTdSeg(
             targetBg = if (rawRecord.data1.asBytes().component2() and 4 != 0)
                 rawRecord.data3.asUnsignedShorts().component2().toGlucoseValue() else null,
             carbRatio = if (rawRecord.data1.asBytes().component2() and 8 != 0)
-                rawRecord.data4 else null)
+                rawRecord.data4/1000.0 else null)
 }
 
 data class Idp(

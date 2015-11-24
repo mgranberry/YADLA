@@ -32,7 +32,7 @@ fun main(args: Array<String>) {
                 val start = DateTime()
                 val records = tslim.records
                         .filterIsInstance<BolusEventRecord>()
-                        .takeWhile { it.timestamp >= DateTime.now() - Period.days(10) }
+                        .takeWhile { it.timestamp >= DateTime.now() - Period.hours(10) }
                         .groupBy { it.bolusId }
                 records.asSequence().forEach { println("$it") }
                 println("Fetched ${records.size} records in ${Duration(start, DateTime.now())}")

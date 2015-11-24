@@ -70,58 +70,58 @@ interface LogEvent : Payload {
             val data2 = source.readIntLe()
             val data3 = source.readIntLe()
             val data4 = source.readIntLe()
-
+            val event = BaseLogEvent(index, res, id, timestamp, seqNo, bogus, data1, data2, data3, data4)
             return when (id) {
-                LOG_ERASED -> LogErased(index, res, id, timestamp, seqNo, bogus, data1, data2, data3, data4)
-                TEMP_RATE_START -> TempRateStart(index, res, id, timestamp, seqNo, bogus, data1, data2, data3, data4)
-                BASAL_RATE_CHANGE -> BasalRateChange(index, res, id, timestamp, seqNo, bogus, data1, data2, data3, data4)
-                ALERT_ACTIVATED -> AlertActivated(index, res, id, timestamp, seqNo, bogus, data1, data2, data3, data4)
-                ALARM_ACTIVATED -> AlarmActivated(index, res, id, timestamp, seqNo, bogus, data1, data2, data3, data4)
-                ALARM_ACK -> AlarmAck(index, res, id, timestamp, seqNo, bogus, data1, data2, data3, data4)
-                PUMPING_SUSPENDED -> PumpingSuspended(index, res, id, timestamp, seqNo, bogus, data1, data2, data3, data4)
-                PUMPING_RESUMED -> PumpingResumed(index, res, id, timestamp, seqNo, bogus, data1, data2, data3, data4)
-                TIME_CHANGED -> TimeChanged(index, res, id, timestamp, seqNo, bogus, data1, data2, data3, data4)
-                DATE_CHANGED -> DateChanged(index, res, id, timestamp, seqNo, bogus, data1, data2, data3, data4)
-                TEMP_RATE_COMPLETED -> TempRateCompleted(index, res, id, timestamp, seqNo, bogus, data1, data2, data3, data4)
-                BG_READING_TAKEN -> BgReadingTaken(index, res, id, timestamp, seqNo, bogus, data1, data2, data3, data4)
-                BOLUS_COMPLETED -> BolusCompleted(index, res, id, timestamp, seqNo, bogus, data1, data2, data3, data4)
-                BOLEX_COMPLETED -> BolexCompleted(index, res, id, timestamp, seqNo, bogus, data1, data2, data3, data4)
-                ALERT_CLEARED -> AlertCleared(index, res, id, timestamp, seqNo, bogus, data1, data2, data3, data4)
-                ALERT_ACK -> AlertAck(index, res, id, timestamp, seqNo, bogus, data1, data2, data3, data4)
-                ALARM_CLEARED -> AlarmCleared(index, res, id, timestamp, seqNo, bogus, data1, data2, data3, data4)
-                CARTRIDGE_FILLED -> CartridgeFilled(index, res, id, timestamp, seqNo, bogus, data1, data2, data3, data4)
-                USB_CONNECTED -> UsbConnected(index, res, id, timestamp, seqNo, bogus, data1, data2, data3, data4)
-                USB_DISCONNECTED -> UsbDisconnected(index, res, id, timestamp, seqNo, bogus, data1, data2, data3, data4)
-                CARB_ENTERED -> CarbEntered(index, res, id, timestamp, seqNo, bogus, data1, data2, data3, data4)
-                USER_NOTIFICATON -> UserNotification(index, res, id, timestamp, seqNo, bogus, data1, data2, data3, data4)
-                BOLUS_ACTIVATED -> BolusActivated(index, res, id, timestamp, seqNo, bogus, data1, data2, data3, data4)
-                IDP_MSG_2 -> IdpMessage2(index, res, id, timestamp, seqNo, bogus, data1, data2, data3, data4)
-                BOLEX_ACTIVATED -> BolexActivated(index, res, id, timestamp, seqNo, bogus, data1, data2, data3, data4)
-                DATA_LOG_CORRUPTION -> DataLogCorruption(index, res, id, timestamp, seqNo, bogus, data1, data2, data3, data4)
-                CONNULA_FILLED -> CannulaFilled(index, res, id, timestamp, seqNo, bogus, data1, data2, data3, data4)
-                TUBING_FILLED -> TubingFilled(index, res, id, timestamp, seqNo, bogus, data1, data2, data3, data4)
-                BOLUS_REQ_1 -> BolusRequest1(index, res, id, timestamp, seqNo, bogus, data1, data2, data3, data4)
-                BOLUS_REQ_2 -> BolusRequest2(index, res, id, timestamp, seqNo, bogus, data1, data2, data3, data4)
-                BOLUS_REQ_3 -> BolusRequest3(index, res, id, timestamp, seqNo, bogus, data1, data2, data3, data4)
-                USB_ENUMERATED -> UsbEnumerated(index, res, id, timestamp, seqNo, bogus, data1, data2, data3, data4)
-                IDP_TD_SEG -> IdpTdSeg(index, res, id, timestamp, seqNo, bogus, data1, data2, data3, data4)
-                IDP -> Idp(index, res, id, timestamp, seqNo, bogus, data1, data2, data3, data4)
-                IDP_BOLUS -> IdpBolus(index, res, id, timestamp, seqNo, bogus, data1, data2, data3, data4)
-                IDP_LIST -> IdpList(index, res, id, timestamp, seqNo, bogus, data1, data2, data3, data4)
+                LOG_ERASED -> LogErased(event)
+                TEMP_RATE_START -> TempRateStart(event)
+                BASAL_RATE_CHANGE -> BasalRateChange(event)
+                ALERT_ACTIVATED -> AlertActivated(event)
+                ALARM_ACTIVATED -> AlarmActivated(event)
+                ALARM_ACK -> AlarmAck(event)
+                PUMPING_SUSPENDED -> PumpingSuspended(event)
+                PUMPING_RESUMED -> PumpingResumed(event)
+                TIME_CHANGED -> TimeChanged(event)
+                DATE_CHANGED -> DateChanged(event)
+                TEMP_RATE_COMPLETED -> TempRateCompleted(event)
+                BG_READING_TAKEN -> BgReadingTaken(event)
+                BOLUS_COMPLETED -> BolusCompleted(event)
+                BOLEX_COMPLETED -> BolexCompleted(event)
+                ALERT_CLEARED -> AlertCleared(event)
+                ALERT_ACK -> AlertAck(event)
+                ALARM_CLEARED -> AlarmCleared(event)
+                CARTRIDGE_FILLED -> CartridgeFilled(event)
+                USB_CONNECTED -> UsbConnected(event)
+                USB_DISCONNECTED -> UsbDisconnected(event)
+                CARB_ENTERED -> CarbEntered(event)
+                USER_NOTIFICATON -> UserNotification(event)
+                BOLUS_ACTIVATED -> BolusActivated(event)
+                IDP_MSG_2 -> IdpMessage2(event)
+                BOLEX_ACTIVATED -> BolexActivated(event)
+                DATA_LOG_CORRUPTION -> DataLogCorruption(event)
+                CONNULA_FILLED -> CannulaFilled(event)
+                TUBING_FILLED -> TubingFilled(event)
+                BOLUS_REQ_1 -> BolusRequest1(event)
+                BOLUS_REQ_2 -> BolusRequest2(event)
+                BOLUS_REQ_3 -> BolusRequest3(event)
+                USB_ENUMERATED -> UsbEnumerated(event)
+                IDP_TD_SEG -> IdpTdSeg(event)
+                IDP -> Idp(event)
+                IDP_BOLUS -> IdpBolus(event)
+                IDP_LIST -> IdpList(event)
                 PARAM_PUMP_SETTINGS -> // unimpl
-                    ParamPumpSettings(index, res, id, timestamp, seqNo, bogus, data1, data2, data3, data4)
+                    ParamPumpSettings(event)
                 PARAM_GLOBAL_SETTINGS -> // unimpl
-                    ParamGlobalSettings(index, res, id, timestamp, seqNo, bogus, data1, data2, data3, data4)
-                DAILY_BASAL -> DailyBasal(index, res, id, timestamp, seqNo, bogus, data1, data2, data3, data4)
-                FACTORY_RESET -> FactoryReset(index, res, id, timestamp, seqNo, bogus, data1, data2, data3, data4)
-                NEW_DAY -> NewDay(index, res, id, timestamp, seqNo, bogus, data1, data2, data3, data4)
+                    ParamGlobalSettings(event)
+                DAILY_BASAL -> DailyBasal(event)
+                FACTORY_RESET -> FactoryReset(event)
+                NEW_DAY -> NewDay(event)
                 CORRECTION_DECLINED -> // unimpl
-                    CorrectionDeclined(index, res, id, timestamp, seqNo, bogus, data1, data2, data3, data4)
+                    CorrectionDeclined(event)
                 PARAM_REMINDER -> // unimpl
-                    ParamReminder(index, res, id, timestamp, seqNo, bogus, data1, data2, data3, data4)
+                    ParamReminder(event)
                 PARAM_REMINDER_SETTINGS -> // unimpl
-                    ParamReminderSettings(index, res, id, timestamp, seqNo, bogus, data1, data2, data3, data4)
-                else -> UnknownLogEvent(id, index, res, id, timestamp, seqNo, bogus, data1, data2, data3, data4)
+                    ParamReminderSettings(event)
+                else -> UnknownLogEvent(event)
             }
         }
     }
@@ -187,556 +187,287 @@ private fun Int.asUnsigned(): Long = this.toLong() and 0xFFFFFFFF
 
 private fun Int.toGlucoseValue(): GlucoseValue = BaseGlucoseValue(this.toDouble(), GlucoseUnit.MGDL)
 
-data class UnknownLogEvent(
-        public val eventType: Int,
-        public override val index: Int,
-        public override val hours: Int,
-        public override val id: Int,
-        public override val timestamp: Instant,
-        public override val seqNo: Int,
-        public override val bogus: Int,
-        public override val data1: Int,
-        public override val data2: Int,
-        public override val data3: Int,
-        public override val data4: Int) : LogEvent {
-
+data class UnknownLogEvent(public val rawRecord: LogEvent) : LogEvent by rawRecord {
     override fun toString(): String {
-        return "${this.javaClass.simpleName}(index=$index, eventType=$eventType, hours=$hours, id=$id, timestamp=$timestamp, seqNo=$seqNo, bogus=$bogus, data1=${fieldToString(data1)}, data2=${fieldToString(data2)}, data3=${fieldToString(data3)}, data4=${fieldToString(data4)})"
+        return "${this.javaClass.simpleName}(index=$index, hours=$hours, id=$id, timestamp=$timestamp, seqNo=$seqNo, bogus=$bogus, data1=${fieldToString(data1)}, data2=${fieldToString(data2)}, data3=${fieldToString(data3)}, data4=${fieldToString(data4)})"
     }
 }
 
-data class LogErased(
+data class BaseLogEvent(
         public override val index: Int,
         public override val hours: Int,
         public override val id: Int,
         public override val timestamp: Instant,
         public override val seqNo: Int,
         public override val bogus: Int,
-        public val erasedCount: Int,
+        public override val data1: Int,
         public override val data2: Int,
         public override val data3: Int,
         public override val data4: Int) : LogEvent {
-    public override val data1: Int
-        get() = erasedCount
+}
+
+data class LogErased(
+        public val erasedCount: Int,
+        public val rawRecord: LogEvent) : LogEvent by rawRecord {
+    constructor (rawRecord: LogEvent) : this(erasedCount = rawRecord.data1, rawRecord = rawRecord)
 }
 
 data class TempRateStart(
-        public override val index: Int,
-        public override val hours: Int,
-        public override val id: Int,
-        public override val timestamp: Instant,
-        public override val seqNo: Int,
-        public override val bogus: Int,
-        public override val data1: Int,
-        public override val data2: Int,
-        public override val data3: Int,
-        public override val data4: Int,
         public val percent: Float,
         public val duration: Float,
-        public val tempRateId: Int) : LogEvent {
-    constructor (index: Int, hours: Int, id: Int, timestamp: Instant, seqNo: Int, bogus: Int, data1: Int,
-                 data2: Int, data3: Int, data4: Int) : this(index, hours, id, timestamp, seqNo, bogus,
-            data1, data2, data3, data4, percent = data1.asFloat(), duration = data2.asFloat(),
-            tempRateId = data3.asUnsignedShorts().component2())
+        public val tempRateId: Int,
+        public val rawRecord: LogEvent) : LogEvent by rawRecord {
+    constructor (rawRecord: LogEvent) : this(percent = rawRecord.data1.asFloat(), duration = rawRecord.data2.asFloat(),
+            tempRateId = rawRecord.data3.asUnsignedShorts().component2(), rawRecord = rawRecord)
 }
 
 data class BasalRateChange(
-        public override val index: Int,
-        public override val hours: Int,
-        public override val id: Int,
-        public override val timestamp: Instant,
-        public override val seqNo: Int,
-        public override val bogus: Int,
-        public override val data1: Int,
-        public override val data2: Int,
-        public override val data3: Int,
-        public override val data4: Int,
         public val rate: Float,
         public val baseRate: Float,
         public val maxRate: Float,
         public val idp: Int,
-        public val changeType: Int) : LogEvent {
-    constructor (index: Int, hours: Int, id: Int, timestamp: Instant, seqNo: Int, bogus: Int, data1: Int,
-                 data2: Int, data3: Int, data4: Int) : this(index, hours, id, timestamp, seqNo, bogus,
-            data1, data2, data3, data4, rate = data1.asFloat(), baseRate = data2.asFloat(),
-            maxRate = data3.asFloat(), idp = data4.asUnsignedShorts().component1(),
-            changeType = data4.asBytes().component3())
+        public val changeType: Int,
+        public val rawRecord: LogEvent) : LogEvent by rawRecord {
+    constructor (rawRecord: LogEvent) : this(rate = rawRecord.data1.asFloat(), baseRate = rawRecord.data2.asFloat(),
+            maxRate = rawRecord.data3.asFloat(), idp = rawRecord.data4.asUnsignedShorts().component1(),
+            changeType = rawRecord.data4.asBytes().component3(), rawRecord = rawRecord)
 }
 
 data class AlertActivated(
-        public override val index: Int,
-        public override val hours: Int,
-        public override val id: Int,
-        public override val timestamp: Instant,
-        public override val seqNo: Int,
-        public override val bogus: Int,
-        public override val data1: Int,
-        public override val data2: Int,
-        public override val data3: Int,
-        public override val data4: Int,
-        public val alertId: Long) : LogEvent {
-    constructor (index: Int, hours: Int, id: Int, timestamp: Instant, seqNo: Int, bogus: Int, data1: Int,
-                 data2: Int, data3: Int, data4: Int) : this(index, hours, id, timestamp, seqNo, bogus,
-            data1, data2, data3, data4, alertId = data1.asUnsigned())
+        public val alertId: Long,
+        public val rawRecord: LogEvent) : LogEvent by rawRecord {
+    constructor (rawRecord: LogEvent) : this(alertId = rawRecord.data1.asUnsigned(), rawRecord = rawRecord)
 }
 
 data class AlarmActivated(
-        public override val index: Int, public override val hours: Int,
-        public override val id: Int,
-        public override val timestamp: Instant,
-        public override val seqNo: Int,
-        public override val bogus: Int,
-        public override val data1: Int,
-        public override val data2: Int,
-        public override val data3: Int,
-        public override val data4: Int,
-        public val alarmId: Long) : LogEvent {
-    constructor (index: Int, hours: Int, id: Int, timestamp: Instant, seqNo: Int, bogus: Int, data1: Int,
-                 data2: Int, data3: Int, data4: Int) : this(index, hours, id, timestamp, seqNo, bogus,
-            data1, data2, data3, data4, alarmId = data1.asUnsigned())
+        public val alarmId: Long,
+        public val rawRecord: LogEvent) : LogEvent by rawRecord {
+    constructor (rawRecord: LogEvent) : this(alarmId = rawRecord.data1.asUnsigned(), rawRecord = rawRecord)
 }
 
 data class AlarmAck(
-        public override val index: Int, public override val hours: Int,
-        public override val id: Int,
-        public override val timestamp: Instant,
-        public override val seqNo: Int,
-        public override val bogus: Int,
-        public override val data1: Int,
-        public override val data2: Int,
-        public override val data3: Int,
-        public override val data4: Int,
-        public val alarmId: Long) : LogEvent {
-    constructor (index: Int, hours: Int, id: Int, timestamp: Instant, seqNo: Int, bogus: Int, data1: Int,
-                 data2: Int, data3: Int, data4: Int) : this(index, hours, id, timestamp, seqNo, bogus,
-            data1, data2, data3, data4, alarmId = data1.asUnsigned())
+        public val alarmId: Long,
+        public val rawRecord: LogEvent) : LogEvent by rawRecord {
+    constructor (rawRecord: LogEvent) : this(alarmId = rawRecord.data1.asUnsigned(), rawRecord = rawRecord)
 }
 
 data class PumpingSuspended(
-        public override val index: Int, public override val hours: Int,
-        public override val id: Int,
-        public override val timestamp: Instant,
-        public override val seqNo: Int,
-        public override val bogus: Int,
-        public override val data1: Int,
-        public override val data2: Int,
-        public override val data3: Int,
-        public override val data4: Int,
-        public val unitsRemaining: Int) : LogEvent {
-    constructor (index: Int, hours: Int, id: Int, timestamp: Instant, seqNo: Int, bogus: Int, data1: Int,
-                 data2: Int, data3: Int, data4: Int) : this(index, hours, id, timestamp, seqNo, bogus,
-            data1, data2, data3, data4, unitsRemaining = data2.asUnsignedShorts().component1())
+        public val unitsRemaining: Int,
+        public val rawRecord: LogEvent) : LogEvent by rawRecord {
+    constructor (rawRecord: LogEvent
+
+    ) : this(unitsRemaining = rawRecord.data2.asUnsignedShorts().component1(), rawRecord = rawRecord)
 }
 
 data class PumpingResumed(
-        public override val index: Int, public override val hours: Int,
-        public override val id: Int,
-        public override val timestamp: Instant,
-        public override val seqNo: Int,
-        public override val bogus: Int,
-        public override val data1: Int,
-        public override val data2: Int,
-        public override val data3: Int,
-        public override val data4: Int,
-        public val unitsRemaining: Int) : LogEvent {
-    constructor (index: Int, hours: Int, id: Int, timestamp: Instant, seqNo: Int, bogus: Int, data1: Int,
-                 data2: Int, data3: Int, data4: Int) : this(index, hours, id, timestamp, seqNo, bogus,
-            data1, data2, data3, data4, unitsRemaining = data2.asUnsignedShorts().component1())
+        public val unitsRemaining: Int,
+        public val rawRecord: LogEvent) : LogEvent by rawRecord {
+    constructor (rawRecord: LogEvent
+
+    ) : this(unitsRemaining = rawRecord.data2.asUnsignedShorts().component1(), rawRecord = rawRecord)
 }
 
 data class TimeChanged(
-        public override val index: Int, public override val hours: Int,
-        public override val id: Int,
-        public override val timestamp: Instant,
-        public override val seqNo: Int,
-        public override val bogus: Int,
-        public override val data1: Int,
-        public override val data2: Int,
-        public override val data3: Int,
-        public override val data4: Int,
         public val timePrior: LocalTime,
-        public val timeAfter: LocalTime) : LogEvent {
-    constructor (index: Int, hours: Int, id: Int, timestamp: Instant, seqNo: Int, bogus: Int, data1: Int,
-                 data2: Int, data3: Int, data4: Int) : this(index, hours, id, timestamp, seqNo, bogus,
-            data1, data2, data3, data4, timePrior = data1.asLocalTime(),
-            timeAfter = data2.asLocalTime())
+        public val timeAfter: LocalTime,
+        public val rawRecord: LogEvent) : LogEvent by rawRecord {
+    constructor (rawRecord: LogEvent
+
+    ) : this(timePrior = rawRecord.data1.asLocalTime(),
+            timeAfter = rawRecord.data2.asLocalTime(),
+            rawRecord = rawRecord)
 }
 
 data class DateChanged(
-        public override val index: Int, public override val hours: Int,
-        public override val id: Int,
-        public override val timestamp: Instant,
-        public override val seqNo: Int,
-        public override val bogus: Int,
-        public override val data1: Int,
-        public override val data2: Int,
-        public override val data3: Int,
-        public override val data4: Int,
         public val datePrior: LocalDate,
-        public val dateAfter: LocalDate) : LogEvent {
-    constructor (index: Int, hours: Int, id: Int, timestamp: Instant, seqNo: Int, bogus: Int, data1: Int,
-                 data2: Int, data3: Int, data4: Int) : this(index, hours, id, timestamp, seqNo, bogus,
-            data1, data2, data3, data4, datePrior = data1.asLocalDate(), dateAfter = data2.asLocalDate())
+        public val dateAfter: LocalDate,
+        public val rawRecord: LogEvent) : LogEvent by rawRecord {
+    constructor (rawRecord: LogEvent
+
+    ) : this(datePrior = rawRecord.data1.asLocalDate(), dateAfter = rawRecord.data2.asLocalDate(), rawRecord = rawRecord)
 }
 
 data class TempRateCompleted(
-        public override val index: Int, public override val hours: Int,
-        public override val id: Int,
-        public override val timestamp: Instant,
-        public override val seqNo: Int,
-        public override val bogus: Int,
-        public override val data1: Int,
-        public override val data2: Int,
-        public override val data3: Int,
-        public override val data4: Int,
         public val tempRateId: Int,
-        public val timeLeft: Duration) : LogEvent {
-    constructor (index: Int, hours: Int, id: Int, timestamp: Instant, seqNo: Int, bogus: Int, data1: Int,
-                 data2: Int, data3: Int, data4: Int) : this(index, hours, id, timestamp, seqNo, bogus,
-            data1, data2, data3, data4, tempRateId = data1.asUnsignedShorts().component2(),
-            timeLeft = Duration(data2.asUnsigned()))
+        public val timeLeft: Duration,
+        public val rawRecord: LogEvent) : LogEvent by rawRecord {
+    constructor (rawRecord: LogEvent
+
+    ) : this(tempRateId = rawRecord.data1.asUnsignedShorts().component2(),
+            timeLeft = Duration(rawRecord.data2.asUnsigned()), rawRecord = rawRecord)
 }
 
 data class BgReadingTaken(
-        public override val index: Int, public override val hours: Int,
-        public override val id: Int,
-        public override val timestamp: Instant,
-        public override val seqNo: Int,
-        public override val bogus: Int,
-        public override val data1: Int,
-        public override val data2: Int,
-        public override val data3: Int,
-        public override val data4: Int,
         public val bg: GlucoseValue,
         public override val iob: Float,
         public val targetBg: GlucoseValue,
-        public val isf: Int) : LogEvent, IobRecord {
-    constructor (index: Int, hours: Int, id: Int, timestamp: Instant, seqNo: Int, bogus: Int, data1: Int,
-                 data2: Int, data3: Int, data4: Int) : this(index, hours, id, timestamp, seqNo, bogus,
-            data1, data2, data3, data4, bg = data1.asUnsignedShorts().component1().toGlucoseValue(),
-            iob = data2.asFloat(),
-            targetBg = data3.asUnsignedShorts().component1().toGlucoseValue(),
-            isf = data3.asUnsignedShorts().component2())
+        public val isf: Int,
+        public val rawRecord: LogEvent) : LogEvent by rawRecord, IobRecord {
+    constructor (rawRecord: LogEvent) : this(rawRecord = rawRecord,
+            bg = rawRecord.data1.asUnsignedShorts().component1().toGlucoseValue(),
+            iob = rawRecord.data2.asFloat(),
+            targetBg = rawRecord.data3.asUnsignedShorts().component1().toGlucoseValue(),
+            isf = rawRecord.data3.asUnsignedShorts().component2())
 }
 
 data class BolusCompleted(
-        public override val index: Int, public override val hours: Int,
-        public override val id: Int,
-        public override val timestamp: Instant,
-        public override val seqNo: Int,
-        public override val bogus: Int,
-        public override val data1: Int,
-        public override val data2: Int,
-        public override val data3: Int,
-        public override val data4: Int,
         public val bolusId: Int,
         public override val iob: Float,
         public val insulinDelivered: Float,
-        public val insulinRequested: Float) : LogEvent, IobRecord {
-    constructor (index: Int, hours: Int, id: Int, timestamp: Instant, seqNo: Int, bogus: Int, data1: Int,
-                 data2: Int, data3: Int, data4: Int) : this(index, hours, id, timestamp, seqNo, bogus,
-            data1, data2, data3, data4, bolusId = data1.asUnsignedShorts().component2(),
-            iob = data2.asFloat(), insulinDelivered = data3.asFloat(),
-            insulinRequested = data4.asFloat())
+        public val insulinRequested: Float,
+        public val rawRecord: LogEvent) : LogEvent by rawRecord, IobRecord {
+    constructor (rawRecord: LogEvent) : this(rawRecord = rawRecord,
+            bolusId = rawRecord.data1.asUnsignedShorts().component2(),
+            iob = rawRecord.data2.asFloat(),
+            insulinDelivered = rawRecord.data3.asFloat(),
+            insulinRequested = rawRecord.data4.asFloat())
 }
 
 data class BolexCompleted(
-        public override val index: Int, public override val hours: Int,
-        public override val id: Int,
-        public override val timestamp: Instant,
-        public override val seqNo: Int,
-        public override val bogus: Int,
-        public override val data1: Int,
-        public override val data2: Int,
-        public override val data3: Int,
-        public override val data4: Int,
         public val bolusId: Int,
         public override val iob: Float,
         public val insulinDelivered: Float,
-        public val insulinRequested: Float) : LogEvent, IobRecord  {
-    constructor (index: Int, hours: Int, id: Int, timestamp: Instant, seqNo: Int, bogus: Int, data1: Int,
-                 data2: Int, data3: Int, data4: Int) : this(index, hours, id, timestamp, seqNo, bogus,
-            data1, data2, data3, data4, bolusId = data1.asUnsignedShorts().component2(),
-            iob = data2.asFloat(), insulinDelivered = data3.asFloat(),
-            insulinRequested = data4.asFloat())
+        public val insulinRequested: Float,
+        public val rawRecord: LogEvent) : LogEvent by rawRecord, IobRecord {
+    constructor (rawRecord: LogEvent) : this(rawRecord = rawRecord,
+            bolusId = rawRecord.data1.asUnsignedShorts().component2(),
+            iob = rawRecord.data2.asFloat(), insulinDelivered = rawRecord.data3.asFloat(),
+            insulinRequested = rawRecord.data4.asFloat())
 }
 
 data class AlertCleared(
-        public override val index: Int, public override val hours: Int,
-        public override val id: Int,
-        public override val timestamp: Instant,
-        public override val seqNo: Int,
-        public override val bogus: Int,
-        public override val data1: Int,
-        public override val data2: Int,
-        public override val data3: Int,
-        public override val data4: Int,
-        public val alertId: Long) : LogEvent {
-    constructor (index: Int, hours: Int, id: Int, timestamp: Instant, seqNo: Int, bogus: Int, data1: Int,
-                 data2: Int, data3: Int, data4: Int) : this(index, hours, id, timestamp, seqNo, bogus,
-            data1, data2, data3, data4, alertId = data1.asUnsigned())
+        public val alertId: Long,
+        public val rawRecord: LogEvent) : LogEvent by rawRecord {
+    constructor (rawRecord: LogEvent) : this(rawRecord = rawRecord,
+            alertId = rawRecord.data1.asUnsigned())
 }
 
 data class AlertAck(
-        public override val index: Int, public override val hours: Int,
-        public override val id: Int,
-        public override val timestamp: Instant,
-        public override val seqNo: Int,
-        public override val bogus: Int,
-        public override val data1: Int,
-        public override val data2: Int,
-        public override val data3: Int,
-        public override val data4: Int,
-        public val alertId: Long) : LogEvent {
-    constructor (index: Int, hours: Int, id: Int, timestamp: Instant, seqNo: Int, bogus: Int, data1: Int,
-                 data2: Int, data3: Int, data4: Int) : this(index, hours, id, timestamp, seqNo, bogus,
-            data1, data2, data3, data4, alertId = data1.asUnsigned())
+        public val alertId: Long,
+        public val rawRecord: LogEvent) : LogEvent by rawRecord {
+    constructor (rawRecord: LogEvent) : this(rawRecord = rawRecord,
+            alertId = rawRecord.data1.asUnsigned())
 }
 
 data class AlarmCleared(
-        public override val index: Int, public override val hours: Int,
-        public override val id: Int,
-        public override val timestamp: Instant,
-        public override val seqNo: Int,
-        public override val bogus: Int,
-        public override val data1: Int,
-        public override val data2: Int,
-        public override val data3: Int,
-        public override val data4: Int,
-        public val alarmId: Long) : LogEvent {
-    constructor (index: Int, hours: Int, id: Int, timestamp: Instant, seqNo: Int, bogus: Int, data1: Int,
-                 data2: Int, data3: Int, data4: Int) : this(index, hours, id, timestamp, seqNo, bogus,
-            data1, data2, data3, data4, alarmId = data1.asUnsigned())
+        public val alarmId: Long,
+        public val rawRecord: LogEvent) : LogEvent by rawRecord {
+    constructor (rawRecord: LogEvent) : this(rawRecord = rawRecord,
+            alarmId = rawRecord.data1.asUnsigned())
 }
 
 data class CartridgeFilled(
-        public override val index: Int, public override val hours: Int,
-        public override val id: Int,
-        public override val timestamp: Instant,
-        public override val seqNo: Int,
-        public override val bogus: Int,
-        public override val data1: Int,
-        public override val data2: Int,
-        public override val data3: Int,
-        public override val data4: Int,
         public val insulinVolume: Long,
-        public val floatVolume: Float) : LogEvent {
-    constructor (index: Int, hours: Int, id: Int, timestamp: Instant, seqNo: Int, bogus: Int, data1: Int,
-                 data2: Int, data3: Int, data4: Int) : this(index, hours, id, timestamp, seqNo, bogus,
-            data1, data2, data3, data4, insulinVolume = data1.asUnsigned(), floatVolume = data2.asFloat())
+        public val floatVolume: Float,
+        public val rawRecord: LogEvent) : LogEvent by rawRecord {
+    constructor (rawRecord: LogEvent) : this(rawRecord = rawRecord,
+            insulinVolume = rawRecord.data1.asUnsigned(), floatVolume = rawRecord.data2.asFloat())
 }
 
 
 data class UsbConnected(
-        public override val index: Int, public override val hours: Int,
-        public override val id: Int,
-        public override val timestamp: Instant,
-        public override val seqNo: Int,
-        public override val bogus: Int,
-        public override val data1: Int,
-        public override val data2: Int,
-        public override val data3: Int,
-        public override val data4: Int,
-        public val current: Float) : LogEvent {
-    constructor (index: Int, hours: Int, id: Int, timestamp: Instant, seqNo: Int, bogus: Int, data1: Int,
-                 data2: Int, data3: Int, data4: Int) : this(index, hours, id, timestamp, seqNo, bogus,
-            data1, data2, data3, data4, current = data1.asFloat())
+        public val current: Float,
+        public val rawRecord: LogEvent) : LogEvent by rawRecord {
+    constructor (rawRecord: LogEvent) : this(rawRecord = rawRecord,
+            current = rawRecord.data1.asFloat())
 }
 
 data class UsbDisconnected(
-        public override val index: Int, public override val hours: Int,
-        public override val id: Int,
-        public override val timestamp: Instant,
-        public override val seqNo: Int,
-        public override val bogus: Int,
-        public override val data1: Int,
-        public override val data2: Int,
-        public override val data3: Int,
-        public override val data4: Int,
-        public val current: Float) : LogEvent {
-    constructor (index: Int, hours: Int, id: Int, timestamp: Instant, seqNo: Int, bogus: Int, data1: Int,
-                 data2: Int, data3: Int, data4: Int) : this(index, hours, id, timestamp, seqNo, bogus,
-            data1, data2, data3, data4, current = data1.asFloat())
+        public val current: Float,
+        public val rawRecord: LogEvent) : LogEvent by rawRecord {
+    constructor (rawRecord: LogEvent) : this(rawRecord = rawRecord,
+            current = rawRecord.data1.asFloat())
 }
 
 data class CarbEntered(
-        public override val index: Int, public override val hours: Int,
-        public override val id: Int,
-        public override val timestamp: Instant,
-        public override val seqNo: Int,
-        public override val bogus: Int,
-        public override val data1: Int,
-        public override val data2: Int,
-        public override val data3: Int,
-        public override val data4: Int,
-        public val carbs: Float) : LogEvent {
-    constructor (index: Int, hours: Int, id: Int, timestamp: Instant, seqNo: Int, bogus: Int, data1: Int,
-                 data2: Int, data3: Int, data4: Int) : this(index, hours, id, timestamp, seqNo, bogus,
-            data1, data2, data3, data4, carbs = data1.asFloat())
+        public val carbs: Float,
+        public val rawRecord: LogEvent) : LogEvent by rawRecord {
+    constructor (rawRecord: LogEvent) : this(rawRecord = rawRecord,
+            carbs = rawRecord.data1.asFloat())
 }
 
 data class UserNotification(
-        public override val index: Int, public override val hours: Int,
-        public override val id: Int,
-        public override val timestamp: Instant,
-        public override val seqNo: Int,
-        public override val bogus: Int,
-        public override val data1: Int,
-        public override val data2: Int,
-        public override val data3: Int,
-        public override val data4: Int,
         public val notificationId: Int,
         public val notificationType: Int,
         public val requested: Float,
-        public val limit: Float) : LogEvent {
-    constructor (index: Int, hours: Int, id: Int, timestamp: Instant, seqNo: Int, bogus: Int, data1: Int,
-                 data2: Int, data3: Int, data4: Int) : this(index, hours, id, timestamp, seqNo, bogus,
-            data1, data2, data3, data4, notificationId = data1.asBytes().component1(),
-            notificationType = data1.asBytes().component2(), requested = data2.asFloat(),
-            limit = data3.asFloat())
+        public val limit: Float,
+        public val rawRecord: LogEvent) : LogEvent by rawRecord {
+    constructor (rawRecord: LogEvent) : this(rawRecord = rawRecord,
+            notificationId = rawRecord.data1.asBytes().component1(),
+            notificationType = rawRecord.data1.asBytes().component2(),
+            requested = rawRecord.data2.asFloat(),
+            limit = rawRecord.data3.asFloat())
 }
 
 data class BolusActivated(
-        public override val index: Int, public override val hours: Int,
-        public override val id: Int,
-        public override val timestamp: Instant,
-        public override val seqNo: Int,
-        public override val bogus: Int,
-        public override val data1: Int,
-        public override val data2: Int,
-        public override val data3: Int,
-        public override val data4: Int,
         public val bolusId: Int,
         public override val iob: Float,
-        public val bolusSize: Float) : LogEvent, IobRecord  {
-    constructor (index: Int, hours: Int, id: Int, timestamp: Instant, seqNo: Int, bogus: Int, data1: Int,
-                 data2: Int, data3: Int, data4: Int) : this(index, hours, id, timestamp, seqNo, bogus,
-            data1, data2, data3, data4, bolusId = data1.asUnsignedShorts().component1(),
-            iob = data2.asFloat(), bolusSize = data3.asFloat())
+        public val bolusSize: Float,
+        public val rawRecord: LogEvent) : LogEvent by rawRecord, IobRecord {
+    constructor (rawRecord: LogEvent) : this(rawRecord = rawRecord,
+            bolusId = rawRecord.data1.asUnsignedShorts().component1(),
+            iob = rawRecord.data2.asFloat(),
+            bolusSize = rawRecord.data3.asFloat())
 }
 
 data class IdpMessage2(
-        public override val index: Int, public override val hours: Int,
-        public override val id: Int,
-        public override val timestamp: Instant,
-        public override val seqNo: Int,
-        public override val bogus: Int,
-        public override val data1: Int,
-        public override val data2: Int,
-        public override val data3: Int,
-        public override val data4: Int,
         public val idp: Int,
-        public val nameCont: String) : LogEvent {
-    constructor (index: Int, hours: Int, id: Int, timestamp: Instant, seqNo: Int, bogus: Int, data1: Int,
-                 data2: Int, data3: Int, data4: Int) : this(index, hours, id, timestamp, seqNo, bogus,
-            data1, data2, data3, data4, idp = data1.asBytes().component1(),
-            nameCont = "${data3.asString()}${data4.asString()}")
+        public val nameCont: String,
+        public val rawRecord: LogEvent) : LogEvent by rawRecord {
+    constructor (rawRecord: LogEvent) : this(rawRecord = rawRecord,
+            idp = rawRecord.data1.asBytes().component1(),
+            nameCont = "${rawRecord.data3.asString()}${rawRecord.data4.asString()}")
 }
 
 data class BolexActivated(
-        public override val index: Int, public override val hours: Int,
-        public override val id: Int,
-        public override val timestamp: Instant,
-        public override val seqNo: Int,
-        public override val bogus: Int,
-        public override val data1: Int,
-        public override val data2: Int,
-        public override val data3: Int,
-        public override val data4: Int,
         public val bolusId: Int,
         public override val iob: Float,
-        public val bolusSize: Float) : LogEvent, IobRecord  {
-    constructor (index: Int, hours: Int, id: Int, timestamp: Instant, seqNo: Int, bogus: Int, data1: Int,
-                 data2: Int, data3: Int, data4: Int) : this(index, hours, id, timestamp, seqNo, bogus,
-            data1, data2, data3, data4, bolusId = data1.asUnsignedShorts().component1(),
-            iob = data2.asFloat(), bolusSize = data3.asFloat())
+        public val bolusSize: Float,
+        public val rawRecord: LogEvent) : LogEvent by rawRecord, IobRecord {
+    constructor (rawRecord: LogEvent) : this(rawRecord = rawRecord,
+            bolusId = rawRecord.data1.asUnsignedShorts().component1(),
+            iob = rawRecord.data2.asFloat(),
+            bolusSize = rawRecord.data3.asFloat())
 }
 
 
-data class DataLogCorruption(
-        public override val index: Int, public override val hours: Int,
-        public override val id: Int,
-        public override val timestamp: Instant,
-        public override val seqNo: Int,
-        public override val bogus: Int,
-        public override val data1: Int,
-        public override val data2: Int,
-        public override val data3: Int,
-        public override val data4: Int) : LogEvent {
-}
+data class DataLogCorruption(public val rawRecord: LogEvent) : LogEvent by rawRecord
 
 data class CannulaFilled(
-        public override val index: Int, public override val hours: Int,
-        public override val id: Int,
-        public override val timestamp: Instant,
-        public override val seqNo: Int,
-        public override val bogus: Int,
-        public override val data1: Int,
-        public override val data2: Int,
-        public override val data3: Int,
-        public override val data4: Int,
-        public val primed: Float) : LogEvent {
-    constructor (index: Int, hours: Int, id: Int, timestamp: Instant, seqNo: Int, bogus: Int, data1: Int,
-                 data2: Int, data3: Int, data4: Int) : this(index, hours, id, timestamp, seqNo, bogus,
-            data1, data2, data3, data4, primed = data1.asFloat())
+        public val primed: Float,
+        public val rawRecord: LogEvent) : LogEvent by rawRecord {
+    constructor (rawRecord: LogEvent) : this(rawRecord = rawRecord,
+            primed = rawRecord.data1.asFloat())
 }
 
 data class TubingFilled(
-        public override val index: Int, public override val hours: Int,
-        public override val id: Int,
-        public override val timestamp: Instant,
-        public override val seqNo: Int,
-        public override val bogus: Int,
-        public override val data1: Int,
-        public override val data2: Int,
-        public override val data3: Int,
-        public override val data4: Int,
-        public val primed: Float) : LogEvent {
-    constructor (index: Int, hours: Int, id: Int, timestamp: Instant, seqNo: Int, bogus: Int, data1: Int,
-                 data2: Int, data3: Int, data4: Int) : this(index, hours, id, timestamp, seqNo, bogus,
-            data1, data2, data3, data4, primed = data1.asFloat())
+        public val primed: Float,
+        public val rawRecord: LogEvent) : LogEvent by rawRecord {
+    constructor (rawRecord: LogEvent) : this(rawRecord = rawRecord,
+            primed = rawRecord.data1.asFloat())
 }
 
 data class BolusRequest1(
-        public override val index: Int, public override val hours: Int,
-        public override val id: Int,
-        public override val timestamp: Instant,
-        public override val seqNo: Int,
-        public override val bogus: Int,
-        public override val data1: Int,
-        public override val data2: Int,
-        public override val data3: Int,
-        public override val data4: Int,
         public val bolusId: Int,
         public val bolusType: Int,
         public val correction: Boolean,
         public val carbs: Int,
         public val bg: GlucoseValue,
         public override val iob: Float,
-        public val carbRatio: Long
-) : LogEvent, IobRecord {
-    constructor (index: Int, hours: Int, id: Int, timestamp: Instant, seqNo: Int, bogus: Int, data1: Int,
-                 data2: Int, data3: Int, data4: Int) : this(index, hours, id, timestamp, seqNo, bogus,
-            data1, data2, data3, data4,
-            bolusId = data1.asUnsignedShorts().component1(),
-            bolusType = data1.asBytes().component3(),
-            correction = data1.asBytes().component4() == 1,
-            carbs = data2.asUnsignedShorts().component1(),
-            bg = data2.asUnsignedShorts().component2().toGlucoseValue(),
-            iob = data3.asFloat(),
-            carbRatio = data4.asUnsigned())
+        public val carbRatio: Long,
+        public val rawRecord: LogEvent
+) : LogEvent by rawRecord, IobRecord {
+    constructor (rawRecord: LogEvent) : this(rawRecord = rawRecord,
+            bolusId = rawRecord.data1.asUnsignedShorts().component1(),
+            bolusType = rawRecord.data1.asBytes().component3(),
+            correction = rawRecord.data1.asBytes().component4() == 1,
+            carbs = rawRecord.data2.asUnsignedShorts().component1(),
+            bg = rawRecord.data2.asUnsignedShorts().component2().toGlucoseValue(),
+            iob = rawRecord.data3.asFloat(),
+            carbRatio = rawRecord.data4.asUnsigned())
 }
 
 data class BolusRequest2(
-        public override val index: Int, public override val hours: Int,
-        public override val id: Int,
-        public override val timestamp: Instant,
-        public override val seqNo: Int,
-        public override val bogus: Int,
-        public override val data1: Int,
-        public override val data2: Int,
-        public override val data3: Int,
-        public override val data4: Int,
         public val bolusId: Int,
         public val options: Int,
         public val standardPercent: Int,
@@ -744,70 +475,42 @@ data class BolusRequest2(
         public val isf: Int,
         public val targetBg: GlucoseValue,
         public val userOverride: Boolean,
-        public val declinedCorrection: Boolean) : LogEvent {
-    constructor (index: Int, hours: Int, id: Int, timestamp: Instant, seqNo: Int, bogus: Int, data1: Int,
-                 data2: Int, data3: Int, data4: Int) : this(index, hours, id, timestamp, seqNo, bogus,
-            data1, data2, data3, data4,
-            bolusId = data1.asUnsignedShorts().component1(),
-            options = data1.asBytes().component3(),
-            standardPercent = data1.asBytes().component4(),
-            duration = Duration(60 * 1000 * data2.asUnsignedShorts().component1().toLong()),
-            isf = data3.asUnsignedShorts().component1(),
-            targetBg = data3.asUnsignedShorts().component2().toGlucoseValue(),
-            userOverride = data4.asBytes().component1() == 1,
-            declinedCorrection = data4.asBytes().component2() == 2
+        public val declinedCorrection: Boolean,
+        public val rawRecord: LogEvent) : LogEvent by rawRecord {
+    constructor (rawRecord: LogEvent) : this(
+            rawRecord = rawRecord,
+            bolusId = rawRecord.data1.asUnsignedShorts().component1(),
+            options = rawRecord.data1.asBytes().component3(),
+            standardPercent = rawRecord.data1.asBytes().component4(),
+            duration = Duration(60 * 1000 * rawRecord.data2.asUnsignedShorts().component1().toLong()),
+            isf = rawRecord.data3.asUnsignedShorts().component1(),
+            targetBg = rawRecord.data3.asUnsignedShorts().component2().toGlucoseValue(),
+            userOverride = rawRecord.data4.asBytes().component1() == 1,
+            declinedCorrection = rawRecord.data4.asBytes().component2() == 2
     )
 }
 
 data class BolusRequest3(
-        public override val index: Int, public override val hours: Int,
-        public override val id: Int,
-        public override val timestamp: Instant,
-        public override val seqNo: Int,
-        public override val bogus: Int,
-        public override val data1: Int,
-        public override val data2: Int,
-        public override val data3: Int,
-        public override val data4: Int,
         public val bolusId: Int,
         public val foodBolusRecommendation: Float,
         public val correctionBolusRecommendation: Float,
-        public val totalBolus: Float) : LogEvent {
-    constructor (index: Int, hours: Int, id: Int, timestamp: Instant, seqNo: Int, bogus: Int, data1: Int,
-                 data2: Int, data3: Int, data4: Int) : this(index, hours, id, timestamp, seqNo, bogus,
-            data1, data2, data3, data4,
-            bolusId = data1.asUnsignedShorts().component1(),
-            foodBolusRecommendation = data2.asFloat(),
-            correctionBolusRecommendation = data3.asFloat(),
-            totalBolus = data4.asFloat())
+        public val totalBolus: Float,
+        public val rawRecord: LogEvent) : LogEvent by rawRecord {
+    constructor (rawRecord: LogEvent) : this(rawRecord = rawRecord,
+            bolusId = rawRecord.data1.asUnsignedShorts().component1(),
+            foodBolusRecommendation = rawRecord.data2.asFloat(),
+            correctionBolusRecommendation = rawRecord.data3.asFloat(),
+            totalBolus = rawRecord.data4.asFloat())
 }
 
 data class UsbEnumerated(
-        public override val index: Int, public override val hours: Int,
-        public override val id: Int,
-        public override val timestamp: Instant,
-        public override val seqNo: Int,
-        public override val bogus: Int,
-        public override val data1: Int,
-        public override val data2: Int,
-        public override val data3: Int,
-        public override val data4: Int,
-        public val current: Float) : LogEvent {
-    constructor (index: Int, hours: Int, id: Int, timestamp: Instant, seqNo: Int, bogus: Int, data1: Int,
-                 data2: Int, data3: Int, data4: Int) : this(index, hours, id, timestamp, seqNo, bogus,
-            data1, data2, data3, data4, current = data1.asFloat())
+        public val current: Float,
+        public val rawRecord: LogEvent) : LogEvent by rawRecord {
+    constructor (rawRecord: LogEvent) : this(rawRecord = rawRecord,
+            current = rawRecord.data1.asFloat())
 }
 
 data class IdpTdSeg(
-        public override val index: Int, public override val hours: Int,
-        public override val id: Int,
-        public override val timestamp: Instant,
-        public override val seqNo: Int,
-        public override val bogus: Int,
-        public override val data1: Int,
-        public override val data2: Int,
-        public override val data3: Int,
-        public override val data4: Int,
         public val idp: Int,
         public val segmentIndex: Int,
         public val modificationType: Int,
@@ -815,206 +518,93 @@ data class IdpTdSeg(
         public val basalRate: Int?,
         public val isf: Int?,
         public val targetBg: GlucoseValue?,
-        public val carbRatio: Int?
-) : LogEvent {
-    constructor (index: Int, hours: Int, id: Int, timestamp: Instant, seqNo: Int, bogus: Int, data1: Int,
-                 data2: Int, data3: Int, data4: Int) : this(index, hours, id, timestamp, seqNo, bogus,
-            data1, data2, data3, data4,
-            idp = data1.asBytes().component1(),
-            segmentIndex = data1.asBytes().component3(),
-            modificationType = data1.asBytes().component4(),
-            startTime = (data2.asUnsignedShorts().component1() * 60).asLocalTime(),
-            basalRate = if (data1.asBytes().component2() and 1 != 0)
-                data2.asUnsignedShorts().component2() else null,
-            isf = if (data1.asBytes().component2() and 2 != 0)
-                data3.asUnsignedShorts().component1() else null,
-            targetBg = if (data1.asBytes().component2() and 4 != 0)
-                data3.asUnsignedShorts().component2().toGlucoseValue() else null,
-            carbRatio = if (data1.asBytes().component2() and 8 != 0)
-                data4 else null)
+        public val carbRatio: Int?,
+        public val rawRecord: LogEvent) : LogEvent by rawRecord {
+    constructor (rawRecord: LogEvent) : this(rawRecord = rawRecord,
+            idp = rawRecord.data1.asBytes().component1(),
+            segmentIndex = rawRecord.data1.asBytes().component3(),
+            modificationType = rawRecord.data1.asBytes().component4(),
+            startTime = (rawRecord.data2.asUnsignedShorts().component1() * 60).asLocalTime(),
+            basalRate = if (rawRecord.data1.asBytes().component2() and 1 != 0)
+                rawRecord.data2.asUnsignedShorts().component2() else null,
+            isf = if (rawRecord.data1.asBytes().component2() and 2 != 0)
+                rawRecord.data3.asUnsignedShorts().component1() else null,
+            targetBg = if (rawRecord.data1.asBytes().component2() and 4 != 0)
+                rawRecord.data3.asUnsignedShorts().component2().toGlucoseValue() else null,
+            carbRatio = if (rawRecord.data1.asBytes().component2() and 8 != 0)
+                rawRecord.data4 else null)
 }
 
 data class Idp(
-        public override val index: Int, public override val hours: Int,
-        public override val id: Int,
-        public override val timestamp: Instant,
-        public override val seqNo: Int,
-        public override val bogus: Int,
-        public override val data1: Int,
-        public override val data2: Int,
-        public override val data3: Int,
-        public override val data4: Int,
         public val idp: Int,
         public val op: Int,
         public val sourceIdp: Int,
-        public val name: String) : LogEvent {
-    constructor (index: Int, hours: Int, id: Int, timestamp: Instant, seqNo: Int, bogus: Int, data1: Int,
-                 data2: Int, data3: Int, data4: Int) : this(index, hours, id, timestamp, seqNo, bogus,
-            data1, data2, data3, data4,
-            idp = data1.asBytes().component1(),
-            op = data1.asBytes().component2(),
-            sourceIdp = data1.asBytes().component3(),
-            name = "${data3.asString()}${data4.asString()}")
+        public val name: String,
+        public val rawRecord: LogEvent) : LogEvent by rawRecord {
+    constructor (rawRecord: LogEvent) : this(
+            idp = rawRecord.data1.asBytes().component1(),
+            op = rawRecord.data1.asBytes().component2(),
+            sourceIdp = rawRecord.data1.asBytes().component3(),
+            name = "${rawRecord.data3.asString()}${rawRecord.data4.asString()}",
+            rawRecord = rawRecord)
 }
 
 data class IdpBolus(
-        public override val index: Int, public override val hours: Int,
-        public override val id: Int,
-        public override val timestamp: Instant,
-        public override val seqNo: Int,
-        public override val bogus: Int,
-        public override val data1: Int,
-        public override val data2: Int,
-        public override val data3: Int,
-        public override val data4: Int,
         public val idp: Int,
         public val op: Int,
         public val insulinDuration: Duration?,
         public val maxBolus: Int?,
-        public val useCarbs: Boolean?) : LogEvent {
-    constructor (index: Int, hours: Int, id: Int, timestamp: Instant, seqNo: Int, bogus: Int, data1: Int,
-                 data2: Int, data3: Int, data4: Int) : this(index, hours, id, timestamp, seqNo, bogus,
-            data1, data2, data3, data4,
-            idp = data1.asBytes().component1(),
-            op = data1.asBytes().component2(),
-            insulinDuration = if (data1.asBytes().component3() and 1 != 0)
-                Duration(data2.asUnsignedShorts().component1().toLong() * 60000) else null,
-            maxBolus = if (data1.asBytes().component3() and 2 != 0)
-                data2.asUnsignedShorts().component2() else null,
-            useCarbs = if (data1.asBytes().component3() and 3 != 0)
-                data3.asBytes().component1() == 1 else null
+        public val useCarbs: Boolean?,
+        public val rawRecord: LogEvent) : LogEvent by rawRecord {
+    constructor (rawRecord: LogEvent) : this(
+            idp = rawRecord.data1.asBytes().component1(),
+            op = rawRecord.data1.asBytes().component2(),
+            insulinDuration = if (rawRecord.data1.asBytes().component3() and 1 != 0)
+                Duration(rawRecord.data2.asUnsignedShorts().component1().toLong() * 60000) else null,
+            maxBolus = if (rawRecord.data1.asBytes().component3() and 2 != 0)
+                rawRecord.data2.asUnsignedShorts().component2() else null,
+            useCarbs = if (rawRecord.data1.asBytes().component3() and 3 != 0)
+                rawRecord.data3.asBytes().component1() == 1 else null,
+            rawRecord = rawRecord
     )
 }
 
 data class IdpList(
-        public override val index: Int, public override val hours: Int,
-        public override val id: Int,
-        public override val timestamp: Instant,
-        public override val seqNo: Int,
-        public override val bogus: Int,
-        public override val data1: Int,
-        public override val data2: Int,
-        public override val data3: Int,
-        public override val data4: Int,
         public val numProfiles: Int,
-        public val slots: List<Int>) : LogEvent {
-    constructor (index: Int, hours: Int, id: Int, timestamp: Instant, seqNo: Int, bogus: Int, data1: Int,
-                 data2: Int, data3: Int, data4: Int) : this(index, hours, id, timestamp, seqNo, bogus,
-            data1, data2, data3, data4,
-            numProfiles = data1.asBytes().component1(),
-            slots = listOf(*(data2.asBytes().toTypedArray()),*(data3.asBytes().toTypedArray())))
+        public val slots: List<Int>,
+        public val rawRecord: LogEvent) : LogEvent by rawRecord {
+    constructor (rawRecord: LogEvent) : this(
+            numProfiles = rawRecord.data1.asBytes().component1(),
+            slots = listOf(*(rawRecord.data2.asBytes().toTypedArray()), *(rawRecord.data3.asBytes().toTypedArray())),
+            rawRecord = rawRecord)
 }
 
-data class ParamPumpSettings(
-        public override val index: Int, public override val hours: Int,
-        public override val id: Int,
-        public override val timestamp: Instant,
-        public override val seqNo: Int,
-        public override val bogus: Int,
-        public override val data1: Int,
-        public override val data2: Int,
-        public override val data3: Int,
-        public override val data4: Int) : LogEvent {
-
-}
-
-data class ParamGlobalSettings(
-        public override val index: Int, public override val hours: Int,
-        public override val id: Int,
-        public override val timestamp: Instant,
-        public override val seqNo: Int,
-        public override val bogus: Int,
-        public override val data1: Int,
-        public override val data2: Int,
-        public override val data3: Int,
-        public override val data4: Int) : LogEvent {
-}
+data class ParamPumpSettings(val rawRecord: LogEvent) : LogEvent by rawRecord
+data class ParamGlobalSettings(val rawRecord: LogEvent) : LogEvent by rawRecord
 
 data class DailyBasal(
-        public override val index: Int, public override val hours: Int,
-        public override val id: Int,
-        public override val timestamp: Instant,
-        public override val seqNo: Int,
-        public override val bogus: Int,
-        public override val data1: Int,
-        public override val data2: Int,
-        public override val data3: Int,
-        public override val data4: Int,
         public val totalDailyBasal: Float,
         public val lastBasalRate: Float,
         public override val iob: Float,
         public val batteryPct: Int,
-        public val batteryMv: Int) : LogEvent, IobRecord  {
-    constructor (index: Int, hours: Int, id: Int, timestamp: Instant, seqNo: Int, bogus: Int, data1: Int,
-                 data2: Int, data3: Int, data4: Int) : this(index, hours, id, timestamp, seqNo, bogus,
-            data1, data2, data3, data4,
-            totalDailyBasal = data1.asFloat(),
-            lastBasalRate = data2.asFloat(),
-            iob = data3.asFloat(),
-            batteryPct = data4.asBytes().component2(),
-            batteryMv = data4.asUnsignedShorts().component2())
+        public val batteryMv: Int,
+        public val rawRecord: LogEvent) : LogEvent by rawRecord, IobRecord {
+    constructor (rawRecord: LogEvent) : this(
+            totalDailyBasal = rawRecord.data1.asFloat(),
+            lastBasalRate = rawRecord.data2.asFloat(),
+            iob = rawRecord.data3.asFloat(),
+            batteryPct = rawRecord.data4.asBytes().component2(),
+            batteryMv = rawRecord.data4.asUnsignedShorts().component2(), rawRecord = rawRecord)
 }
 
-data class FactoryReset(
-        public override val index: Int, public override val hours: Int,
-        public override val id: Int,
-        public override val timestamp: Instant,
-        public override val seqNo: Int,
-        public override val bogus: Int,
-        public override val data1: Int,
-        public override val data2: Int,
-        public override val data3: Int,
-        public override val data4: Int) : LogEvent {
-}
+data class FactoryReset(public val rawRecord: LogEvent) : LogEvent by rawRecord
 
 data class NewDay(
-        public override val index: Int, public override val hours: Int,
-        public override val id: Int,
-        public override val timestamp: Instant,
-        public override val seqNo: Int,
-        public override val bogus: Int,
-        public override val data1: Int,
-        public override val data2: Int,
-        public override val data3: Int,
-        public override val data4: Int,
-        public val currentBasalRate: Float) : LogEvent {
-    constructor (index: Int, hours: Int, id: Int, timestamp: Instant, seqNo: Int, bogus: Int, data1: Int,
-                 data2: Int, data3: Int, data4: Int) : this(index, hours, id, timestamp, seqNo, bogus,
-            data1, data2, data3, data4, currentBasalRate = data1.asFloat())
+        public val currentBasalRate: Float,
+        public val rawRecord: LogEvent) : LogEvent by rawRecord {
+    constructor (rawRecord: LogEvent) : this(currentBasalRate = rawRecord.data1.asFloat(), rawRecord = rawRecord)
 }
 
-data class CorrectionDeclined(
-        public override val index: Int, public override val hours: Int,
-        public override val id: Int,
-        public override val timestamp: Instant,
-        public override val seqNo: Int,
-        public override val bogus: Int,
-        public override val data1: Int,
-        public override val data2: Int,
-        public override val data3: Int,
-        public override val data4: Int) : LogEvent {
-}
-
-data class ParamReminder(
-        public override val index: Int, public override val hours: Int,
-        public override val id: Int,
-        public override val timestamp: Instant,
-        public override val seqNo: Int,
-        public override val bogus: Int,
-        public override val data1: Int,
-        public override val data2: Int,
-        public override val data3: Int,
-        public override val data4: Int) : LogEvent {
-}
-
-data class ParamReminderSettings(
-        public override val index: Int, public override val hours: Int,
-        public override val id: Int,
-        public override val timestamp: Instant,
-        public override val seqNo: Int,
-        public override val bogus: Int,
-        public override val data1: Int,
-        public override val data2: Int,
-        public override val data3: Int,
-        public override val data4: Int) : LogEvent {
-}
+data class CorrectionDeclined(public val rawRecord: LogEvent) : LogEvent by rawRecord
+data class ParamReminder(public val rawRecord: LogEvent) : LogEvent by rawRecord
+data class ParamReminderSettings(public val rawRecord: LogEvent) : LogEvent by rawRecord

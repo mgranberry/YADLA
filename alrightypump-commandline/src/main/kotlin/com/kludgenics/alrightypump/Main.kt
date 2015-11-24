@@ -31,11 +31,11 @@ fun main(args: Array<String>) {
                 println("lsr: $lsr ${lsr.range}")
                 val start = DateTime()
                 val records = tslim.records
-                        .filterIsInstance<BolusEventRecord>()
-                        .takeWhile { it.timestamp >= DateTime.now() - Period.hours(10) }
-                        .groupBy { it.bolusId }
+                        .filterIsInstance<IdpRecord>()
+                        .takeWhile { it.timestamp >= DateTime.now() - Period.days(90) }
+                        println(it)
                 records.asSequence().forEach { println("$it") }
-                println("Fetched ${records.size} records in ${Duration(start, DateTime.now())}")
+                // println("Fetched ${records.size} records in ${Duration(start, DateTime.now())}")
 
             }
             "DexCom Gen4 USB Serial" -> {

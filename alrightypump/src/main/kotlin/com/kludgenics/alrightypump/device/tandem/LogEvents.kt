@@ -538,7 +538,7 @@ data class IdpTdSeg(
         public val segmentIndex: Int,
         public val modificationType: Int,
         public val startTime: LocalTime,
-        public val basalRate: Int?,
+        public val basalRate: Double?,
         public val isf: Int?,
         public val targetBg: GlucoseValue?,
         public val carbRatio: Double?,
@@ -549,7 +549,7 @@ data class IdpTdSeg(
             modificationType = rawRecord.data1.asBytes().component4(),
             startTime = (rawRecord.data2.asUnsignedShorts().component1() * 60).asLocalTime(),
             basalRate = if (rawRecord.data1.asBytes().component2() and 1 != 0)
-                rawRecord.data2.asUnsignedShorts().component2() else null,
+                rawRecord.data2.asUnsignedShorts().component2()/1000.0 else null,
             isf = if (rawRecord.data1.asBytes().component2() and 2 != 0)
                 rawRecord.data3.asUnsignedShorts().component1() else null,
             targetBg = if (rawRecord.data1.asBytes().component2() and 4 != 0)

@@ -31,10 +31,16 @@ fun main(args: Array<String>) {
                 println("lsr: $lsr ${lsr.range}")
                 val start = DateTime()
                 val records = tslim.records
-                        .filterIsInstance<IdpRecord>()
-                        .takeWhile { it.timestamp >= DateTime.now() - Period.days(90) }
-                        println(it)
-                records.asSequence().forEach { println("$it") }
+                        .takeWhile { it.timestamp >= DateTime.now() - Period.days(3) }
+
+                val boluses = records.filterIsInstance<BolusEventRecord>().groupBy { it.bolusId }
+                val tempBasals = records.filterIsInstance<TempBasalEventRecord>().groupBy { it.tempRateId }
+                val tempStarts = records.filterIsInstance<TempRateStart>()
+                val tempEnds = records.filterIsInstance<TempRateCompleted>()
+                //boluses.forEach { println(it) }
+                tempBasals.forEach { println(it) }
+                tempStarts.forEach { println(it) }
+                tempEnds.forEach { println(it) }
                 // println("Fetched ${records.size} records in ${Duration(start, DateTime.now())}")
 
             }

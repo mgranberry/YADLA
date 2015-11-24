@@ -9,7 +9,7 @@ import com.kludgenics.cgmlogger.model.math.trendline.CachedPeriod
 import com.kludgenics.cgmlogger.model.treatment.Treatment
 import io.realm.Realm
 import io.realm.RealmConfiguration
-import net.danlew.android.joda.JodaTimeAndroid
+// import net.danlew.android.joda.JodaTimeAndroid
 import org.jetbrains.anko.AnkoLogger
 import org.jetbrains.anko.async
 import org.jetbrains.anko.debug
@@ -26,7 +26,7 @@ public class LoggerApplication : Application(), AnkoLogger {
     override fun onCreate() {
         super.onCreate()
         debug("start")
-        JodaTimeAndroid.init(this);
+        // JodaTimeAndroid.init(this);
         Fabric.with(this, Crashlytics());
         // should throw as migration is required
         debug("trying realm for migration")

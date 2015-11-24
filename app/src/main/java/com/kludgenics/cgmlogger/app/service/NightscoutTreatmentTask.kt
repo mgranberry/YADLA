@@ -35,7 +35,13 @@ class NightscoutTreatmentTask(override val ctx: Context,
                 is Map<*, *> -> {
                     val treatment = it as Map<String, String>
                     info("Processing $treatment")
-                    copyToRealmOrUpdate(Treatment(treatment))
+                    try {
+                        copyToRealmOrUpdate(Treatment(treatment))
+                    } catch (e: RuntimeException) {
+                        info("Exception: $e")
+                        e.printStackTrace()
+                    }
+                        info("copied $treatment")
                 }
             }
         }

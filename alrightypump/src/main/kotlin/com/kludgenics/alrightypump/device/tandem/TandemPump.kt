@@ -1,10 +1,6 @@
 package com.kludgenics.alrightypump.device.tandem
 
 import com.kludgenics.alrightypump.*
-import com.kludgenics.alrightypump.device.dexcom.CalSetRecord
-import com.kludgenics.alrightypump.device.dexcom.DexcomCgmRecord
-import com.kludgenics.alrightypump.device.dexcom.EgvRecord
-import com.kludgenics.alrightypump.device.dexcom.SgvRecord
 import com.kludgenics.alrightypump.therapy.SmbgRecord
 import okio.BufferedSink
 import okio.BufferedSource

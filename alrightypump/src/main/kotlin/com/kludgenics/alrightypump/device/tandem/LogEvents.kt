@@ -1,8 +1,7 @@
 package com.kludgenics.alrightypump.device.tandem
 
-import com.kludgenics.alrightypump.therapy.BaseGlucoseValue
-import com.kludgenics.alrightypump.therapy.GlucoseUnit
-import com.kludgenics.alrightypump.therapy.GlucoseValue
+import com.kludgenics.alrightypump.device.dexcom.MeterRecord
+import com.kludgenics.alrightypump.therapy.*
 import okio.Buffer
 import okio.BufferedSource
 import org.joda.time.*
@@ -10,6 +9,41 @@ import org.joda.time.*
 /**
  * Created by matthias on 11/21/15.
  */
+
+interface IobEventRecord : LogEvent {
+    val iob: Float
+}
+
+interface BolusEventRecord : LogEvent {
+    val bolusId: Int
+}
+
+interface TempBasalEventRecord : LogEvent {
+    val tempRateId: Int
+}
+
+interface AlertRecord {
+    val alertId: Int
+}
+
+interface AlarmRecord {
+    val alarmId: Int
+}
+
+interface IdpRecord {
+    val idp: Int
+}
+
+interface SuspensionRecord
+
+interface TimeChangeEventRecord
+
+interface TandemTherapyRecord : Record, LogEvent {
+    override val time: Instant
+        get() = timestamp
+    override val source: String
+        get() = "alrightypump-tandem"
+}
 
 interface LogEvent : Payload {
     companion object {
@@ -140,10 +174,6 @@ interface LogEvent : Payload {
     val data4: Int
 }
 
-interface IobRecord : LogEvent {
-    val iob: Float
-}
-
 private fun LogEvent.fieldToString(field: Int): String {
     return "(int=$field, uint=${field.toLong() and 0xFFFFFFFF}, bytes=${field.asBytes()}, shorts=${field.asShorts()}, ushorts=(${field.asUnsignedShorts()}), float=${field.asFloat()}"
 }
@@ -215,8 +245,8 @@ data class LogErased(
 data class TempRateStart(
         public val percent: Float,
         public val duration: Float,
-        public val tempRateId: Int,
-        public val rawRecord: LogEvent) : LogEvent by rawRecord {
+        public override val tempRateId: Int,
+        public val rawRecord: LogEvent) : LogEvent by rawRecord, TempBasalEventRecord {
     constructor (rawRecord: LogEvent) : this(percent = rawRecord.data1.asFloat(), duration = rawRecord.data2.asFloat(),
             tempRateId = rawRecord.data3.asUnsignedShorts().component2(), rawRecord = rawRecord)
 }
@@ -234,46 +264,40 @@ data class BasalRateChange(
 }
 
 data class AlertActivated(
-        public val alertId: Long,
-        public val rawRecord: LogEvent) : LogEvent by rawRecord {
-    constructor (rawRecord: LogEvent) : this(alertId = rawRecord.data1.asUnsigned(), rawRecord = rawRecord)
+        public override val alertId: Int,
+        public val rawRecord: LogEvent) : LogEvent by rawRecord, AlertRecord {
+    constructor (rawRecord: LogEvent) : this(alertId = rawRecord.data1, rawRecord = rawRecord)
 }
 
 data class AlarmActivated(
-        public val alarmId: Long,
-        public val rawRecord: LogEvent) : LogEvent by rawRecord {
-    constructor (rawRecord: LogEvent) : this(alarmId = rawRecord.data1.asUnsigned(), rawRecord = rawRecord)
+        public override val alarmId: Int,
+        public val rawRecord: LogEvent) : LogEvent by rawRecord, AlarmRecord {
+    constructor (rawRecord: LogEvent) : this(alarmId = rawRecord.data1, rawRecord = rawRecord)
 }
 
 data class AlarmAck(
-        public val alarmId: Long,
-        public val rawRecord: LogEvent) : LogEvent by rawRecord {
-    constructor (rawRecord: LogEvent) : this(alarmId = rawRecord.data1.asUnsigned(), rawRecord = rawRecord)
+        public override val alarmId: Int,
+        public val rawRecord: LogEvent) : LogEvent by rawRecord, AlarmRecord {
+    constructor (rawRecord: LogEvent) : this(alarmId = rawRecord.data1, rawRecord = rawRecord)
 }
 
 data class PumpingSuspended(
         public val unitsRemaining: Int,
-        public val rawRecord: LogEvent) : LogEvent by rawRecord {
-    constructor (rawRecord: LogEvent
-
-    ) : this(unitsRemaining = rawRecord.data2.asUnsignedShorts().component1(), rawRecord = rawRecord)
+        public val rawRecord: LogEvent) : LogEvent by rawRecord, SuspensionRecord {
+    constructor (rawRecord: LogEvent) : this(unitsRemaining = rawRecord.data2.asUnsignedShorts().component1(), rawRecord = rawRecord)
 }
 
 data class PumpingResumed(
         public val unitsRemaining: Int,
-        public val rawRecord: LogEvent) : LogEvent by rawRecord {
-    constructor (rawRecord: LogEvent
-
-    ) : this(unitsRemaining = rawRecord.data2.asUnsignedShorts().component1(), rawRecord = rawRecord)
+        public val rawRecord: LogEvent) : LogEvent by rawRecord, SuspensionRecord {
+    constructor (rawRecord: LogEvent) : this(unitsRemaining = rawRecord.data2.asUnsignedShorts().component1(), rawRecord = rawRecord)
 }
 
 data class TimeChanged(
         public val timePrior: LocalTime,
         public val timeAfter: LocalTime,
-        public val rawRecord: LogEvent) : LogEvent by rawRecord {
-    constructor (rawRecord: LogEvent
-
-    ) : this(timePrior = rawRecord.data1.asLocalTime(),
+        public val rawRecord: LogEvent) : LogEvent by rawRecord, TimeChangeEventRecord {
+    constructor (rawRecord: LogEvent) : this(timePrior = rawRecord.data1.asLocalTime(),
             timeAfter = rawRecord.data2.asLocalTime(),
             rawRecord = rawRecord)
 }
@@ -281,20 +305,19 @@ data class TimeChanged(
 data class DateChanged(
         public val datePrior: LocalDate,
         public val dateAfter: LocalDate,
-        public val rawRecord: LogEvent) : LogEvent by rawRecord {
-    constructor (rawRecord: LogEvent
-
-    ) : this(datePrior = rawRecord.data1.asLocalDate(), dateAfter = rawRecord.data2.asLocalDate(), rawRecord = rawRecord)
+        public val rawRecord: LogEvent) : LogEvent by rawRecord, TimeChangeEventRecord {
+    constructor (rawRecord: LogEvent) : this(rawRecord = rawRecord,
+            datePrior = rawRecord.data1.asLocalDate(),
+            dateAfter = rawRecord.data2.asLocalDate())
 }
 
 data class TempRateCompleted(
-        public val tempRateId: Int,
+        public override val tempRateId: Int,
         public val timeLeft: Duration,
-        public val rawRecord: LogEvent) : LogEvent by rawRecord {
-    constructor (rawRecord: LogEvent
-
-    ) : this(tempRateId = rawRecord.data1.asUnsignedShorts().component2(),
-            timeLeft = Duration(rawRecord.data2.asUnsigned()), rawRecord = rawRecord)
+        public val rawRecord: LogEvent) : LogEvent by rawRecord, TempBasalEventRecord {
+    constructor (rawRecord: LogEvent) : this(rawRecord = rawRecord,
+            tempRateId = rawRecord.data1.asUnsignedShorts().component2(),
+            timeLeft = Duration(rawRecord.data2.asUnsigned()))
 }
 
 data class BgReadingTaken(
@@ -302,7 +325,12 @@ data class BgReadingTaken(
         public override val iob: Float,
         public val targetBg: GlucoseValue,
         public val isf: Int,
-        public val rawRecord: LogEvent) : LogEvent by rawRecord, IobRecord {
+        public val rawRecord: LogEvent) : LogEvent by rawRecord, IobEventRecord, SmbgRecord, TandemTherapyRecord {
+    override val value: GlucoseValue
+        get() = bg
+    override val manual: Boolean
+        get() = true
+
     constructor (rawRecord: LogEvent) : this(rawRecord = rawRecord,
             bg = rawRecord.data1.asUnsignedShorts().component1().toGlucoseValue(),
             iob = rawRecord.data2.asFloat(),
@@ -311,11 +339,11 @@ data class BgReadingTaken(
 }
 
 data class BolusCompleted(
-        public val bolusId: Int,
+        public override val bolusId: Int,
         public override val iob: Float,
         public val insulinDelivered: Float,
         public val insulinRequested: Float,
-        public val rawRecord: LogEvent) : LogEvent by rawRecord, IobRecord {
+        public val rawRecord: LogEvent) : LogEvent by rawRecord, IobEventRecord, BolusEventRecord {
     constructor (rawRecord: LogEvent) : this(rawRecord = rawRecord,
             bolusId = rawRecord.data1.asUnsignedShorts().component2(),
             iob = rawRecord.data2.asFloat(),
@@ -324,11 +352,11 @@ data class BolusCompleted(
 }
 
 data class BolexCompleted(
-        public val bolusId: Int,
+        public override val bolusId: Int,
         public override val iob: Float,
         public val insulinDelivered: Float,
         public val insulinRequested: Float,
-        public val rawRecord: LogEvent) : LogEvent by rawRecord, IobRecord {
+        public val rawRecord: LogEvent) : LogEvent by rawRecord, IobEventRecord, BolusEventRecord {
     constructor (rawRecord: LogEvent) : this(rawRecord = rawRecord,
             bolusId = rawRecord.data1.asUnsignedShorts().component2(),
             iob = rawRecord.data2.asFloat(), insulinDelivered = rawRecord.data3.asFloat(),
@@ -336,32 +364,32 @@ data class BolexCompleted(
 }
 
 data class AlertCleared(
-        public val alertId: Long,
-        public val rawRecord: LogEvent) : LogEvent by rawRecord {
+        public override val alertId: Int,
+        public val rawRecord: LogEvent) : LogEvent by rawRecord, AlertRecord {
     constructor (rawRecord: LogEvent) : this(rawRecord = rawRecord,
-            alertId = rawRecord.data1.asUnsigned())
+            alertId = rawRecord.data1)
 }
 
 data class AlertAck(
-        public val alertId: Long,
-        public val rawRecord: LogEvent) : LogEvent by rawRecord {
+        public override val alertId: Int,
+        public val rawRecord: LogEvent) : LogEvent by rawRecord, AlertRecord {
     constructor (rawRecord: LogEvent) : this(rawRecord = rawRecord,
-            alertId = rawRecord.data1.asUnsigned())
+            alertId = rawRecord.data1)
 }
 
 data class AlarmCleared(
-        public val alarmId: Long,
-        public val rawRecord: LogEvent) : LogEvent by rawRecord {
+        public override val alarmId: Int,
+        public val rawRecord: LogEvent) : LogEvent by rawRecord, AlarmRecord {
     constructor (rawRecord: LogEvent) : this(rawRecord = rawRecord,
-            alarmId = rawRecord.data1.asUnsigned())
+            alarmId = rawRecord.data1)
 }
 
 data class CartridgeFilled(
-        public val insulinVolume: Long,
+        public val insulinVolume: Int,
         public val floatVolume: Float,
         public val rawRecord: LogEvent) : LogEvent by rawRecord {
     constructor (rawRecord: LogEvent) : this(rawRecord = rawRecord,
-            insulinVolume = rawRecord.data1.asUnsigned(), floatVolume = rawRecord.data2.asFloat())
+            insulinVolume = rawRecord.data1, floatVolume = rawRecord.data2.asFloat())
 }
 
 
@@ -399,11 +427,10 @@ data class UserNotification(
             limit = rawRecord.data3.asFloat())
 }
 
-data class BolusActivated(
-        public val bolusId: Int,
-        public override val iob: Float,
-        public val bolusSize: Float,
-        public val rawRecord: LogEvent) : LogEvent by rawRecord, IobRecord {
+data class BolusActivated(public override val bolusId: Int,
+                          public override val iob: Float,
+                          public val bolusSize: Float,
+                          public val rawRecord: LogEvent) : LogEvent by rawRecord, IobEventRecord, BolusEventRecord {
     constructor (rawRecord: LogEvent) : this(rawRecord = rawRecord,
             bolusId = rawRecord.data1.asUnsignedShorts().component1(),
             iob = rawRecord.data2.asFloat(),
@@ -411,19 +438,19 @@ data class BolusActivated(
 }
 
 data class IdpMessage2(
-        public val idp: Int,
+        public override val idp: Int,
         public val nameCont: String,
-        public val rawRecord: LogEvent) : LogEvent by rawRecord {
+        public val rawRecord: LogEvent) : LogEvent by rawRecord, IdpRecord {
     constructor (rawRecord: LogEvent) : this(rawRecord = rawRecord,
             idp = rawRecord.data1.asBytes().component1(),
             nameCont = "${rawRecord.data3.asString()}${rawRecord.data4.asString()}")
 }
 
 data class BolexActivated(
-        public val bolusId: Int,
+        public override val bolusId: Int,
         public override val iob: Float,
         public val bolusSize: Float,
-        public val rawRecord: LogEvent) : LogEvent by rawRecord, IobRecord {
+        public val rawRecord: LogEvent) : LogEvent by rawRecord, IobEventRecord, BolusEventRecord {
     constructor (rawRecord: LogEvent) : this(rawRecord = rawRecord,
             bolusId = rawRecord.data1.asUnsignedShorts().component1(),
             iob = rawRecord.data2.asFloat(),
@@ -448,7 +475,7 @@ data class TubingFilled(
 }
 
 data class BolusRequest1(
-        public val bolusId: Int,
+        public override val bolusId: Int,
         public val bolusType: Int,
         public val correction: Boolean,
         public val carbs: Int,
@@ -456,7 +483,7 @@ data class BolusRequest1(
         public override val iob: Float,
         public val carbRatio: Long,
         public val rawRecord: LogEvent
-) : LogEvent by rawRecord, IobRecord {
+) : LogEvent by rawRecord, IobEventRecord, BolusEventRecord {
     constructor (rawRecord: LogEvent) : this(rawRecord = rawRecord,
             bolusId = rawRecord.data1.asUnsignedShorts().component1(),
             bolusType = rawRecord.data1.asBytes().component3(),
@@ -468,7 +495,7 @@ data class BolusRequest1(
 }
 
 data class BolusRequest2(
-        public val bolusId: Int,
+        public override val bolusId: Int,
         public val options: Int,
         public val standardPercent: Int,
         public val duration: Duration,
@@ -476,7 +503,7 @@ data class BolusRequest2(
         public val targetBg: GlucoseValue,
         public val userOverride: Boolean,
         public val declinedCorrection: Boolean,
-        public val rawRecord: LogEvent) : LogEvent by rawRecord {
+        public val rawRecord: LogEvent) : LogEvent by rawRecord, BolusEventRecord {
     constructor (rawRecord: LogEvent) : this(
             rawRecord = rawRecord,
             bolusId = rawRecord.data1.asUnsignedShorts().component1(),
@@ -491,11 +518,11 @@ data class BolusRequest2(
 }
 
 data class BolusRequest3(
-        public val bolusId: Int,
+        public override val bolusId: Int,
         public val foodBolusRecommendation: Float,
         public val correctionBolusRecommendation: Float,
         public val totalBolus: Float,
-        public val rawRecord: LogEvent) : LogEvent by rawRecord {
+        public val rawRecord: LogEvent) : LogEvent by rawRecord, BolusEventRecord {
     constructor (rawRecord: LogEvent) : this(rawRecord = rawRecord,
             bolusId = rawRecord.data1.asUnsignedShorts().component1(),
             foodBolusRecommendation = rawRecord.data2.asFloat(),
@@ -511,7 +538,7 @@ data class UsbEnumerated(
 }
 
 data class IdpTdSeg(
-        public val idp: Int,
+        public override val idp: Int,
         public val segmentIndex: Int,
         public val modificationType: Int,
         public val startTime: LocalTime,
@@ -519,7 +546,7 @@ data class IdpTdSeg(
         public val isf: Int?,
         public val targetBg: GlucoseValue?,
         public val carbRatio: Int?,
-        public val rawRecord: LogEvent) : LogEvent by rawRecord {
+        public val rawRecord: LogEvent) : LogEvent by rawRecord, IdpRecord {
     constructor (rawRecord: LogEvent) : this(rawRecord = rawRecord,
             idp = rawRecord.data1.asBytes().component1(),
             segmentIndex = rawRecord.data1.asBytes().component3(),
@@ -536,11 +563,11 @@ data class IdpTdSeg(
 }
 
 data class Idp(
-        public val idp: Int,
+        public override val idp: Int,
         public val op: Int,
         public val sourceIdp: Int,
         public val name: String,
-        public val rawRecord: LogEvent) : LogEvent by rawRecord {
+        public val rawRecord: LogEvent) : LogEvent by rawRecord, IdpRecord {
     constructor (rawRecord: LogEvent) : this(
             idp = rawRecord.data1.asBytes().component1(),
             op = rawRecord.data1.asBytes().component2(),
@@ -550,12 +577,12 @@ data class Idp(
 }
 
 data class IdpBolus(
-        public val idp: Int,
+        public override val idp: Int,
         public val op: Int,
         public val insulinDuration: Duration?,
         public val maxBolus: Int?,
         public val useCarbs: Boolean?,
-        public val rawRecord: LogEvent) : LogEvent by rawRecord {
+        public val rawRecord: LogEvent) : LogEvent by rawRecord, IdpRecord {
     constructor (rawRecord: LogEvent) : this(
             idp = rawRecord.data1.asBytes().component1(),
             op = rawRecord.data1.asBytes().component2(),
@@ -588,7 +615,7 @@ data class DailyBasal(
         public override val iob: Float,
         public val batteryPct: Int,
         public val batteryMv: Int,
-        public val rawRecord: LogEvent) : LogEvent by rawRecord, IobRecord {
+        public val rawRecord: LogEvent) : LogEvent by rawRecord, IobEventRecord {
     constructor (rawRecord: LogEvent) : this(
             totalDailyBasal = rawRecord.data1.asFloat(),
             lastBasalRate = rawRecord.data2.asFloat(),

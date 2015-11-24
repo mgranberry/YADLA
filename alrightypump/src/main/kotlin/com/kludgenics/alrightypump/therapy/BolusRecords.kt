@@ -10,6 +10,7 @@ interface BolusRecord: Record {
     val requestedNormal: Double
     val requestedExtended: Double
     val extendedDuration: Duration
+    val expectedExtendedDuration: Duration?
     val delivered: Double
     val manual: Boolean
 }

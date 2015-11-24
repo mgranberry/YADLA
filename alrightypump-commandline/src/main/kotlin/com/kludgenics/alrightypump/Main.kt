@@ -4,6 +4,8 @@ import com.fazecast.jSerialComm.SerialPort
 import com.kludgenics.alrightypump.device.dexcom.DexcomG4
 import com.kludgenics.alrightypump.device.dexcom.RecordPage
 import com.kludgenics.alrightypump.device.tandem.*
+import com.kludgenics.alrightypump.therapy.BasalRecord
+import com.kludgenics.alrightypump.therapy.TemporaryBasalRecord
 import com.kludgenics.alrightypump.therapy.TreeMapTherapyTimeline
 import org.joda.time.DateTime
 import org.joda.time.Duration
@@ -34,15 +36,12 @@ fun main(args: Array<String>) {
                         .takeWhile { it.timestamp >= DateTime.now() - Period.days(3) }
 
                 val boluses = records.filterIsInstance<BolusEventRecord>().groupBy { it.bolusId }
-                val tempBasals = records.filterIsInstance<TempBasalEventRecord>().groupBy { it.tempRateId }
-                val tempStarts = records.filterIsInstance<TempRateStart>()
-                val tempEnds = records.filterIsInstance<TempRateCompleted>()
+                val tempBasals = records.filterIsInstance<BasalRecord>()
                 //boluses.forEach { println(it) }
-                tempBasals.forEach { println(it) }
-                tempStarts.forEach { println(it) }
-                tempEnds.forEach { println(it) }
-                // println("Fetched ${records.size} records in ${Duration(start, DateTime.now())}")
-
+                tempBasals.forEach {
+                    @Suppress("IMPLICIT_CAST_TO_UNIT_OR_ANY")
+                    println("${it.time} ${it.rate} ${if (it is TemporaryBasalRecord) it.duration.standardMinutes else ""} ${if (it is TemporaryBasalRecord) it.percent else ""} $it}") }
+                    // println("Fetched ${records.size} records in ${Duration(start, DateTime.now())}")
             }
             "DexCom Gen4 USB Serial" -> {
                 val connection = SerialConnection(it)

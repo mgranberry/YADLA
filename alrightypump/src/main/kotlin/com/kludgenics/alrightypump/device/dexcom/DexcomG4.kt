@@ -90,12 +90,12 @@ open class DexcomG4(private val source: BufferedSource,
     override val outOfRangeLow: Double
         get() = 39.0
 
-    public val egvRecords: Iterator<EgvRecord> get() = DataPageIterator(RecordPage.EGV_DATA)
-    public val sgvRecords: Iterator<SgvRecord> get() = DataPageIterator(RecordPage.SENSOR_DATA)
+    public val egvRecords: Sequence<EgvRecord> get() = DataPageIterator<EgvRecord>(RecordPage.EGV_DATA).asSequence()
+    public val sgvRecords: Sequence<SgvRecord> get() = DataPageIterator<SgvRecord>(RecordPage.SENSOR_DATA).asSequence()
     public val eventRecords: Sequence<EventRecord> get() = DataPageIterator<EventRecord>(RecordPage.USER_EVENT_DATA).asSequence()
-    public val settingsRecords: Iterator<UserSettingsRecord> get() = DataPageIterator(RecordPage.USER_SETTING_DATA)
+    public val settingsRecords: Sequence<UserSettingsRecord> get() = DataPageIterator<UserSettingsRecord>(RecordPage.USER_SETTING_DATA).asSequence()
     public val calibrationRecords: Sequence<CalSetRecord> get() = DataPageIterator<CalSetRecord>(RecordPage.CAL_SET).asSequence()
-    public val meterRecords: Iterator<MeterRecord> get() = DataPageIterator(RecordPage.METER_DATA)
+    public val meterRecords: Sequence<MeterRecord> get() = DataPageIterator<MeterRecord>(RecordPage.METER_DATA).asSequence()
     public val insertionRecords: Sequence<InsertionRecord> get() = DataPageIterator<InsertionRecord>(RecordPage.INSERTION_TIME).asSequence()
 
     public val version: String? by lazy { requestVersion() }

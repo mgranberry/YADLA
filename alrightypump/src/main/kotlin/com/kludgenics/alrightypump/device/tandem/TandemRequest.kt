@@ -82,12 +82,12 @@ class LogSizeReq : TandemPayload {
     override public val id: Int get() = COMMAND
 }
 
-data class LogSizeResp(public val numEntries: Long,
-                       public val firstSeqNo: Long,
-                       public val lastSeqNo: Long) : TandemPayload {
-    constructor(buffer: Buffer) : this(buffer.readIntLe().toLong() and 0xFFFFFFFF,
-            buffer.readIntLe().toLong() and 0xFFFFFFFF,
-            buffer.readIntLe().toLong() and 0xFFFFFFFF) {
+data class LogSizeResp(public val numEntries: Int,
+                       public val firstSeqNo: Int,
+                       public val lastSeqNo: Int) : TandemPayload {
+    constructor(buffer: Buffer) : this(buffer.readIntLe(),
+            buffer.readIntLe(),
+            buffer.readIntLe()) {
 
     }
 

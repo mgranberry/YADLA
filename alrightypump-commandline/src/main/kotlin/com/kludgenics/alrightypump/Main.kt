@@ -1,15 +1,13 @@
 package com.kludgenics.alrightypump
 
 import com.fazecast.jSerialComm.SerialPort
-import com.kludgenics.alrightypump.device.dexcom.DexcomG4
-import com.kludgenics.alrightypump.device.dexcom.RecordPage
+import com.kludgenics.alrightypump.device.dexcom.g4.DexcomG4
+import com.kludgenics.alrightypump.device.dexcom.g4.RecordPage
 import com.kludgenics.alrightypump.device.tandem.*
 import com.kludgenics.alrightypump.therapy.BasalRecord
 import com.kludgenics.alrightypump.therapy.TemporaryBasalRecord
 import com.kludgenics.alrightypump.therapy.TreeMapTherapyTimeline
 import org.joda.time.DateTime
-import org.joda.time.Duration
-import org.joda.time.Instant
 import org.joda.time.Period
 
 

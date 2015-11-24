@@ -1,4 +1,4 @@
-package com.kludgenics.alrightypump.device.dexcom
+package com.kludgenics.alrightypump.device.dexcom.g4
 
 import com.kludgenics.alrightypump.*
 import com.kludgenics.alrightypump.therapy.*

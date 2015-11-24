@@ -243,10 +243,10 @@ data class LogErased(
 
 data class TempRateStart(
         public val percent: Float,
-        public val duration: Float,
+        public val duration: Duration,
         public override val tempRateId: Int,
         public val rawRecord: LogEvent) : LogEvent by rawRecord, TempBasalEventRecord {
-    constructor (rawRecord: LogEvent) : this(percent = rawRecord.data1.asFloat(), duration = rawRecord.data2.asFloat(),
+    constructor (rawRecord: LogEvent) : this(percent = rawRecord.data1.asFloat(), duration = Duration(rawRecord.data2.asFloat().toLong()),
             tempRateId = rawRecord.data3.asUnsignedShorts().component2(), rawRecord = rawRecord)
 }
 
@@ -284,7 +284,7 @@ data class PumpingSuspended(
         public val unitsRemaining: Int,
         public val rawRecord: LogEvent) : LogEvent by rawRecord, SuspensionRecord, TempBasalEventRecord {
     override val tempRateId: Int
-        get() = 0
+        get() = -1
 
     constructor (rawRecord: LogEvent) : this(unitsRemaining = rawRecord.data2.asUnsignedShorts().component1(), rawRecord = rawRecord)
 }
@@ -293,7 +293,7 @@ data class PumpingResumed(
         public val unitsRemaining: Int,
         public val rawRecord: LogEvent) : LogEvent by rawRecord, SuspensionRecord, TempBasalEventRecord {
     override val tempRateId: Int
-        get() = 0
+        get() = -1
 
     constructor (rawRecord: LogEvent) : this(unitsRemaining = rawRecord.data2.asUnsignedShorts().component1(), rawRecord = rawRecord)
 }

@@ -8,6 +8,7 @@ import com.kludgenics.alrightypump.therapy.TreeMapTherapyTimeline
 import org.joda.time.DateTime
 import org.joda.time.Duration
 import org.joda.time.Instant
+import org.joda.time.Period
 
 
 fun main(args: Array<String>) {
@@ -25,33 +26,30 @@ fun main(args: Array<String>) {
                 println(it.flowControlSettings)
 
                 val tslim = TandemPump(connection.source(), connection.sink())
-                var response = tslim.commandResponse(VersionReq())
-                println(response.frame.snapshot().hex())
-                println(response.timestamp.toDateTime())
-                response = tslim.commandResponse(LogSizeReq())
+                val response = tslim.commandResponse(LogSizeReq())
                 val lsr = LogSizeResp(response.payload)
                 println("lsr: $lsr ${lsr.range}")
                 val start = DateTime()
                 /*for (entry in lsr.range.endInclusive - 1000 .. lsr.range.endInclusive) {
                     val resp = tslim.commandResponse(LogEntrySeqReq(entry))
                 }*/
-                var r1 = tslim.readLogRecords((lsr.range.start).toInt(), lsr.range.endInclusive.toInt())
+                var r1: Collection<LogEvent> = emptyList()
+                println("a")
+                val r = tslim.records
+                r1 = tslim.records.takeWhile { it.timestamp > DateTime.now()-Period.days(3) }.map { it }.toList()
+                println("z")
+                //r1 = tslim.readLogRecords((lsr.range.start).toInt(), lsr.range.endInclusive.toInt())
                 val midpoint = DateTime()
-                r1 = r1.filter{ it !is UnknownLogEvent }
+                // r1 = r1.filter{ it !is UnknownLogEvent }
                 println("Fetched ${r1.size} records in ${Duration(start, midpoint)}")
-                r1.forEach {
-                    println(it)
-                }
-                val r2 = tslim.readLogRecords((lsr.range.endInclusive - 1000).toInt(), lsr.range.endInclusive.toInt())
+                val r2 = r.takeWhile { it.timestamp > DateTime.now() - Period.days(4) }.toList()
                 val end = DateTime()
                 println("Fetched ${r2.size} records in ${Duration(midpoint, end)}")
-                /*for (entry in lsr.range.endInclusive downTo lsr.range.start) {
-                    response = tslim.commandResponse(LogEntrySeqReq(entry))
-                    if (response.parsedPayload is IobRecord) {
-                        val payload = response.parsedPayload as IobRecord
-                        println("${payload.timestamp.toDateTime()} ${payload.iob} ${payload.javaClass.simpleName}")
-                    }
-                }*/
+                val r3 = r.takeWhile { it.timestamp > DateTime.now() - Period.days(3) }.filter { it !is UnknownLogEvent }.toList()
+                println(r3.size)
+                r3.forEach { println("${it.timestamp} $it") }
+                println("Fetched ${r3.size} records in ${Duration(end, DateTime.now())}")
+
             }
             "DexCom Gen4 USB Serial" -> {
                 val connection = SerialConnection(it)

@@ -17,7 +17,7 @@ interface BolusEventRecord : LogEvent {
     val bolusId: Int
 }
 
-interface TempBasalEventRecord : LogEvent {
+interface TempBasalEventRecord : LogEvent, TemporaryBasalRecord, TandemTherapyRecord {
     val tempRateId: Int
 }
 
@@ -33,7 +33,7 @@ interface IdpRecord : LogEvent {
     val idp: Int
 }
 
-interface SuspensionRecord : LogEvent
+interface SuspensionRecord : LogEvent, SuspendedBasalRecord, TandemTherapyRecord
 
 interface TimeChangeEventRecord : LogEvent
 
@@ -242,11 +242,14 @@ data class LogErased(
 }
 
 data class TempRateStart(
-        public val percent: Float,
-        public val duration: Duration,
+        public override val percent: Double,
+        public override val duration: Duration,
         public override val tempRateId: Int,
         public val rawRecord: LogEvent) : LogEvent by rawRecord, TempBasalEventRecord {
-    constructor (rawRecord: LogEvent) : this(percent = rawRecord.data1.asFloat(), duration = Duration(rawRecord.data2.asFloat().toLong()),
+    override val rate: Double?
+        get() = null
+
+    constructor (rawRecord: LogEvent) : this(percent = rawRecord.data1.asFloat().toDouble(), duration = Duration(rawRecord.data2.asFloat().toLong()),
             tempRateId = rawRecord.data3.asUnsignedShorts().component2(), rawRecord = rawRecord)
 }
 
@@ -283,6 +286,12 @@ data class AlarmAck(
 data class PumpingSuspended(
         public val unitsRemaining: Int,
         public val rawRecord: LogEvent) : LogEvent by rawRecord, SuspensionRecord, TempBasalEventRecord {
+    override val rate: Double?
+        get() = 0.0
+    override val percent: Double?
+        get() = -100.0
+    override val duration: Duration
+        get() = Duration.standardDays(1)
     override val tempRateId: Int
         get() = -1
 
@@ -292,6 +301,12 @@ data class PumpingSuspended(
 data class PumpingResumed(
         public val unitsRemaining: Int,
         public val rawRecord: LogEvent) : LogEvent by rawRecord, SuspensionRecord, TempBasalEventRecord {
+    override val rate: Double?
+        get() = null
+    override val percent: Double?
+        get() = null
+    override val duration: Duration
+        get() = Duration.ZERO
     override val tempRateId: Int
         get() = -1
 
@@ -320,6 +335,13 @@ data class TempRateCompleted(
         public override val tempRateId: Int,
         public val timeLeft: Duration,
         public val rawRecord: LogEvent) : LogEvent by rawRecord, TempBasalEventRecord {
+    override val percent: Double?
+        get() = 0.0
+    override val duration: Duration
+        get() = Duration.ZERO
+    override val rate: Double?
+        get() = null
+
     constructor (rawRecord: LogEvent) : this(rawRecord = rawRecord,
             tempRateId = rawRecord.data1.asUnsignedShorts().component2(),
             timeLeft = Duration(rawRecord.data2.asUnsigned()))

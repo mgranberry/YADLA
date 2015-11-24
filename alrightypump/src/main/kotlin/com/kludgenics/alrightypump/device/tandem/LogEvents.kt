@@ -289,7 +289,7 @@ data class PumpingSuspended(
     override val rate: Double?
         get() = 0.0
     override val percent: Double?
-        get() = -100.0
+        get() = 0.0
     override val duration: Duration
         get() = Duration.standardDays(1)
     override val tempRateId: Int

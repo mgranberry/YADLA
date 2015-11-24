@@ -282,13 +282,19 @@ data class AlarmAck(
 
 data class PumpingSuspended(
         public val unitsRemaining: Int,
-        public val rawRecord: LogEvent) : LogEvent by rawRecord, SuspensionRecord {
+        public val rawRecord: LogEvent) : LogEvent by rawRecord, SuspensionRecord, TempBasalEventRecord {
+    override val tempRateId: Int
+        get() = 0
+
     constructor (rawRecord: LogEvent) : this(unitsRemaining = rawRecord.data2.asUnsignedShorts().component1(), rawRecord = rawRecord)
 }
 
 data class PumpingResumed(
         public val unitsRemaining: Int,
-        public val rawRecord: LogEvent) : LogEvent by rawRecord, SuspensionRecord {
+        public val rawRecord: LogEvent) : LogEvent by rawRecord, SuspensionRecord, TempBasalEventRecord {
+    override val tempRateId: Int
+        get() = 0
+
     constructor (rawRecord: LogEvent) : this(unitsRemaining = rawRecord.data2.asUnsignedShorts().component1(), rawRecord = rawRecord)
 }
 

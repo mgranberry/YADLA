@@ -30,25 +30,12 @@ fun main(args: Array<String>) {
                 val lsr = LogSizeResp(response.payload)
                 println("lsr: $lsr ${lsr.range}")
                 val start = DateTime()
-                /*for (entry in lsr.range.endInclusive - 1000 .. lsr.range.endInclusive) {
-                    val resp = tslim.commandResponse(LogEntrySeqReq(entry))
-                }*/
-                var r1: Collection<LogEvent> = emptyList()
-                println("a")
-                val r = tslim.records
-                r1 = tslim.records.takeWhile { it.timestamp > DateTime.now()-Period.days(3) }.map { it }.toList()
-                println("z")
-                //r1 = tslim.readLogRecords((lsr.range.start).toInt(), lsr.range.endInclusive.toInt())
-                val midpoint = DateTime()
-                // r1 = r1.filter{ it !is UnknownLogEvent }
-                println("Fetched ${r1.size} records in ${Duration(start, midpoint)}")
-                val r2 = r.takeWhile { it.timestamp > DateTime.now() - Period.days(4) }.toList()
-                val end = DateTime()
-                println("Fetched ${r2.size} records in ${Duration(midpoint, end)}")
-                val r3 = r.takeWhile { it.timestamp > DateTime.now() - Period.days(3) }.filter { it !is UnknownLogEvent }.toList()
-                println(r3.size)
-                r3.forEach { println("${it.timestamp} $it") }
-                println("Fetched ${r3.size} records in ${Duration(end, DateTime.now())}")
+                val records = tslim.records
+                        .filterIsInstance<BolusEventRecord>()
+                        .takeWhile { it.timestamp >= DateTime.now() - Period.days(10) }
+                        .groupBy { it.bolusId }
+                records.asSequence().forEach { println("$it") }
+                println("Fetched ${records.size} records in ${Duration(start, DateTime.now())}")
 
             }
             "DexCom Gen4 USB Serial" -> {

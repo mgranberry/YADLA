@@ -1,6 +1,5 @@
 package com.kludgenics.alrightypump.device.tandem
 
-import com.kludgenics.alrightypump.device.dexcom.MeterRecord
 import com.kludgenics.alrightypump.therapy.*
 import okio.Buffer
 import okio.BufferedSource
@@ -22,21 +21,21 @@ interface TempBasalEventRecord : LogEvent {
     val tempRateId: Int
 }
 
-interface AlertRecord {
+interface AlertRecord : LogEvent {
     val alertId: Int
 }
 
-interface AlarmRecord {
+interface AlarmRecord : LogEvent {
     val alarmId: Int
 }
 
-interface IdpRecord {
+interface IdpRecord : LogEvent {
     val idp: Int
 }
 
-interface SuspensionRecord
+interface SuspensionRecord : LogEvent
 
-interface TimeChangeEventRecord
+interface TimeChangeEventRecord : LogEvent
 
 interface TandemTherapyRecord : Record, LogEvent {
     override val time: Instant
@@ -392,7 +391,6 @@ data class CartridgeFilled(
             insulinVolume = rawRecord.data1, floatVolume = rawRecord.data2.asFloat())
 }
 
-
 data class UsbConnected(
         public val current: Float,
         public val rawRecord: LogEvent) : LogEvent by rawRecord {
@@ -457,7 +455,6 @@ data class BolexActivated(
             bolusSize = rawRecord.data3.asFloat())
 }
 
-
 data class DataLogCorruption(public val rawRecord: LogEvent) : LogEvent by rawRecord
 
 data class CannulaFilled(
@@ -513,8 +510,7 @@ data class BolusRequest2(
             isf = rawRecord.data3.asUnsignedShorts().component1(),
             targetBg = rawRecord.data3.asUnsignedShorts().component2().toGlucoseValue(),
             userOverride = rawRecord.data4.asBytes().component1() == 1,
-            declinedCorrection = rawRecord.data4.asBytes().component2() == 2
-    )
+            declinedCorrection = rawRecord.data4.asBytes().component2() == 2)
 }
 
 data class BolusRequest3(

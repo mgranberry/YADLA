@@ -1,14 +1,15 @@
 package com.kludgenics.alrightypump.cloud.nightscout.records
 
+import org.joda.time.DateTime
 import org.joda.time.Duration
-import org.joda.time.format.DateTimeFormatter
+import org.joda.time.format.ISODateTimeFormat
 import java.util.*
 
 interface Treatment {
     companion object {
         fun fromMap(treatment: Treatment, treatmentMap: Map<String, String>) {
             treatment.id = treatmentMap["_id"]!!
-            treatment.eventTime = treatment.dateParser.parseDateTime(treatmentMap["created_at"]).toDate()
+            treatment.eventTime = DateTime.parse(treatmentMap["created_at"]).toDate()
             treatment.eventType = treatmentMap["eventType"]
             treatment.enteredBy = treatmentMap["enteredBy"]
             treatment.glucose = treatmentMap["glucose"]?.toDouble()
@@ -25,9 +26,10 @@ interface Treatment {
         }
 
         fun toMap(treatment: Treatment) : Map<String, Any?> {
+            val dateParser = ISODateTimeFormat.dateTimeParser()
             val map = mapOf(
                     "_id" to treatment.id,
-                    "created_at" to treatment.dateTimeString,
+                    "created_at" to dateParser.print(treatment.eventTime.time),
                     "profile" to treatment.profile,
                     "percent" to treatment.percent,
                     "absolute" to treatment.absolute,
@@ -51,7 +53,6 @@ interface Treatment {
     open var duration: Duration?
     open var profile: String?
     open var eventType: String?
-    val dateTimeString: String get() = dateParser.print(eventTime.time)
     open var enteredBy: String?
     open var glucose: Double?
     open var glucoseType: String?
@@ -60,5 +61,4 @@ interface Treatment {
     open var notes: String?
     open var carbs: Int?
     open var preBolus: Int?
-    val dateParser: DateTimeFormatter
 }

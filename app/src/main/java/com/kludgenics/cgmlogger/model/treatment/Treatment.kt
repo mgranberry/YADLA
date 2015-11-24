@@ -1,6 +1,7 @@
 package com.kludgenics.cgmlogger.model.treatment
 
 import com.kludgenics.alrightypump.cloud.nightscout.records.Treatment
+import com.kludgenics.cgmlogger.extension.dateTime
 import java.util.Date
 
 import io.realm.RealmObject
@@ -9,15 +10,12 @@ import io.realm.annotations.PrimaryKey
 import io.realm.annotations.Required
 import org.joda.time.Duration
 import org.joda.time.format.ISODateTimeFormat
+import kotlin.properties.Delegates
 
 /**
  * Created by matthiasgranberry on 6/4/15.
  */
 open class Treatment : Treatment, RealmObject {
-    @Ignore
-    override val dateTimeString: String by lazy { super.dateTimeString }
-    @Ignore
-    override val dateParser = ISODateTimeFormat.dateTimeParser()
 
     @PrimaryKey
     override var id: String = ""
@@ -38,13 +36,17 @@ open class Treatment : Treatment, RealmObject {
     override var preBolus: Int? = null
     override var percent: Int? = null
     override var absolute: Double? = null
+
+    @Ignore
     override var duration: Duration? = null
+    open var durationLong: Long? = null
     override var profile: String? = null
 
     constructor() : super() {
     }
 
     constructor(treatmentMap: Map<String, String>) {
+        duration = if (durationLong != null) Duration(durationLong!!) else null
         Treatment.fromMap(this, treatmentMap)
     }
 
@@ -67,6 +69,7 @@ open class Treatment : Treatment, RealmObject {
         this.percent = percent
         this.absolute = absolute
         this.duration = duration
+        this.durationLong = duration?.millis
         this.profile = profile
     }
 }

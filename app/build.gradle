@@ -81,6 +81,7 @@ dependencies {
     // sdk19, sdk21, sdk23 are also available
     compile 'org.jetbrains.anko:anko-support-v4:0.7.2'
     // In case you need support.v4 bindings
-    compile 'net.danlew:android.joda:2.8.0'
+    compile 'joda-time:joda-time:2.9'
+    // compile 'net.danlew:android.joda:2.8.0'
     compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
 }

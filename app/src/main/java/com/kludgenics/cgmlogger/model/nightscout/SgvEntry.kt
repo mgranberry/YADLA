@@ -8,7 +8,7 @@ import com.kludgenics.cgmlogger.model.glucose.BloodGlucose
 /**
  * Created by matthiasgranberry on 5/21/15.
  */
-public open class RealmSgvEntry() : Sgv, BloodGlucose {
+public open class SgvEntry() : Sgv, BloodGlucose {
     @Expose
     @SerializedName("_id")
     override var id: String = ""
@@ -35,8 +35,8 @@ public open class RealmSgvEntry() : Sgv, BloodGlucose {
         this.noise = noise
     }
 
-    override val unit: String = BloodGlucose.UNIT_MGDL
-    override val value: Double = sgv.toDouble()
+    override val unit: String get() = BloodGlucose.UNIT_MGDL
+    override val value: Double get() = sgv.toDouble()
 
 }
 

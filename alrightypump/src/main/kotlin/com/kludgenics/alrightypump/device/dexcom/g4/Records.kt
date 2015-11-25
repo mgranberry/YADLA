@@ -354,10 +354,9 @@ public data class FoodEventRecord(public override val time: Instant,
 }
 
 public data class InsulinEventRecord(public override val time: Instant,
-                                     public override val delivered: Double,
+                                     public override val deliveredNormal: Double,
                                      public override val rawRecord: UserEventRecord) : BolusRecord, EventRecord,
         DexcomRecord by rawRecord {
-
     constructor(rawRecord: UserEventRecord) : this(DexcomRecord.toInstant(rawRecord.eventSeconds),
             rawRecord.eventValue / 100.0,
             rawRecord)
@@ -365,13 +364,16 @@ public data class InsulinEventRecord(public override val time: Instant,
     override val manual: Boolean
         get() = true
     override val requestedNormal: Double
-        get() = delivered
-    override val requestedExtended: Double
-        get() = 0.0
-    override val extendedDuration: Duration
-        get() = Duration.ZERO
+        get() = deliveredNormal
+    override val requestedExtended: Double?
+        get() = null
+    override val extendedDuration: Duration?
+        get() = null
     override val expectedExtendedDuration: Duration?
-        get() = Duration.ZERO
+        get() = null
+    override val deliveredExtended: Double?
+        get() = null
+
 
 }
 

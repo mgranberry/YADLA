@@ -1,9 +1,6 @@
 package com.kludgenics.alrightypump.device.tandem
 
-import com.kludgenics.alrightypump.therapy.BloodGlucoseTarget
-import com.kludgenics.alrightypump.therapy.BolusRecord
-import com.kludgenics.alrightypump.therapy.BolusWizardRecord
-import com.kludgenics.alrightypump.therapy.GlucoseValue
+import com.kludgenics.alrightypump.therapy.*
 import org.joda.time.Duration
 
 /**
@@ -51,8 +48,10 @@ interface TandemBolus : BolusRecord {
 
 data class TandemNormalBolus(public val bolusActivated: BolusActivated,
                              public val bolusCompleted: BolusCompleted?,
-                             public val bolusWizard: TandemBolusWizard) :  TandemBolus, TandemTherapyRecord,
-        LogEvent by bolusActivated {
+                             public override val bolusWizard: TandemBolusWizard) : NormalBolusRecord,
+        TandemBolus,
+        TandemTherapyRecord,
+        LogEvent by bolusWizard {
 
     override val requestedNormal: Double
         get() = bolusActivated.bolusSize.toDouble()
@@ -75,8 +74,10 @@ data class TandemNormalBolus(public val bolusActivated: BolusActivated,
 
 data class TandemExtendedBolus(public val extendedActivated: BolexActivated,
                                public val bolexCompleted: BolexCompleted?,
-                               public val bolusWizard: TandemBolusWizard) : TandemBolus, TandemTherapyRecord,
-        LogEvent by extendedActivated {
+                               public override val bolusWizard: TandemBolusWizard) : ExtendedBolusRecord,
+        TandemBolus,
+        TandemTherapyRecord,
+        LogEvent by bolusWizard {
 
     override val requestedNormal: Double?
         get() = null
@@ -104,7 +105,10 @@ data class TandemComboBolus(public val bolusActivated: BolusActivated,
                             public val extendedActivated: BolexActivated,
                             public val bolusCompleted: BolusCompleted?,
                             public val bolexCompleted: BolexCompleted?,
-                            public val bolusWizard: TandemBolusWizard) : TandemBolus, TandemTherapyRecord, LogEvent by bolusActivated {
+                            public override val bolusWizard: TandemBolusWizard) : ComboBolusRecord,
+        TandemBolus,
+        TandemTherapyRecord,
+        LogEvent by bolusWizard {
     override val requestedNormal: Double
         get() = bolusActivated.bolusSize.toDouble()
 

@@ -15,6 +15,7 @@ interface Payload {
         fun parse(command: Int, source: BufferedSource): Payload? {
             return when(command) {
                 125 -> LogEvent.parse(source)
+                123 -> Ack(source)
                 else -> null
             }
         }
@@ -84,3 +85,7 @@ data class Reminder(public val remindIn: Duration?, // minutes
                     public val endTime: LocalTime?,
                     public val days: Int?, // bitmask mtwrfss
                     public val active: Boolean) // mask: rin, act, start, end, days
+
+data class Ack (val command: Int, val success: Int) : Payload {
+    constructor(source: BufferedSource) : this(source.readByte().toInt() and 0xFF, source.readByte().toInt() and 0xFF)
+}

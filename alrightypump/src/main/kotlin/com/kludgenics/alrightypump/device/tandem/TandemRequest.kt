@@ -37,7 +37,7 @@ interface TandemPayload {
 
 class VersionReq : TandemPayload {
     companion object {
-        public val COMMAND: Int = 82
+        const public val COMMAND: Int = 82
     }
 
     override public val id: Int get() = COMMAND
@@ -45,7 +45,7 @@ class VersionReq : TandemPayload {
 
 data class LogEntrySeqReq(public val seqNum: Long) : TandemPayload {
     companion object {
-        public val COMMAND: Int = 151
+        const public val COMMAND: Int = 151
     }
 
     override val payloadLength: Int get() = 4
@@ -56,7 +56,7 @@ data class LogEntrySeqReq(public val seqNum: Long) : TandemPayload {
 
 class LogEntrySeqMultiReq : TandemPayload {
     companion object {
-        public val COMMAND: Int = 152
+        const public val COMMAND: Int = 152
     }
 
     override public val id: Int get() = COMMAND
@@ -65,7 +65,7 @@ class LogEntrySeqMultiReq : TandemPayload {
 data class LogEntrySeqMultiStopDump(public val seqNum: Long,
                                     public val howMany: Long) : TandemPayload {
     companion object {
-        public val COMMAND: Int = 153
+        const public val COMMAND: Int = 153
     }
 
     override val payloadLength: Int get() = 8
@@ -76,7 +76,7 @@ data class LogEntrySeqMultiStopDump(public val seqNum: Long,
 
 class LogSizeReq : TandemPayload {
     companion object {
-        public val COMMAND: Int = 168
+        const public val COMMAND: Int = 168
     }
 
     override public val id: Int get() = COMMAND
@@ -92,7 +92,7 @@ data class LogSizeResp(public val numEntries: Int,
     }
 
     companion object {
-        public val COMMAND: Int = 169
+        const public val COMMAND: Int = 169
     }
 
     public override val id: Int get() = COMMAND
@@ -101,7 +101,7 @@ data class LogSizeResp(public val numEntries: Int,
 
 class IdpListReq : TandemPayload {
     companion object {
-        public val COMMAND: Int = 173
+        const public val COMMAND: Int = 173
     }
 
     override public val id: Int get() = COMMAND
@@ -109,7 +109,7 @@ class IdpListReq : TandemPayload {
 
 data class IdpReq(public val idp: Int) : TandemPayload {
     companion object {
-        public val COMMAND: Int = 175
+        const public val COMMAND: Int = 175
     }
 
     override val payload: Buffer
@@ -120,7 +120,7 @@ data class IdpReq(public val idp: Int) : TandemPayload {
 
 class GlobalsReq : TandemPayload {
     companion object {
-        public val COMMAND: Int = 178
+        const public val COMMAND: Int = 178
     }
 
     override public val id: Int get() = COMMAND
@@ -128,7 +128,7 @@ class GlobalsReq : TandemPayload {
 
 class PumpSettingsReq : TandemPayload {
     companion object {
-        public val COMMAND: Int = 181
+        const public val COMMAND: Int = 181
     }
 
     override public val id: Int get() = COMMAND
@@ -136,9 +136,51 @@ class PumpSettingsReq : TandemPayload {
 
 class RemindSettingsReq : TandemPayload {
     companion object {
-        public val COMMAND: Int = 184
+        const public val COMMAND: Int = 184
     }
 
     override public val id: Int get() = COMMAND
 }
 
+class Command188(val value1: Int = 7, val value2: Int) : TandemPayload {
+    companion object {
+        const public val COMMAND: Int = 188
+    }
+    override val payload: Buffer
+        get() = Buffer().writeIntLe(value1).writeIntLe(value2)
+    override val payloadLength = 8
+
+    override public val id: Int = COMMAND
+}
+
+class Command189() : TandemPayload {
+    companion object {
+        const public val COMMAND: Int = 189
+    }
+
+    override public val id: Int = COMMAND
+}
+class Command209() : TandemPayload {
+    companion object {
+        const public val COMMAND: Int = 209
+    }
+
+    override public val id: Int = COMMAND
+}
+
+class Command83() : TandemPayload {
+    companion object {
+        const public val COMMAND: Int = 83
+    }
+    override val payload: Buffer
+        get() = Buffer().writeIntLe(0x17a5c352)
+    override val payloadLength = 4
+    override public val id: Int = COMMAND
+}
+
+class Command61() : TandemPayload {
+    companion object {
+        const public val COMMAND: Int = 61
+    }
+    override public val id: Int = COMMAND
+}

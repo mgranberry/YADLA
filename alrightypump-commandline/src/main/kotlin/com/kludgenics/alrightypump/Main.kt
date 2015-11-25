@@ -8,6 +8,7 @@ import com.kludgenics.alrightypump.therapy.BasalRecord
 import com.kludgenics.alrightypump.therapy.TemporaryBasalRecord
 import com.kludgenics.alrightypump.therapy.TreeMapTherapyTimeline
 import org.joda.time.DateTime
+import org.joda.time.Duration
 import org.joda.time.Period
 
 
@@ -18,29 +19,28 @@ fun main(args: Array<String>) {
         println(it.descriptivePortName)
         when (it.descriptivePortName) {
             "Tandem Virtual COM Port" -> {
-                println(it.baudRate)
                 it.baudRate = 115200 * 12
-                println(it.baudRate)
                 val connection = SerialConnection(it)
-                println(it.baudRate)
-                println(it.flowControlSettings)
 
                 val tslim = TandemPump(connection.source(), connection.sink())
                 val response = tslim.commandResponse(LogSizeReq())
                 val lsr = LogSizeResp(response.payload)
                 println("lsr: $lsr ${lsr.range}")
                 val start = DateTime()
-                val records = tslim.bolusRecords.takeWhile { it.time >= DateTime.now() - Period.months(6) }
-                records.forEach { println(it) }
-                records.forEach { println(it) }
-                //val records = tslim.records
-                //        .takeWhile { it.timestamp >= DateTime.now() - Period.days(1) }
-                //records.filterIsInstance<BolusEventRecord>().forEach { println("${it.timestamp.toDateTime()} ${it.bolusId} ${it.javaClass.simpleName}") }
-    //boluses.forEach { println(it) }
-                // tempBasals.forEach {
-                //    @Suppress("IMPLICIT_CAST_TO_UNIT_OR_ANY")
-                //    println("${it.time} ${it.rate} ${if (it is TemporaryBasalRecord) it.duration.standardMinutes else ""} ${if (it is TemporaryBasalRecord) it.percent else ""} $it}") }
-                    // println("Fetched ${records.size} records in ${Duration(start, DateTime.now())}")
+                val records = tslim.bolusRecords
+//                records.forEach { /*println(it)*/ }
+                val mid = DateTime()
+ //               records.forEach { /*println(it) */}
+                val end = DateTime()
+                println(records.first())
+                val resp = tslim.commandResponse(Command61())
+                println("command: ${resp.command} ${resp.header.snapshot().hex()} ${resp.payload.snapshot().hex()} ${resp.parsedPayload} ${resp.frame.snapshot().hex()}")
+                println("start: $start (${Duration(start, mid)}) mid: $mid (${Duration(mid, end)}) end: $end")
+                //println(records.groupBy { it.time.toDateTime().withTimeAtStartOfDay() }.values.map { it.size }.average())
+                val time = DateTime.parse("2014-7-01")
+                // val recs = tslim.bolusRecords
+                // recs.map { it.requestedNormal != null && (it.requestedNormal!! >=  10.0)}
+                // timeline.merge({it.time >= time}, tslim.bolusRecords)
             }
             "DexCom Gen4 USB Serial" -> {
                 val connection = SerialConnection(it)
@@ -63,10 +63,11 @@ fun main(args: Array<String>) {
                 // g4.cgmRecords.forEach { println("${it.time}: ${it.value.mgdl} ${it.value.rawMgdl}") }
                 //g4.cgmRecords.filter{(it.value as DexcomG4GlucoseValue).calibration != null} .forEach{ println("${(it.value as DexcomG4GlucoseValue).raw} ${it.value.glucose}")}
                 //g4.calibrationRecords.forEach { println("$it ${it.displayTime}") }
+
                 timeline.merge({it.time >= DateTime.parse("2015-11-19")}, g4.cgmRecords, g4.calibrationRecords, g4.eventRecords, g4.insertionRecords, g4.smbgRecords)
             }
         }
     }
-    println(timeline.events)
-    timeline.events.forEach { println("${it.time} $it") }
+    //
+    // timeline.events.forEach { println("${it.time} $it") }
 }

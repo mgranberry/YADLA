@@ -14,8 +14,24 @@ interface BolusRecord: Record {
     val deliveredExtended: Double?
     val extendedDuration: Duration?
     val expectedExtendedDuration: Duration?
-
+    val bolusWizard: BolusWizardRecord?
     val manual: Boolean
+}
+
+interface NormalBolusRecord: BolusRecord {
+    override val requestedNormal: Double
+    override val deliveredNormal: Double?
+}
+
+interface ExtendedBolusRecord: BolusRecord {
+    override val requestedExtended: Double
+    override val expectedExtendedDuration: Duration
+}
+
+interface ComboBolusRecord: BolusRecord {
+    override val requestedNormal: Double
+    override val requestedExtended: Double
+    override val expectedExtendedDuration: Duration
 }
 
 interface BolusWizardRecord: Record {

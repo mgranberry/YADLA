@@ -17,9 +17,14 @@ class TreeMapTherapyTimeline : TherapyTimeline {
             _events.tailMap(start).headMap(end).values.flatMap { it }
 
 
+    override fun merge(vararg additionalEvents: Sequence<Record>) {
+        merge({true}, *additionalEvents)
+    }
+
     override fun merge(predicate: (Record) -> Boolean, vararg additionalEvents: Sequence<Record>) {
+        val e = additionalEvents.map { it }
         val events = additionalEvents.flatMap { it.takeWhile(predicate).toList() }
         for (event in events)
-            _events.getOrPut(event.time, { hashSetOf() }).add(event)
+            _events.getOrPut(event.time, { HashSet(1) }).add(event)
     }
 }

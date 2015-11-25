@@ -1,6 +1,7 @@
 package com.kludgenics.alrightypump.device.tandem
 
 import com.kludgenics.alrightypump.*
+import com.kludgenics.alrightypump.therapy.BolusRecord
 import com.kludgenics.alrightypump.therapy.SmbgRecord
 import okio.BufferedSink
 import okio.BufferedSource
@@ -87,6 +88,87 @@ class TandemPump(private val source: BufferedSource, private val sink: BufferedS
         get() = throw UnsupportedOperationException()
     override val smbgRecords: Sequence<SmbgRecord>
         get() = throw UnsupportedOperationException()
+
+    val bolusRecords: Sequence<TandemBolus> get () = BolusWizardAssemblingSequence()
+
+    private data class BolusRecordHolder (var record1: BolusRequest1? = null,
+                                  var record2: BolusRequest2? = null,
+                                  var record3: BolusRequest3? = null,
+                                  var normalActivated: BolusActivated? = null,
+                                  var extendedActivated: BolexActivated? = null,
+                                  var normalCompleted: BolusCompleted? = null,
+                                  var extendedCompleted: BolexCompleted? = null) {
+
+        @Suppress("USELESS_CAST") // the compiler can't figure it out
+        fun toRecord(): TandemBolus? {
+            val wizard = if (record1 != null && record2 != null && record3 != null)
+                TandemBolusWizard(record1!!, record2!!, record3!!)
+            else null
+            return if (wizard != null) {
+                if (normalActivated != null && extendedActivated != null)
+                    TandemComboBolus(normalActivated!!, extendedActivated!!, normalCompleted, extendedCompleted, wizard)
+                else if (normalActivated != null)
+                    TandemNormalBolus(normalActivated!!, normalCompleted, wizard)
+                else if (extendedActivated != null)
+                    TandemExtendedBolus(extendedActivated!!, extendedCompleted, wizard) as TandemBolus
+                else null
+            } else null
+        }
+    }
+
+    private inner class BolusWizardAssemblingSequence : Sequence<TandemBolus> {
+        override fun iterator() = object: Iterator<TandemBolus> {
+            val bolusRecordMap = LinkedHashMap<Int, BolusRecordHolder>()
+            val recordIterator: Iterator<TandemBolus>
+
+            init {
+                recordIterator = records.filterIsInstance<BolusEventRecord>()
+                        .mapNotNull {
+                            val recordHolder = bolusRecordMap.getOrPut(it.bolusId, { BolusRecordHolder() })
+                            when (it) {
+                                is BolusRequest1 -> {
+                                    recordHolder.record1 = it
+                                    bolusRecordMap.remove(it.bolusId)
+                                    recordHolder.toRecord()
+                                }
+                                is BolusRequest2 -> {
+                                    recordHolder.record2 = it
+                                    null
+                                }
+                                is BolusRequest3 -> {
+                                    recordHolder.record3 = it
+                                    null
+                                }
+                                is BolusActivated -> {
+                                    recordHolder.normalActivated = it
+                                    null
+                                }
+                                is BolexActivated -> {
+                                    recordHolder.extendedActivated = it
+                                    null
+                                }
+                                is BolusCompleted -> {
+                                    recordHolder.normalCompleted = it
+                                    null
+                                }
+                                is BolexCompleted -> {
+                                    recordHolder.extendedCompleted = it
+                                    null
+                                }
+                                else -> null
+                            }
+                        }.iterator()
+            }
+
+            override fun next(): TandemBolus {
+                return recordIterator.next()
+            }
+
+            override fun hasNext(): Boolean {
+                return recordIterator.hasNext()
+            }
+        }
+    }
 
     val logRange: IntRange = LogSizeResp(commandResponse(LogSizeReq()).payload).range
 

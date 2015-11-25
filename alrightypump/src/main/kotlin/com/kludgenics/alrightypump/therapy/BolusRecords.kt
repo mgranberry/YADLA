@@ -7,11 +7,14 @@ import org.joda.time.Duration
  */
 
 interface BolusRecord: Record {
-    val requestedNormal: Double
-    val requestedExtended: Double
-    val extendedDuration: Duration
+    val requestedNormal: Double?
+    val deliveredNormal: Double?
+
+    val requestedExtended: Double?
+    val deliveredExtended: Double?
+    val extendedDuration: Duration?
     val expectedExtendedDuration: Duration?
-    val delivered: Double
+
     val manual: Boolean
 }
 
@@ -19,7 +22,7 @@ interface BolusWizardRecord: Record {
     interface Recommendation {
         val carbBolus: Double
         val correctionBolus: Double
-        val total: Double get() = carbBolus + correctionBolus
+        val totalBolus: Double get() = carbBolus + correctionBolus
     }
     val bg: GlucoseValue
     val carbs: Int
@@ -27,6 +30,7 @@ interface BolusWizardRecord: Record {
     val carbRatio: Double
     val insulinSensitivity: Double
     val target: BloodGlucoseTarget
+    val recommendation: Recommendation
 }
 
 interface BloodGlucoseTarget {

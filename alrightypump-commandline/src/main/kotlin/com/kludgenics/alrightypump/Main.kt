@@ -30,15 +30,16 @@ fun main(args: Array<String>) {
                 val lsr = LogSizeResp(response.payload)
                 println("lsr: $lsr ${lsr.range}")
                 val start = DateTime()
-                val records = tslim.records
-                        .takeWhile { it.timestamp >= DateTime.now() - Period.days(3) }
-
-                val boluses = records.filterIsInstance<BolusEventRecord>().groupBy { it.bolusId }
-                val tempBasals = records.filterIsInstance<BasalRecord>()
-                //boluses.forEach { println(it) }
-                tempBasals.forEach {
-                    @Suppress("IMPLICIT_CAST_TO_UNIT_OR_ANY")
-                    println("${it.time} ${it.rate} ${if (it is TemporaryBasalRecord) it.duration.standardMinutes else ""} ${if (it is TemporaryBasalRecord) it.percent else ""} $it}") }
+                val records = tslim.bolusRecords.takeWhile { it.time >= DateTime.now() - Period.months(6) }
+                records.forEach { println(it) }
+                records.forEach { println(it) }
+                //val records = tslim.records
+                //        .takeWhile { it.timestamp >= DateTime.now() - Period.days(1) }
+                //records.filterIsInstance<BolusEventRecord>().forEach { println("${it.timestamp.toDateTime()} ${it.bolusId} ${it.javaClass.simpleName}") }
+    //boluses.forEach { println(it) }
+                // tempBasals.forEach {
+                //    @Suppress("IMPLICIT_CAST_TO_UNIT_OR_ANY")
+                //    println("${it.time} ${it.rate} ${if (it is TemporaryBasalRecord) it.duration.standardMinutes else ""} ${if (it is TemporaryBasalRecord) it.percent else ""} $it}") }
                     // println("Fetched ${records.size} records in ${Duration(start, DateTime.now())}")
             }
             "DexCom Gen4 USB Serial" -> {

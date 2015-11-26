@@ -357,6 +357,9 @@ public data class InsulinEventRecord(public override val time: Instant,
                                      public override val deliveredNormal: Double,
                                      public override val rawRecord: UserEventRecord) : BolusRecord, EventRecord,
         DexcomRecord by rawRecord {
+    override val bolusWizard: BolusWizardRecord?
+        get() = null
+
     constructor(rawRecord: UserEventRecord) : this(DexcomRecord.toInstant(rawRecord.eventSeconds),
             rawRecord.eventValue / 100.0,
             rawRecord)

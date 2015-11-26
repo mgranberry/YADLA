@@ -1,15 +1,20 @@
 package com.kludgenics.alrightypump
 
 import com.fazecast.jSerialComm.SerialPort
+import com.kludgenics.alrightypump.cloud.nightscout.NightscoutApi
+import com.kludgenics.alrightypump.cloud.nightscout.records.Cal
+import com.kludgenics.alrightypump.cloud.nightscout.records.Meter
+import com.kludgenics.alrightypump.cloud.nightscout.records.NightscoutEntry
+import com.kludgenics.alrightypump.cloud.nightscout.records.Sgv
 import com.kludgenics.alrightypump.device.dexcom.g4.DexcomG4
 import com.kludgenics.alrightypump.device.dexcom.g4.RecordPage
 import com.kludgenics.alrightypump.device.tandem.*
-import com.kludgenics.alrightypump.therapy.BasalRecord
-import com.kludgenics.alrightypump.therapy.TemporaryBasalRecord
-import com.kludgenics.alrightypump.therapy.TreeMapTherapyTimeline
+import com.kludgenics.alrightypump.therapy.*
+import com.squareup.okhttp.HttpUrl
 import org.joda.time.DateTime
 import org.joda.time.Duration
 import org.joda.time.Period
+import retrofit.Retrofit
 
 
 fun main(args: Array<String>) {
@@ -27,20 +32,25 @@ fun main(args: Array<String>) {
                 val lsr = LogSizeResp(response.payload)
                 println("lsr: $lsr ${lsr.range}")
                 val start = DateTime()
-                val records = tslim.bolusRecords
-//                records.forEach { /*println(it)*/ }
-                val mid = DateTime()
- //               records.forEach { /*println(it) */}
-                val end = DateTime()
-                println(records.first())
-                val resp = tslim.commandResponse(Command61())
-                println("command: ${resp.command} ${resp.header.snapshot().hex()} ${resp.payload.snapshot().hex()} ${resp.parsedPayload} ${resp.frame.snapshot().hex()}")
-                println("start: $start (${Duration(start, mid)}) mid: $mid (${Duration(mid, end)}) end: $end")
-                //println(records.groupBy { it.time.toDateTime().withTimeAtStartOfDay() }.values.map { it.size }.average())
-                val time = DateTime.parse("2014-7-01")
-                // val recs = tslim.bolusRecords
-                // recs.map { it.requestedNormal != null && (it.requestedNormal!! >=  10.0)}
-                // timeline.merge({it.time >= time}, tslim.bolusRecords)
+                val bolusRecords = tslim.bolusRecords.takeWhile { it.time.toDateTime() > DateTime.now() - Period.days(2) }
+                bolusRecords.forEach { println("${it.javaClass.simpleName}\t${it.time.toDateTime()}\tn:${it.deliveredNormal}\te:${it.deliveredExtended}\tdur:${it.extendedDuration}") }
+                val basalRecords = tslim.basalRecords.takeWhile { it.time.toDateTime() > DateTime.now() - Period.days(60) }
+                basalRecords.forEach {
+                    when (it) {
+                        is TemporaryBasalRecord -> {
+                            println ("${it.javaClass.simpleName}\t${it.time.toDateTime()}\tr:${it.rate}\tp:${it.percent} d:${it.duration}")
+                        }
+                        is SuspendedBasalRecord -> {
+                            println ("${it.javaClass.simpleName}\t${it.time.toDateTime()}\tr:${it.rate}")
+                        }
+                        is ScheduledBasalRecord -> {
+                            println ("${it.javaClass.simpleName}\t${it.time.toDateTime()}\tr:${it.rate}\tsched:${it.schedule}")
+                        }
+                        else -> {
+                            println ("${it.javaClass.simpleName}\t${it.time.toDateTime()}\t${it.rate}\t$it")
+                        }
+                    }
+                }
             }
             "DexCom Gen4 USB Serial" -> {
                 val connection = SerialConnection(it)

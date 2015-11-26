@@ -4,6 +4,7 @@ import com.kludgenics.alrightypump.DateTimeChangeRecord
 import com.kludgenics.alrightypump.DeviceFeature
 import com.kludgenics.alrightypump.Glucometer
 import com.kludgenics.alrightypump.InsulinPump
+import com.kludgenics.alrightypump.therapy.BasalRecord
 import com.kludgenics.alrightypump.therapy.SmbgRecord
 import okio.BufferedSink
 import okio.BufferedSource
@@ -43,31 +44,7 @@ class TandemPump(private val source: BufferedSource, private val sink: BufferedS
         get() = throw UnsupportedOperationException()
 
     val bolusRecords: Sequence<TandemBolus> get () = BolusWizardAssemblingSequence()
-
-    private data class BolusRecordHolder (var record1: BolusRequest1? = null,
-                                  var record2: BolusRequest2? = null,
-                                  var record3: BolusRequest3? = null,
-                                  var normalActivated: BolusActivated? = null,
-                                  var extendedActivated: BolexActivated? = null,
-                                  var normalCompleted: BolusCompleted? = null,
-                                  var extendedCompleted: BolexCompleted? = null) {
-
-        @Suppress("USELESS_CAST") // the compiler can't figure it out
-        fun toRecord(): TandemBolus? {
-            val wizard = if (record1 != null && record2 != null && record3 != null)
-                TandemBolusWizard(record1!!, record2!!, record3!!)
-            else null
-            return if (wizard != null) {
-                if (normalActivated != null && extendedActivated != null)
-                    TandemComboBolus(normalActivated!!, extendedActivated!!, normalCompleted, extendedCompleted, wizard)
-                else if (normalActivated != null)
-                    TandemNormalBolus(normalActivated!!, normalCompleted, wizard)
-                else if (extendedActivated != null)
-                    TandemExtendedBolus(extendedActivated!!, extendedCompleted, wizard) as TandemBolus
-                else null
-            } else null
-        }
-    }
+    val basalRecords: Sequence<BasalRecord> get() = BasalRateAssemblingSequence()
 
     val logRange: IntRange = LogSizeResp(commandResponse(LogSizeReq()).payload).range
 
@@ -161,6 +138,108 @@ class TandemPump(private val source: BufferedSource, private val sink: BufferedS
                     }
                 }
             }
+        }
+    }
+
+    private data class BasalRecordHolder (val tempBasalStart: TempRateStart? = null,
+                                          val tempRateCompleted: TempRateCompleted? = null,
+                                          val basalRateChange: BasalRateChange? = null,
+                                          val pumpingSuspended: PumpingSuspended? = null,
+                                          val pumpingResumed: PumpingResumed? = null) {
+        fun scheduled() : TandemScheduledBasalRecord? {
+            return if (basalRateChange != null)
+                TandemScheduledBasalRecord(rateChange = basalRateChange!!, schedule = null)
+            else null
+        }
+
+        fun temp() : TandemTemporaryBasalRecord? {
+            val result = if (basalRateChange != null && tempRateCompleted != null)
+                TandemTemporaryBasalRecord(tempBasalStart, tempRateCompleted, basalRateChange)
+            else if (basalRateChange != null && pumpingSuspended != null && pumpingResumed != null)
+                TandemTemporaryBasalRecord(pumpingSuspended, pumpingResumed, basalRateChange)
+            else {
+                null
+            }
+            return result
+        }
+
+    }
+
+    private inner class BasalRateAssemblingSequence : Sequence<TandemBasalRecord> {
+
+        override fun iterator() = object: Iterator<TandemBasalRecord> {
+            var basalRecordHolder = BasalRecordHolder()
+            val recordIterator: Iterator<TandemBasalRecord>
+
+            init {
+                recordIterator = records.filterIsInstance<BasalRecord>()
+                        .mapNotNull {
+                            when (it) {
+                                is BasalRateChange -> {
+                                    basalRecordHolder = basalRecordHolder.copy(basalRateChange = it)
+                                    if (it.changeType and (BasalRateChange.MASK_PROFILE_CHANGE or
+                                            BasalRateChange.MASK_SEGMENT_CHANGE or
+                                            BasalRateChange.MASK_PUMP_RESUME or
+                                            BasalRateChange.MASK_TEMP_END) != 0) {
+                                        basalRecordHolder.scheduled()
+                                    } else
+                                        null
+                                }
+                                is TempRateCompleted -> {
+                                    basalRecordHolder = basalRecordHolder.copy(tempRateCompleted = it)
+                                    basalRecordHolder.temp()
+                                }
+                                is PumpingResumed -> {
+                                    basalRecordHolder = basalRecordHolder.copy(pumpingResumed = it)
+                                    null
+                                }
+                                is TempRateStart -> {
+                                    val v = basalRecordHolder.copy(tempBasalStart = it).temp()
+                                    basalRecordHolder = BasalRecordHolder()
+                                    v
+                                }
+                                is PumpingSuspended -> {
+                                    val v = basalRecordHolder.copy(pumpingSuspended = it).temp()
+                                    basalRecordHolder = BasalRecordHolder()
+                                    v
+                                }
+                                else -> null
+                            }
+                        }.iterator()
+            }
+
+            override fun next(): TandemBasalRecord {
+                return recordIterator.next()
+            }
+
+            override fun hasNext(): Boolean {
+                return recordIterator.hasNext()
+            }
+        }
+    }
+
+    private data class BolusRecordHolder (var record1: BolusRequest1? = null,
+                                          var record2: BolusRequest2? = null,
+                                          var record3: BolusRequest3? = null,
+                                          var normalActivated: BolusActivated? = null,
+                                          var extendedActivated: BolexActivated? = null,
+                                          var normalCompleted: BolusCompleted? = null,
+                                          var extendedCompleted: BolexCompleted? = null) {
+
+        @Suppress("USELESS_CAST") // the compiler can't figure it out without a little help.
+        fun toRecord(): TandemBolus? {
+            val wizard = if (record1 != null && record2 != null && record3 != null)
+                TandemBolusWizard(record1!!, record2!!, record3!!)
+            else null
+            return if (wizard != null) {
+                if (normalActivated != null && extendedActivated != null)
+                    TandemComboBolus(normalActivated!!, extendedActivated!!, normalCompleted, extendedCompleted, wizard)
+                else if (normalActivated != null)
+                    TandemNormalBolus(normalActivated!!, normalCompleted, wizard)
+                else if (extendedActivated != null)
+                    TandemExtendedBolus(extendedActivated!!, extendedCompleted, wizard) as TandemBolus
+                else null
+            } else null
         }
     }
 

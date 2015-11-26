@@ -4,32 +4,89 @@ import com.kludgenics.alrightypump.cloud.nightscout.records.Cal
 import com.kludgenics.alrightypump.cloud.nightscout.records.Meter
 import com.kludgenics.alrightypump.cloud.nightscout.records.NightscoutEntry
 import com.kludgenics.alrightypump.cloud.nightscout.records.Sgv
+import com.kludgenics.alrightypump.therapy.*
 import com.squareup.okhttp.RequestBody
 import com.squareup.okhttp.ResponseBody
+import org.joda.time.Instant
 import retrofit.Call
-import retrofit.http.*
+import retrofit.http.Body
+import retrofit.http.GET
+import retrofit.http.POST
+import retrofit.http.Query
+import java.util.*
 
-interface NightscoutApi<SGV: Sgv, METER: Meter, CAL: Cal, NS: NightscoutEntry> {
+
+
+interface NightscoutRecord : Record, NightscoutEntry {
+    override val time: Instant
+        get() = Instant(date)
+    override val source: String
+        get() = "nightscout-$id"
+}
+
+data class NightscoutSgv(override val sgv: Int,
+                         override val direction: String,
+                         override val filtered: Double?,
+                         override val unfiltered: Double?,
+                         override val rssi: Int?,
+                         override val noise: Int?,
+                         override val id: String,
+                         override val device: String,
+                         override val date: Long) : NightscoutRecord, Sgv, CgmRecord, GlucoseValue {
+    override val glucose: Double
+        get() = sgv.toDouble()
+    override val unit: Int
+        get() = GlucoseUnit.MGDL
+    override val value: GlucoseValue
+        get() = this
+}
+
+data class NightscoutMeter(override val mbg: Int,
+                           override val id: String,
+                           override val device: String,
+                           override val type: String,
+                           override val date: Long) : NightscoutRecord, Meter, SmbgRecord, GlucoseValue {
+    override val value: GlucoseValue
+        get() = this
+    override val manual: Boolean
+        get() = true
+    override val glucose: Double?
+        get() = mbg.toDouble()
+    override val unit: Int
+        get() = GlucoseUnit.MGDL
+}
+
+data class NightscoutCal(override val slope: Double,
+                         override val intercept: Double,
+                         override val scale: Double,
+                         override val id: String,
+                         override val device: String,
+                         override val date: Long) : Cal
+
+interface NightscoutApi {
     @GET("/api/v1/entries/sgv.json")
-    fun getSgvRecords(@Query("count") count: Int, @Query("find[dateString][\$gte]") start: String): Call<MutableList<SGV>>
+    fun getSgvRecords(@Query("count") count: Int, @Query("find[dateString][\$gte]") start: String): Call<ArrayList<NightscoutSgv>>
 
     @GET("/api/v1/entries/mbg.json")
-    fun getMeterRecords(@Query("count") count: Int, @Query("find[dateString][\$gte]") start: String): Call<MutableList<METER>>
+    fun getMeterRecords(@Query("count") count: Int, @Query("find[dateString][\$gte]") start: String): Call<ArrayList<NightscoutMeter>>
 
     @GET("/api/v1/entries/cal.json")
-    fun getCalRecords(@Query("count") count: Int, @Query("find[dateString][\$gte]") start: String): Call<MutableList<CAL>>
+    fun getCalRecords(@Query("count") count: Int, @Query("find[dateString][\$gte]") start: String): Call<ArrayList<NightscoutCal>>
 
     @POST("/api/v1/entries")
-    fun postRecords(@Body entries: MutableList<NS>): Call<MutableList<NS>>
+    fun postRecords(@Body body: RequestBody): Call<ResponseBody>
 
     @GET("/api/v1/treatments")
-    fun getTreatmentsSince(@Query("find[created_at][\$gte]") since: String): Call<MutableList<Map<String, String>>>
+    fun getTreatmentsSince(@Query("find[created_at][\$gte]") since: String): Call<ArrayList<Map<String, String>>>
 
     @GET("/api/v1/treatments")
-    fun getTreatmentsSince(@Query("find[created_at][\$gte]") since: String, @Query("count") count: Int): Call<MutableList<Map<String, String>>>
+    fun getTreatmentsSince(@Query("find[created_at][\$gte]") since: String, @Query("count") count: Int): Call<LinkedHashMap<String, String>>
 
     @POST("/api/v1/treatments")
-    fun postTreatments(@Body treatments: MutableList<Map<String, String>>): Call<ResponseBody>
+    fun postTreatments(@Body treatments: ArrayList<Map<String, String>>): Call<ResponseBody>
+
+    @GET("/api/v1/profile")
+    fun getProfile(): Call<ResponseBody>
 
     @POST("/api/v1/profile")
     fun postProfiles(@Body profile: RequestBody): Call<ResponseBody>

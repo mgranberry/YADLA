@@ -254,13 +254,22 @@ data class TempRateStart(
 }
 
 data class BasalRateChange(
-        public val rate: Float,
+        override public val rate: Double,
         public val baseRate: Float,
         public val maxRate: Float,
         public val idp: Int,
         public val changeType: Int,
-        public val rawRecord: LogEvent) : LogEvent by rawRecord {
-    constructor (rawRecord: LogEvent) : this(rate = rawRecord.data1.asFloat(), baseRate = rawRecord.data2.asFloat(),
+        public val rawRecord: LogEvent) : LogEvent by rawRecord, BasalRecord, TandemTherapyRecord {
+    companion object {
+        const final val MASK_SEGMENT_CHANGE = 1
+        const final val MASK_PROFILE_CHANGE = 2
+        const final val MASK_TEMP_START = 4
+        const final val MASK_TEMP_END = 8
+        const final val MASK_PUMP_SUSPEND = 16
+        const final val MASK_PUMP_RESUME = 32
+        const final val MASK_PUMP_SHUTDOWN = 64
+    }
+    constructor (rawRecord: LogEvent) : this(rate = rawRecord.data1.asFloat().toDouble(), baseRate = rawRecord.data2.asFloat(),
             maxRate = rawRecord.data3.asFloat(), idp = rawRecord.data4.asUnsignedShorts().component1(),
             changeType = rawRecord.data4.asBytes().component3(), rawRecord = rawRecord)
 }
@@ -303,8 +312,8 @@ data class PumpingResumed(
         public val rawRecord: LogEvent) : LogEvent by rawRecord, SuspensionRecord, TempBasalEventRecord {
     override val rate: Double?
         get() = null
-    override val percent: Double?
-        get() = null
+    override val percent: Double
+        get() = 100.0
     override val duration: Duration
         get() = Duration.ZERO
     override val tempRateId: Int
@@ -336,7 +345,7 @@ data class TempRateCompleted(
         public val timeLeft: Duration,
         public val rawRecord: LogEvent) : LogEvent by rawRecord, TempBasalEventRecord {
     override val percent: Double?
-        get() = 0.0
+        get() = 100.0
     override val duration: Duration
         get() = Duration.ZERO
     override val rate: Double?

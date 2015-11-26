@@ -10,7 +10,7 @@ interface BasalRecord: Record {
 }
 
 interface ScheduledBasalRecord: BasalRecord {
-    val schedule: BasalSchedule
+    val schedule: BasalSchedule?
 }
 
 interface TemporaryBasalRecord: BasalRecord {

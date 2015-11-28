@@ -5,9 +5,11 @@ import com.google.android.gms.gcm.GcmNetworkManager
 import com.google.gson.JsonParseException
 import com.kludgenics.cgmlogger.model.nightscout.NightscoutApiEndpoint
 import io.realm.Realm
+import okio.Timeout
 import org.jetbrains.anko.AnkoLogger
 import org.jetbrains.anko.error
 import org.jetbrains.anko.info
+import java.io.IOException
 import java.util.concurrent.Callable
 
 /**
@@ -49,6 +51,10 @@ interface NightscoutTask: Callable<Int>, AnkoLogger {
             } catch (t: JsonParseException) {
                 error("sync failed: $t")
                 return GcmNetworkManager.RESULT_FAILURE
+            } catch (t: IOException){
+                info("sync failed: $t")
+                t.printStackTrace()
+                return GcmNetworkManager.RESULT_RESCHEDULE
             }
         }
     }

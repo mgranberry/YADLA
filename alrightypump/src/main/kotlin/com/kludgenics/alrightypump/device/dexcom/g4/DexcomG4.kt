@@ -23,6 +23,43 @@ open class DexcomG4(private val source: BufferedSource,
 
     var rawEnabled = true
 
+    override val cgmRecords: Sequence<DexcomCgmRecord>
+        get() =
+        if (rawEnabled) {
+            val cals = calibrationRecords
+            val egvs = egvRecords
+            val sgvs = sgvRecords
+            DexcomCgmSequence(egvs, sgvs, cals)
+        } else
+            DexcomCgmSequence(egvRecords, null, null)
+
+
+    override val smbgRecords: Sequence<SmbgRecord>
+        get() = meterRecords
+
+    override val dateTimeChangeRecords: Sequence<DateTimeChangeRecord>
+        get() = throw UnsupportedOperationException()
+
+    override val chronology: Chronology
+        get() = ISOChronology.getInstance() // this should actually be constructed from time change records
+
+    override val outOfRangeHigh: Double
+        get() = 401.0
+
+    override val outOfRangeLow: Double
+        get() = 39.0
+
+    public val egvRecords: Sequence<EgvRecord> get() = DataPageIterator<EgvRecord>(RecordPage.EGV_DATA).asSequence()
+    public val sgvRecords: Sequence<SgvRecord> get() = DataPageIterator<SgvRecord>(RecordPage.SENSOR_DATA).asSequence()
+    public val eventRecords: Sequence<EventRecord> get() = DataPageIterator<EventRecord>(RecordPage.USER_EVENT_DATA).asSequence()
+    public val settingsRecords: Sequence<UserSettingsRecord> get() = DataPageIterator<UserSettingsRecord>(RecordPage.USER_SETTING_DATA).asSequence()
+    public val calibrationRecords: Sequence<CalSetRecord> get() = DataPageIterator<CalSetRecord>(RecordPage.CAL_SET).asSequence()
+    public val meterRecords: Sequence<MeterRecord> get() = DataPageIterator<MeterRecord>(RecordPage.METER_DATA).asSequence()
+    public val insertionRecords: Sequence<InsertionRecord> get() = DataPageIterator<InsertionRecord>(RecordPage.INSERTION_TIME).asSequence()
+
+    public val version: String? by lazy { requestVersion() }
+    public val databasePartitionInfo: String? by lazy { readDatabasePartitionInfo() }
+
     private inner class DexcomCgmSequence(private val egvs: Sequence<EgvRecord>,
                                           private val sgvs: Sequence<SgvRecord>?,
                                           private val cals: Sequence<CalSetRecord>?) : Sequence<DexcomCgmRecord> {
@@ -63,43 +100,6 @@ open class DexcomG4(private val source: BufferedSource,
             override fun hasNext(): Boolean = bgIterator.hasNext()
         }
     }
-
-    override val cgmRecords: Sequence<DexcomCgmRecord>
-        get() =
-        if (rawEnabled) {
-            val cals = calibrationRecords.asSequence()
-            val egvs = egvRecords.asSequence()
-            val sgvs = sgvRecords.asSequence()
-            DexcomCgmSequence(egvs, sgvs, cals)
-        } else
-            DexcomCgmSequence(egvRecords.asSequence(), null, null)
-
-
-    override val smbgRecords: Sequence<SmbgRecord>
-        get() = meterRecords.asSequence()
-
-    override val dateTimeChangeRecords: Sequence<DateTimeChangeRecord>
-        get() = throw UnsupportedOperationException()
-
-    override val chronology: Chronology
-        get() = ISOChronology.getInstance() // this should actually be constructed from time change records
-
-    override val outOfRangeHigh: Double
-        get() = 401.0
-
-    override val outOfRangeLow: Double
-        get() = 39.0
-
-    public val egvRecords: Sequence<EgvRecord> get() = DataPageIterator<EgvRecord>(RecordPage.EGV_DATA).asSequence()
-    public val sgvRecords: Sequence<SgvRecord> get() = DataPageIterator<SgvRecord>(RecordPage.SENSOR_DATA).asSequence()
-    public val eventRecords: Sequence<EventRecord> get() = DataPageIterator<EventRecord>(RecordPage.USER_EVENT_DATA).asSequence()
-    public val settingsRecords: Sequence<UserSettingsRecord> get() = DataPageIterator<UserSettingsRecord>(RecordPage.USER_SETTING_DATA).asSequence()
-    public val calibrationRecords: Sequence<CalSetRecord> get() = DataPageIterator<CalSetRecord>(RecordPage.CAL_SET).asSequence()
-    public val meterRecords: Sequence<MeterRecord> get() = DataPageIterator<MeterRecord>(RecordPage.METER_DATA).asSequence()
-    public val insertionRecords: Sequence<InsertionRecord> get() = DataPageIterator<InsertionRecord>(RecordPage.INSERTION_TIME).asSequence()
-
-    public val version: String? by lazy { requestVersion() }
-    public val databasePartitionInfo: String? by lazy { readDatabasePartitionInfo() }
 
     private inner class DataPageIterator<T>(private val type: Int) : Iterator<T> {
         var pageIterator: Iterator<T>? = null

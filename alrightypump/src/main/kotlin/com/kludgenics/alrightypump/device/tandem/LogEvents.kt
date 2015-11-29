@@ -159,18 +159,18 @@ interface LogEvent : Payload {
         }
     }
 
-    val index: Int
-    val hours: Int // ushort
-    val id: Int // ushort
+    public val index: Int
+    public val hours: Int // ushort
+    public val id: Int // ushort
 
-    val timestamp: Instant
-    val seqNo: Int
-    val bogus: Int
+    public val timestamp: Instant
+    public val seqNo: Int
+    public val bogus: Int
 
-    val data1: Int
-    val data2: Int
-    val data3: Int
-    val data4: Int
+    public val data1: Int
+    public val data2: Int
+    public val data3: Int
+    public val data4: Int
 }
 
 private fun LogEvent.fieldToString(field: Int): String {

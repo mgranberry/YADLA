@@ -19,7 +19,7 @@ import java.util.*
 class TandemPump(private val source: BufferedSource, private val sink: BufferedSink) : InsulinPump, Glucometer {
     companion object {
         @JvmField final val EPOCH = Instant.parse("2008-01-01T00:00:00")
-        const val ITERATION_STEP = 200
+        const val ITERATION_STEP = 50
     }
 
     val recordCache = TreeMap<Int, LogEvent>()
@@ -41,7 +41,7 @@ class TandemPump(private val source: BufferedSource, private val sink: BufferedS
     override val dateTimeChangeRecords: Sequence<DateTimeChangeRecord>
         get() = throw UnsupportedOperationException()
     override val smbgRecords: Sequence<SmbgRecord>
-        get() = throw UnsupportedOperationException()
+        get() = records.filterIsInstance<SmbgRecord>()
 
     val bolusRecords: Sequence<TandemBolus> get () = BolusWizardAssemblingSequence()
     val basalRecords: Sequence<BasalRecord> get() = BasalRateAssemblingSequence()

@@ -31,7 +31,7 @@ public fun BgByPeriod.populateData(): ByteArray {
 
         bgOffsets[i] = BloodGlucose.createBloodGlucose(fb,
                 record.value.toFloat(),
-                record.date,
+                record.date.time,
                 BloodGlucoseType.SGV,
                 BloodGlucoseUnit.MGDL)
     }

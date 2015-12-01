@@ -1,20 +1,16 @@
 package com.kludgenics.alrightypump
 
 import com.fazecast.jSerialComm.SerialPort
-import com.kludgenics.alrightypump.cloud.nightscout.NightscoutApi
-import com.kludgenics.alrightypump.cloud.nightscout.records.Cal
-import com.kludgenics.alrightypump.cloud.nightscout.records.Meter
-import com.kludgenics.alrightypump.cloud.nightscout.records.NightscoutEntry
-import com.kludgenics.alrightypump.cloud.nightscout.records.Sgv
+import com.kludgenics.alrightypump.cloud.nightscout.Nightscout
+import com.kludgenics.alrightypump.cloud.nightscout.NightscoutSgvJson
 import com.kludgenics.alrightypump.device.dexcom.g4.DexcomG4
 import com.kludgenics.alrightypump.device.dexcom.g4.RecordPage
-import com.kludgenics.alrightypump.device.tandem.*
-import com.kludgenics.alrightypump.therapy.*
+import com.kludgenics.alrightypump.device.tandem.LogSizeReq
+import com.kludgenics.alrightypump.device.tandem.LogSizeResp
+import com.kludgenics.alrightypump.device.tandem.TandemPump
+import com.kludgenics.alrightypump.therapy.TreeMapTherapyTimeline
 import com.squareup.okhttp.HttpUrl
 import org.joda.time.DateTime
-import org.joda.time.Duration
-import org.joda.time.Period
-import retrofit.Retrofit
 
 
 fun main(args: Array<String>) {
@@ -31,7 +27,7 @@ fun main(args: Array<String>) {
                 val response = tslim.commandResponse(LogSizeReq())
                 val lsr = LogSizeResp(response.payload)
                 println("lsr: $lsr ${lsr.range}")
-                val start = DateTime()
+                /*val start = DateTime()
                 val bolusRecords = tslim.bolusRecords.takeWhile { it.time.toDateTime() > DateTime.now() - Period.days(2) }
                 bolusRecords.forEach { println("${it.javaClass.simpleName}\t${it.time.toDateTime()}\tn:${it.deliveredNormal}\te:${it.deliveredExtended}\tdur:${it.extendedDuration}") }
                 val basalRecords = tslim.basalRecords.takeWhile { it.time.toDateTime() > DateTime.now() - Period.days(60) }
@@ -50,7 +46,8 @@ fun main(args: Array<String>) {
                             println ("${it.javaClass.simpleName}\t${it.time.toDateTime()}\t${it.rate}\t$it")
                         }
                     }
-                }
+                }*/
+                timeline.merge({it.time >= DateTime.parse("2015-11-25T00:00:01Z")},tslim.basalRecords, tslim.bolusRecords, tslim.smbgRecords)
             }
             "DexCom Gen4 USB Serial" -> {
                 val connection = SerialConnection(it)
@@ -79,5 +76,13 @@ fun main(args: Array<String>) {
         }
     }
     //
-    // timeline.events.forEach { println("${it.time} $it") }
+    val nightscout = Nightscout(HttpUrl.parse(""))
+    nightscout.entryPageSize = 2880
+    val r = nightscout.entries.takeWhile { it.date >= DateTime.parse("2015-7-19") }
+    println("average: ${r.map { it.rawEntry }.filterIsInstance<NightscoutSgvJson>().map { it.sgv }.average()}")
+    println(nightscout.entries.take(2).toArrayList())
+    val e = nightscout.treatments
+    e.forEach { println(it) }
+
+    //timeline.events.forEach { println("${it.time.toDateTime()} $it") }
 }

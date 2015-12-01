@@ -7,12 +7,12 @@ import android.view.ViewGroup
 import android.widget.TextView
 import com.kludgenics.cgmlogger.app.util.PathParser
 import com.kludgenics.cgmlogger.app.view.DailyBgChartView
-import com.kludgenics.cgmlogger.extension.dateTime
 import com.kludgenics.cgmlogger.model.realm.cards.Card
 import com.kludgenics.cgmlogger.model.realm.cards.ModalCard
 import com.kludgenics.cgmlogger.model.realm.cards.TreatmentDetailCard
 import org.jetbrains.anko.AnkoLogger
 import org.jetbrains.anko.info
+import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat
 
 /**
@@ -42,7 +42,7 @@ class DailyCardAdapter(): RealmCardAdapter<DailyCardAdapter.ViewHolder>(), AnkoL
         when (card) {
             is ModalCard -> {
                 info("Displaying ModalDayCard: ${card.metadata.cardtType} ${card.day} (${card.metadata.lastUpdated})")
-                holder.textView.text = "${fmt.print(card.day.dateTime)}"
+                holder.textView.text = "${fmt.print(DateTime(card.day.time))}"
                 holder.chartView.visibility = View.VISIBLE
                 holder.chartView.trendPathData = PathParser.copyFromPathDataBufferBytes(card.trendline) ?: emptyArray()
                 holder.chartView.requestLayout()

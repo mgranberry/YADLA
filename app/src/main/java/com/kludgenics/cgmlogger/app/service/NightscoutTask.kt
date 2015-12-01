@@ -1,61 +1,39 @@
 package com.kludgenics.cgmlogger.app.service
 
-import android.content.Context
 import com.google.android.gms.gcm.GcmNetworkManager
-import com.google.gson.JsonParseException
-import com.kludgenics.cgmlogger.model.nightscout.NightscoutApiEndpoint
+import com.kludgenics.alrightypump.cloud.nightscout.Nightscout
+import com.kludgenics.alrightypump.therapy.Record
+import com.kludgenics.cgmlogger.model.glucose.BgPostprocessor
 import io.realm.Realm
-import okio.Timeout
 import org.jetbrains.anko.AnkoLogger
-import org.jetbrains.anko.error
-import org.jetbrains.anko.info
-import java.io.IOException
+import org.jetbrains.anko.debug
+import org.joda.time.DateTime
 import java.util.concurrent.Callable
 
 /**
  * Created by matthiasgranberry on 6/4/15.
  */
 
-interface NightscoutTask: Callable<Int>, AnkoLogger {
-    val nightscoutEndpoint: NightscoutApiEndpoint
-    val init: NightscoutApiEndpoint.() -> List<Any>?
-    val ctx: Context
-    val copy: Realm.(e: Any) -> Unit
-    fun postprocess(realm: Realm, l: List<*>): Unit
+class NightscoutTask(val nightscout: Nightscout, val full: Boolean = false): Callable<Int>, AnkoLogger {
+    fun postprocess (realm: Realm, l: List<Record>) {
+        debug("Postprocessing $l")
+        val fi = l.first()
+        val li = l.last()
+        debug("Invalidating caches")
+        val startDt = DateTime(li.time).withTimeAtStartOfDay()
+        val endDt = DateTime(fi.time).withTimeAtStartOfDay()
+        BgPostprocessor.invalidateCaches(realm, startDt, endDt)
+        debug("Beginning daily grouping")
+        BgPostprocessor.updatePeriods(realm, startDt.millis, endDt.plusDays(1).millis)
+        debug("Finished daily grouping")
+    }
+
 
     override fun call(): Int {
-        val realm = Realm.getInstance(ctx)
-        realm.use {
-            try {
-                info("init")
-                val items = nightscoutEndpoint.init()
-                info("bt")
-                realm.beginTransaction()
-                if (items != null && items.isNotEmpty()) {
-                    items.forEach {
-                        realm.copy(it)
-                    }
-                    info("sync completed")
-                    realm.commitTransaction()
-                    realm.beginTransaction()
-                    info("ps")
-                    postprocess(realm, items)
-                    realm.commitTransaction()
-                    info("pe")
-                    return GcmNetworkManager.RESULT_SUCCESS
-                } else {
-                    info("sync failed")
-                    realm.cancelTransaction()
-                    return GcmNetworkManager.RESULT_RESCHEDULE
-                }
-            } catch (t: JsonParseException) {
-                error("sync failed: $t")
-                return GcmNetworkManager.RESULT_FAILURE
-            } catch (t: IOException){
-                info("sync failed: $t")
-                t.printStackTrace()
-                return GcmNetworkManager.RESULT_RESCHEDULE
-            }
+        if (full == true) {
+            val records = nightscout.entries
+            val treatments = nightscout.treatments
         }
+        return GcmNetworkManager.RESULT_SUCCESS
     }
 }

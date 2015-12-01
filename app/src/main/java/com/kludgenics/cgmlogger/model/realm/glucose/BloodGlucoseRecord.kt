@@ -1,6 +1,8 @@
 package com.kludgenics.cgmlogger.model.realm.glucose
 
 import com.google.flatbuffers.FlatBufferBuilder
+import com.kludgenics.alrightypump.therapy.CgmRecord
+import com.kludgenics.alrightypump.therapy.GlucoseUnit
 import com.kludgenics.cgmlogger.app.util.PathParser
 import com.kludgenics.cgmlogger.model.flatbuffers.path.BloodGlucosePeriod
 import com.kludgenics.cgmlogger.model.math.bgi.Bgi
@@ -10,15 +12,15 @@ import io.realm.annotations.PrimaryKey
 import io.realm.annotations.Required
 import org.joda.time.DateTime
 import org.joda.time.Duration
+import java.util.*
 
 /**
  * Created by matthiasgranberry on 5/24/15.
  */
-public open class BloodGlucoseRecord( public open var value: Double = 0.0,
-                                      public open var date: Long = 0,
-                                      @Required
-                                      public open var unit: String = "",
-                                      @PrimaryKey public open var id: String = ""): RealmObject()
+public open class BloodGlucoseRecord(public open var value: Double = 0.0,
+                                     public open var date: Date = Date(),
+                                     public open var unit: Int = GlucoseUnit.MGDL,
+                                     @PrimaryKey public open var id: String = ""): RealmObject()
 
 
 public fun RealmList<BloodGlucoseRecord>.createPathDataBuffer(builder: FlatBufferBuilder,
@@ -31,11 +33,11 @@ public fun RealmList<BloodGlucoseRecord>.createPathDataBuffer(builder: FlatBuffe
     val pathString = if (size > 0) {
         buildString {
             val initial = this@createPathDataBuffer[0]
-            val initialX = ((initial.date - startMillis).toFloat() / periodLength) * scaleX
+            val initialX = ((initial.date.time - startMillis).toFloat() / periodLength) * scaleX
             val initialY = scaleY - initial.value
             append("M$initialX,${initialY}L")
             this@createPathDataBuffer.forEach {
-                val xOffset = ((it.date - startMillis).toFloat() / periodLength) * scaleX
+                val xOffset = ((it.date.time - startMillis).toFloat() / periodLength) * scaleX
                 val yOffset = scaleY - it.value
                 append("$xOffset,$yOffset ")
             }

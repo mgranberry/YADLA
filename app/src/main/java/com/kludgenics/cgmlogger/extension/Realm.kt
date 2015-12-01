@@ -82,9 +82,7 @@ inline fun <T: RealmObject> RealmQuery<T>.group(init: RealmQuery<T>.() -> RealmQ
 
 var BloodGlucoseRecord.dateTime: DateTime
     get() = DateTime(date)
-    set(dt: DateTime) = { date = dt.millis }()
+    set(dt: DateTime) = { date = dt.toDate() }()
 
 data class UpdateResult<T: RealmObject>(val result: T, val changeMap: Map<String, String>)
 
-val Date.dateTime: DateTime
-    get() = DateTime(date)

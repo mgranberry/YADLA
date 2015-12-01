@@ -6,7 +6,6 @@ import com.kludgenics.cgmlogger.extension.where
 import com.kludgenics.cgmlogger.model.math.agp.CachedDatePeriodAgp
 import com.kludgenics.cgmlogger.model.math.bgi.CachedBgi
 import com.kludgenics.cgmlogger.model.math.trendline.CachedPeriod
-import com.kludgenics.cgmlogger.model.treatment.Treatment
 import io.realm.Realm
 import io.realm.RealmConfiguration
 // import net.danlew.android.joda.JodaTimeAndroid
@@ -56,9 +55,6 @@ public class LoggerApplication : Application(), AnkoLogger {
                 info("Copying realm file")
                 realm.writeCopyTo(File("/sdcard/cgm.realm"))
                 info("Realm is at: ${realm.path}")
-                var t = realm.where<Treatment>{this}.findAll()
-                info("T count: ${t.count()}")
-                t.forEach { info(it) }
             }
 
         }

@@ -6,15 +6,10 @@ import android.content.SharedPreferences
 import android.util.ArrayMap
 import android.util.Log
 import com.google.android.gms.gcm.*
-import com.google.gson.FieldNamingPolicy
-import com.google.gson.GsonBuilder
-import com.google.gson.TypeAdapter
-import com.google.gson.stream.JsonReader
-import com.google.gson.stream.JsonToken
-import com.google.gson.stream.JsonWriter
+import com.kludgenics.alrightypump.cloud.nightscout.Nightscout
 import com.kludgenics.cgmlogger.app.R
-import com.kludgenics.cgmlogger.app.util.DateTimeSerializer
-import com.kludgenics.cgmlogger.model.nightscout.NightscoutApiEndpoint
+import com.squareup.okhttp.HttpUrl
+import com.squareup.okhttp.OkHttpClient
 import org.jetbrains.anko.*
 import org.joda.time.DateTime
 import retrofit.GsonConverterFactory
@@ -124,15 +119,6 @@ public class TaskService : GcmTaskService(), AnkoLogger {
         }
     }
 
-    val gsonConverter: GsonConverterFactory by lazy(LazyThreadSafetyMode.NONE) {
-        GsonConverterFactory.create(GsonBuilder()
-                .registerTypeAdapter(Int::class.java, IntegerTypeAdapter() )
-                .registerTypeAdapter(DateTime::class.java, DateTimeSerializer())
-                .setFieldNamingPolicy(FieldNamingPolicy.IDENTITY)
-                .excludeFieldsWithoutExposeAnnotation()
-                .create())
-    }
-
     val tasks: MutableMap<String, NightscoutTask> = ArrayMap()
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -192,20 +178,14 @@ public class TaskService : GcmTaskService(), AnkoLogger {
     private fun createNightscoutTasks(): Unit {
         val uri = prefs.getString(resources.getString(R.string.nightscout_uri), "")
         val enabled = prefs.getBoolean(resources.getString(R.string.nightscout_enable), false)
-        val endpoint = if (enabled && !uri.isNullOrBlank())
-            Retrofit.Builder()
-                    .baseUrl(uri)
-                    .addConverterFactory(gsonConverter)
-                    .build().create(NightscoutApiEndpoint::class.java)
-            else
-                null
+
         info ("closing tasks in createNightscoutTasks")
         synchronized(tasks) {
             tasks.clear()
-            if (endpoint != null) {
-                tasks.put(TASK_SYNC_TREATMENTS, NightscoutTreatmentTask(ctx, endpoint))
-                tasks.put(TASK_SYNC_ENTRIES_FULL, NightscoutEntryTask(ctx, endpoint, 50000))
-                tasks.put(TASK_SYNC_ENTRIES_PERIODIC, NightscoutEntryTask(ctx, endpoint))
+            if (enabled && uri != "") {
+                val nightscout = Nightscout(HttpUrl.parse(uri), OkHttpClient())
+                tasks.put(TASK_SYNC_ENTRIES_FULL, NightscoutTask(nightscout, full = true))
+                tasks.put(TASK_SYNC_ENTRIES_PERIODIC, NightscoutTask(nightscout, full = true))
             } else
                 cancelNightscoutTasks(ctx)
         }
@@ -219,27 +199,5 @@ public class TaskService : GcmTaskService(), AnkoLogger {
         }
     }
 
-    public class IntegerTypeAdapter: TypeAdapter<Int>() {
-
-        override fun write(writer: JsonWriter, value: Int?) {
-            if (value == null) {
-                writer.nullValue();
-                return;
-            }
-            writer.value(value);
-        }
-
-        override fun read(reader: JsonReader): Int? {
-            reader.peek()
-            return when (reader.peek()) {
-                JsonToken.NUMBER -> {
-                    val value = reader.nextDouble()
-                    value.toInt()
-                }
-                else -> null
-            }
-        }
-
-    }
 }
 

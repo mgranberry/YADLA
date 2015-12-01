@@ -1,13 +1,11 @@
 package com.kludgenics.cgmlogger.app.presenter
 
 import com.kludgenics.cgmlogger.extension.create
-import com.kludgenics.cgmlogger.extension.dateTime
 import com.kludgenics.cgmlogger.extension.transaction
 import com.kludgenics.cgmlogger.extension.where
 import com.kludgenics.cgmlogger.model.realm.cards.*
 import com.kludgenics.cgmlogger.model.realm.glucose.BgByPeriod
 import com.kludgenics.cgmlogger.model.realm.glucose.BloodGlucoseRecord
-import com.kludgenics.cgmlogger.model.treatment.Treatment
 import io.realm.Realm
 import io.realm.RealmChangeListener
 import io.realm.RealmResults
@@ -26,7 +24,7 @@ class DailyCardPresenter(val period: Period, val listId: Int): Closeable {
     val bgListener = RealmChangeListener { onBgChanged() }
     val treatmentListener = RealmChangeListener { onTreatmentChanged() }
     private var bgQuery: RealmResults<BloodGlucoseRecord> = updateBgQuery()
-    private var treatmentQuery: RealmResults<Treatment> = updateTreatmentQuery()
+    //private var treatmentQuery: RealmResults<RealmTreatment> = updateTreatmentQuery()
     private val cardList: CardList = realm.where <CardList> {
         equalTo("id", listId)
     }.findFirst() ?: realm.create<CardList> {
@@ -42,14 +40,14 @@ class DailyCardPresenter(val period: Period, val listId: Int): Closeable {
         return results
     }
 
-    fun updateTreatmentQuery(): RealmResults<Treatment> {
+    /*fun updateTreatmentQuery(): RealmResults<RealmTreatment> {
         treatmentQuery.removeChangeListener(treatmentListener)
-        val results = realm.where<Treatment> {
+        val results = realm.where<RealmTreatment> {
             greaterThanOrEqualTo("eventTime", (DateTime.now().withTimeAtStartOfDay() - period).toDate())
         }.findAll()
         results.addChangeListener(treatmentListener)
         return results
-    }
+    }*/
 
     private fun updateCards() {
         async {
@@ -62,7 +60,7 @@ class DailyCardPresenter(val period: Period, val listId: Int): Closeable {
                 val card = Card.retrieve(cardMetaData)
                 when (card) {
                     is ModalCard -> {
-                        if (card.day.dateTime < startTime)
+                        if (DateTime(card.day) < startTime)
                             deleteList.add(card.metadata)
                     }
                 }
@@ -99,7 +97,7 @@ class DailyCardPresenter(val period: Period, val listId: Int): Closeable {
 
     override fun close() {
         bgQuery.removeChangeListeners()
-        treatmentQuery.removeChangeListeners()
+        //treatmentQuery.removeChangeListeners()
         realm.close()
     }
 

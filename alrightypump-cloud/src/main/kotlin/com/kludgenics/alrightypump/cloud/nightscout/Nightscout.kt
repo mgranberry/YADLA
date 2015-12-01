@@ -1,13 +1,18 @@
 package com.kludgenics.alrightypump.cloud.nightscout
 
+import com.kludgenics.alrightypump.cloud.nightscout.records.therapy.NightscoutCgmRecord
+import com.kludgenics.alrightypump.cloud.nightscout.records.therapy.NightscoutRecord
+import com.kludgenics.alrightypump.device.dexcom.g4.DexcomCgmRecord
+import com.kludgenics.alrightypump.therapy.CalibrationRecord
+import com.kludgenics.alrightypump.therapy.CgmRecord
 import com.kludgenics.alrightypump.therapy.Record
+import com.squareup.moshi.JsonDataException
 import com.squareup.moshi.Moshi
 import com.squareup.okhttp.HttpUrl
 import com.squareup.okhttp.Interceptor
 import com.squareup.okhttp.OkHttpClient
 import com.squareup.okhttp.Response
 import okio.ByteString
-import org.joda.time.DateTime
 import org.joda.time.Instant
 import retrofit.MoshiConverterFactory
 import retrofit.Retrofit
@@ -28,18 +33,59 @@ class Nightscout(private val url: HttpUrl,
     public var overwriteEntries: Boolean = true
     public var overwriteTreatments: Boolean = false
     public var entryPageSize: Int = 576
-    public val entries : Sequence<NightscoutEntryJson> get() = RestCallSequence({start, end, count -> nightscoutApi.getRecordsBetween(start.millis, end.millis, count).execute().body()},
-            Instant.parse("2008-01-01T01:00:00Z"),
-            Instant.now(), entryPageSize)
-    public var treatmentPageSize: Int = 100
-    public val treatments: Sequence<NightscoutTreatment> get() = RestCallSequence({start, end, count -> nightscoutApi.getTreatmentsBetween(start.toString(), end.toString(), count).execute().body()},
-            Instant.parse("2008-01-01T01:00:00Z"),
-            Instant.now(), treatmentPageSize)
 
-    private class RestCallSequence<T:NightscoutApiEntry>(val call: (start: Instant, end: Instant, count: Int) -> List<T>,
-                                      val startInstant: Instant,
-                                      val endInstant: Instant,
-                                      val batchSize: Int) : Sequence<T> {
+    public val entries : Sequence<NightscoutRecord> get() = (RestCallSequence(Instant.parse("2008-01-01T01:00:00Z"),
+            Instant.now(),
+            entryPageSize) {
+        start, end, count ->
+        nightscoutApi
+                .getRecordsBetween(start.millis, end.millis, count)
+                .execute()
+                .body()
+        }).mapNotNull {
+        when (it.rawEntry) {
+            is NightscoutSgvJson -> NightscoutCgmRecord(it.rawEntry)
+            else -> null
+        }
+    }
+
+    public var treatmentPageSize: Int = 100
+    public val treatments: Sequence<NightscoutTreatment> get() = RestCallSequence(Instant.parse("2008-01-01T01:00:00Z"),
+            Instant.now(),
+            treatmentPageSize) {
+        start, end, count -> nightscoutApi
+            .getTreatmentsBetween(start.toString(), end.toString(), count)
+            .execute()
+            .body()
+    }
+
+    public fun postEntries(records: Sequence<Record>) {
+        var postableRecords = records.mapNotNull {
+            when (it) {
+                is CalibrationRecord -> NightscoutCalJson(it)
+                is DexcomCgmRecord -> NightscoutSgvJson(it)
+                is CgmRecord -> NightscoutSgvJson(it)
+                else -> null
+            }
+        }.map { NightscoutEntryJson(it) }.toList()
+        while (!postableRecords.isEmpty()) {
+            val r = postableRecords.mapIndexed { i, nightscoutEntryJson -> i to nightscoutEntryJson }.partition { it.first < 1000 }
+            val batch = r.first.map { it.second }.toArrayList()
+            postableRecords = r.second.map { it.second }
+            try {
+                if (!batch.isEmpty())
+                    nightscoutApi.postRecords(batch).execute()
+            } catch (e: JsonDataException) {
+
+            }
+        }
+
+    }
+
+    private class RestCallSequence<T:NightscoutApiEntry>(val startInstant: Instant,
+                                                         val endInstant: Instant,
+                                                         val batchSize: Int,
+                                                         val call: (Instant, Instant, Int) -> List<T>) : Sequence<T> {
         override fun iterator(): Iterator<T> {
             return object : Iterator<T> {
 
@@ -52,7 +98,6 @@ class Nightscout(private val url: HttpUrl,
                 }
 
                 private fun updateIterator(): Boolean {
-                    println("updateIterator: $startInstant, $current, $batchSize ${DateTime.now()}")
                     currentRecords = call(startInstant, current, batchSize)
                     if (currentRecords.isEmpty())
                         return false

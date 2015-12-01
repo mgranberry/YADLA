@@ -6,12 +6,12 @@ import com.kludgenics.alrightypump.therapy.*
 /**
  * Created by matthias on 12/1/15.
  */
-class NightscoutCgmRecord(public override val rawEntry: NightscoutApiSgvEntry): CgmRecord, NightscoutRecord {
+data class NightscoutCgmRecord(public override val rawEntry: NightscoutApiSgvEntry): CgmRecord, NightscoutRecord {
     override val value: GlucoseValue
         get() = NightscoutGlucoseValue(rawEntry)
 }
 
-class NightscoutGlucoseValue(public val sgv: NightscoutApiSgvEntry) : RawGlucoseValue {
+data class NightscoutGlucoseValue(public val sgv: NightscoutApiSgvEntry) : RawGlucoseValue {
     override val calibration: Calibration?
         get() = null
     override val filtered: Int?

@@ -153,7 +153,7 @@ class TandemPump(private val source: BufferedSource, private val sink: BufferedS
         }
 
         fun temp() : TandemTemporaryBasalRecord? {
-            val result = if (basalRateChange != null && tempRateCompleted != null)
+            val result = if (tempBasalStart != null && basalRateChange != null)
                 TandemTemporaryBasalRecord(tempBasalStart, tempRateCompleted, basalRateChange)
             else if (basalRateChange != null && pumpingSuspended != null && pumpingResumed != null)
                 TandemTemporaryBasalRecord(pumpingSuspended, pumpingResumed, basalRateChange)

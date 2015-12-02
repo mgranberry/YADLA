@@ -42,6 +42,7 @@ interface TandemTherapyRecord : Record, LogEvent {
         get() = timestamp
     override val source: String
         get() = "alrightypump-tandem"
+    override val id: String? get() = seqNo.toString()
 }
 
 interface LogEvent : Payload {
@@ -95,7 +96,7 @@ interface LogEvent : Payload {
             source.require(36)
             val index = source.readIntLe()
             val res = source.readShortLe().toInt() and 0xFFFF
-            val id = source.readShortLe().toInt() and 0xFFFF
+            val logId = source.readShortLe().toInt() and 0xFFFF
             val timestamp = source.readIntLe().asInstant()
             val seqNo = source.readIntLe()
             val bogus = source.readIntLe()
@@ -103,8 +104,8 @@ interface LogEvent : Payload {
             val data2 = source.readIntLe()
             val data3 = source.readIntLe()
             val data4 = source.readIntLe()
-            val event = BaseLogEvent(index, res, id, timestamp, seqNo, bogus, data1, data2, data3, data4)
-            return when (id) {
+            val event = BaseLogEvent(index, res, logId, timestamp, seqNo, bogus, data1, data2, data3, data4)
+            return when (logId) {
                 LOG_ERASED -> LogErased(event)
                 TEMP_RATE_START -> TempRateStart(event)
                 BASAL_RATE_CHANGE -> BasalRateChange(event)
@@ -161,7 +162,7 @@ interface LogEvent : Payload {
 
     public val index: Int
     public val hours: Int // ushort
-    public val id: Int // ushort
+    public val logId: Int // ushort
 
     public val timestamp: Instant
     public val seqNo: Int
@@ -218,14 +219,14 @@ private fun Int.toGlucoseValue(): GlucoseValue = BaseGlucoseValue(this.toDouble(
 
 data class UnknownLogEvent(public val rawRecord: LogEvent) : LogEvent by rawRecord {
     override fun toString(): String {
-        return "${this.javaClass.simpleName}(index=$index, hours=$hours, id=$id, timestamp=$timestamp, seqNo=$seqNo, bogus=$bogus, data1=${fieldToString(data1)}, data2=${fieldToString(data2)}, data3=${fieldToString(data3)}, data4=${fieldToString(data4)})"
+        return "${this.javaClass.simpleName}(index=$index, hours=$hours, id=$logId, timestamp=$timestamp, seqNo=$seqNo, bogus=$bogus, data1=${fieldToString(data1)}, data2=${fieldToString(data2)}, data3=${fieldToString(data3)}, data4=${fieldToString(data4)})"
     }
 }
 
 data class BaseLogEvent(
         public override val index: Int,
         public override val hours: Int,
-        public override val id: Int,
+        public override val logId: Int,
         public override val timestamp: Instant,
         public override val seqNo: Int,
         public override val bogus: Int,

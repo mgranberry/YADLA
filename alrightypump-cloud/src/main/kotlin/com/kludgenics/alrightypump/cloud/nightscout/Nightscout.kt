@@ -3,9 +3,7 @@ package com.kludgenics.alrightypump.cloud.nightscout
 import com.kludgenics.alrightypump.cloud.nightscout.records.therapy.NightscoutCgmRecord
 import com.kludgenics.alrightypump.cloud.nightscout.records.therapy.NightscoutRecord
 import com.kludgenics.alrightypump.device.dexcom.g4.DexcomCgmRecord
-import com.kludgenics.alrightypump.therapy.CalibrationRecord
-import com.kludgenics.alrightypump.therapy.CgmRecord
-import com.kludgenics.alrightypump.therapy.Record
+import com.kludgenics.alrightypump.therapy.*
 import com.squareup.moshi.JsonDataException
 import com.squareup.moshi.Moshi
 import com.squareup.okhttp.HttpUrl
@@ -59,22 +57,52 @@ class Nightscout(private val url: HttpUrl,
             .body()
     }
 
-    public fun postEntries(records: Sequence<Record>) {
-        var postableRecords = records.mapNotNull {
+    public fun postRecords(records: Sequence<Record>) {
+        var (treatmentRecords, entryRecords) = records.mapNotNull {
             when (it) {
-                is CalibrationRecord -> NightscoutCalJson(it)
-                is DexcomCgmRecord -> NightscoutSgvJson(it)
-                is CgmRecord -> NightscoutSgvJson(it)
+                is CalibrationRecord -> NightscoutEntryJson(NightscoutCalJson(it))
+                is DexcomCgmRecord -> NightscoutEntryJson(NightscoutSgvJson(it))
+                is CgmRecord -> NightscoutEntryJson(NightscoutSgvJson(it))
+                is FoodRecord,
+                is CgmInsertionRecord,
+                is TemporaryBasalRecord,
+                // is ScheduledBasalRecord,
+                is BolusRecord-> {
+                    val treatment = NightscoutTreatment(HashMap())
+                    treatment.applyRecord(it)
+                    treatment
+                }
                 else -> null
             }
-        }.map { NightscoutEntryJson(it) }.toList()
-        while (!postableRecords.isEmpty()) {
-            val r = postableRecords.mapIndexed { i, nightscoutEntryJson -> i to nightscoutEntryJson }.partition { it.first < 1000 }
+        }.partition { it is NightscoutApiTreatment }
+        while (!entryRecords.isEmpty()) {
+            //println("entries:$entries")
+            val r = entryRecords.filterIsInstance<NightscoutEntryJson>().mapIndexed { i, nightscoutEntryJson -> i to nightscoutEntryJson }.partition { it.first < 1000 }
             val batch = r.first.map { it.second }.toArrayList()
-            postableRecords = r.second.map { it.second }
+            println("posting $batch")
+
+            entryRecords = r.second.map { it.second }
+            //println("entries: $entries")
             try {
                 if (!batch.isEmpty())
                     nightscoutApi.postRecords(batch).execute()
+            } catch (e: JsonDataException) {
+
+            }
+        }
+        println("treatments: $treatmentRecords")
+        while (!treatmentRecords.isEmpty()) {
+            //println("entries:$entries")
+            val r = treatmentRecords.filterIsInstance<NightscoutTreatment>().mapIndexed {
+                i, treatment -> i to treatment
+            }.partition { it.first < 1 }
+            val batch = r.first.map { it.second }.toArrayList()
+            println("posting $batch")
+
+            treatmentRecords = r.second.map { it.second }
+            try {
+                if (!batch.isEmpty())
+                    nightscoutApi.postTreatments(batch).execute()
             } catch (e: JsonDataException) {
 
             }

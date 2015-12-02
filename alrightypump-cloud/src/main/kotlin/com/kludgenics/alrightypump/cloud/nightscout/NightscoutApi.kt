@@ -4,8 +4,7 @@ import com.kludgenics.alrightypump.cloud.nightscout.records.json.Cal
 import com.kludgenics.alrightypump.cloud.nightscout.records.json.NightscoutEntry
 import com.kludgenics.alrightypump.cloud.nightscout.records.json.Sgv
 import com.kludgenics.alrightypump.device.dexcom.g4.DexcomCgmRecord
-import com.kludgenics.alrightypump.therapy.CalibrationRecord
-import com.kludgenics.alrightypump.therapy.CgmRecord
+import com.kludgenics.alrightypump.therapy.*
 import com.squareup.moshi.FromJson
 import com.squareup.moshi.JsonDataException
 import com.squareup.moshi.Moshi
@@ -96,26 +95,52 @@ data class NightscoutTreatment(public val map: MutableMap<String, Any?>) : Night
     override val absolute: Double? by map
     override val profile: String? by map
 
-    private data class NightscoutCarbTreatment(public override val carbs: Int,
-                                               public val rawTreatment: NightscoutTreatment) :
+    public fun applyRecord(record: Record) {
+        println(record)
+        map.putAll("_id" to "${record.source}-${record.id}",
+                "enteredBy" to record.source,
+                "created_at" to record.time.toString(),
+                //"notes" to record.toString(),
+                "eventType" to "<none>")
+        if (record is BolusRecord) {
+            map.putAll("insulin" to record.requestedNormal)
+            if (record.bolusWizard != null)
+                map.putAll("glucose" to if (record.bolusWizard?.bg?.glucose != 0.0) record.bolusWizard?.bg?.glucose else null,
+                        "units" to if (record.bolusWizard?.bg?.unit == GlucoseUnit.MGDL) "mg/dl" else "mmol",
+                        "carbs" to record.bolusWizard?.carbs)
+        }
+        if (record is TemporaryBasalRecord) {
+            map.putAll("rate" to record.rate,
+                    "duration" to record.duration.standardMinutes,
+                    "percent" to record.percent?.minus(100.0),
+                    "absolute" to record.rate,
+                    "eventType" to "Temp Basal")
+        }
+        if (record is FoodRecord) {
+            map.putAll("carbs" to record.carbohydrateGrams)
+        }
+    }
+
+    data class NightscoutCarbTreatment(public override val carbs: Int,
+                                       public val rawTreatment: NightscoutTreatment) :
             NightscoutApiCarbTreatment,
             NightscoutApiBaseTreatment by rawTreatment
 
-    private data class NightscoutBolusTreatment(public override val insulin: Double,
-                                                public val rawTreatment: NightscoutTreatment) :
+    data class NightscoutBolusTreatment(public override val insulin: Double,
+                                        public val rawTreatment: NightscoutTreatment) :
             NightscoutApiBolusTreatment,
             NightscoutApiBaseTreatment by rawTreatment
 
-    private data class NightscoutTempBasalTreatment(public override val rate: Double?,
-                                                    public override val percent: Double?,
-                                                    public override val absolute: Double?,
-                                                    public override val duration: Long,
-                                                    public val rawTreatment: NightscoutTreatment) :
+    data class NightscoutTempBasalTreatment(public override val rate: Double?,
+                                            public override val percent: Double?,
+                                            public override val absolute: Double?,
+                                            public override val duration: Long,
+                                            public val rawTreatment: NightscoutTreatment) :
             NightscoutApiTempBasalTreatment,
             NightscoutApiBaseTreatment by rawTreatment
 
-    private data class NightscoutProfileChangeTreatment(public override val profile: String,
-                                                        public val rawTreatment: NightscoutTreatment) :
+    data class NightscoutProfileChangeTreatment(public override val profile: String,
+                                                public val rawTreatment: NightscoutTreatment) :
             NightscoutApiProfileChangeTreatment,
             NightscoutApiBaseTreatment by rawTreatment
 
@@ -237,7 +262,7 @@ data class NightscoutSgvJson(public override val _id: String?,
                              public override val rssi: Int?) : NightscoutApiSgvEntry {
     companion object {
 
-        fun directionString(direction: Int?) : String {
+        fun directionString(direction: Int?): String {
             when (direction) {
                 1 -> return "DoubleUp"
                 2 -> return "SingleUp"
@@ -250,6 +275,7 @@ data class NightscoutSgvJson(public override val _id: String?,
             }
         }
     }
+
     constructor(record: DexcomCgmRecord) : this(_id = null, type = "sgv", date = record.time, dateString = record.time.toString(),
             device = record.source, sgv = record.value.mgdl!!.toInt(), direction = directionString(record.egvRecord.trendArrow), rssi = record.sgvRecord?.rssi,
             unfiltered = record.sgvRecord?.unfiltered,
@@ -284,7 +310,6 @@ data class NightscoutCalJson(public override val _id: String? = null,
             intercept = calibrationRecord.intercept,
             scale = calibrationRecord.scale)
 }
-
 
 @Suppress("UNUSED_METHOD")
 interface NightscoutApi {

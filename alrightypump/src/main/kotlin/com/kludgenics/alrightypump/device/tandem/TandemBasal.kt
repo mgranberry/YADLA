@@ -29,10 +29,10 @@ data class TandemTemporaryBasalRecord(val tempRateStart: TempRateStart?,
                                       val logEvent: LogEvent): TandemBasalRecord,
         TemporaryBasalRecord,
         LogEvent by logEvent {
-    constructor(tempRateStart: TempRateStart? = null,
-                tempRateEnd: TempRateCompleted,
+    constructor(tempRateStart: TempRateStart,
+                tempRateEnd: TempRateCompleted?,
                 basalRateChange: BasalRateChange) : this(tempRateStart, tempRateEnd, basalRateChange, null,
-            null, tempRateEnd)
+            null, tempRateStart)
     constructor(tempRateEnd: TempRateCompleted,
                 basalRateChange: BasalRateChange) : this(null, tempRateEnd, basalRateChange, null, null,
             tempRateEnd)

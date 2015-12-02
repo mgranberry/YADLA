@@ -63,6 +63,7 @@ class Nightscout(private val url: HttpUrl,
                 is CalibrationRecord -> NightscoutEntryJson(NightscoutCalJson(it))
                 is DexcomCgmRecord -> NightscoutEntryJson(NightscoutSgvJson(it))
                 is CgmRecord -> NightscoutEntryJson(NightscoutSgvJson(it))
+                is SmbgRecord -> NightscoutEntryJson(NightscoutMbgJson(it))
                 is FoodRecord,
                 is CgmInsertionRecord,
                 is TemporaryBasalRecord,
@@ -77,7 +78,9 @@ class Nightscout(private val url: HttpUrl,
         }.partition { it is NightscoutApiTreatment }
         while (!entryRecords.isEmpty()) {
             //println("entries:$entries")
-            val r = entryRecords.filterIsInstance<NightscoutEntryJson>().mapIndexed { i, nightscoutEntryJson -> i to nightscoutEntryJson }.partition { it.first < 1000 }
+            val r = entryRecords.filterIsInstance<NightscoutEntryJson>().mapIndexed {
+                i, nightscoutEntryJson -> i to nightscoutEntryJson }.partition { it.first < 1000
+            }
             val batch = r.first.map { it.second }.toArrayList()
             println("posting $batch")
 
@@ -95,7 +98,7 @@ class Nightscout(private val url: HttpUrl,
             //println("entries:$entries")
             val r = treatmentRecords.filterIsInstance<NightscoutTreatment>().mapIndexed {
                 i, treatment -> i to treatment
-            }.partition { it.first < 1 }
+            }.partition { it.first < 50 }
             val batch = r.first.map { it.second }.toArrayList()
             println("posting $batch")
 

@@ -292,7 +292,12 @@ data class NightscoutMbgJson(public override val _id: String?,
                              public override val dateString: String,
                              public override val date: Instant,
                              public override val device: String,
-                             public override val mbg: Int) : NightscoutApiMbgEntry
+                             public override val mbg: Int) : NightscoutApiMbgEntry {
+    constructor (smbgRecord: SmbgRecord) : this(_id = smbgRecord.id, type = "mbg", date = smbgRecord.time,
+            dateString = smbgRecord.time.toString(),
+            device = smbgRecord.source,
+            mbg = smbgRecord.value.mgdl!!.toInt())
+}
 
 data class NightscoutCalJson(public override val _id: String? = null,
                              public override val type: String,

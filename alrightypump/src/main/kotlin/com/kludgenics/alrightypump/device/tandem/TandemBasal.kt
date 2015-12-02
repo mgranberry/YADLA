@@ -23,7 +23,7 @@ data class TandemScheduledBasalRecord(val rateChange: BasalRateChange,
 
 data class TandemTemporaryBasalRecord(val tempRateStart: TempRateStart?,
                                       val tempRateEnd: TempRateCompleted?,
-                                      val basalRateChange: BasalRateChange,
+                                      val basalRateChange: BasalRateChange?,
                                       val suspended: PumpingSuspended?,
                                       val resumed: PumpingResumed?,
                                       val logEvent: LogEvent): TandemBasalRecord,
@@ -31,27 +31,28 @@ data class TandemTemporaryBasalRecord(val tempRateStart: TempRateStart?,
         LogEvent by logEvent {
     constructor(tempRateStart: TempRateStart,
                 tempRateEnd: TempRateCompleted?,
-                basalRateChange: BasalRateChange) : this(tempRateStart, tempRateEnd, basalRateChange, null,
+                basalRateChange: BasalRateChange?) : this(tempRateStart, tempRateEnd, basalRateChange, null,
             null, tempRateStart)
     constructor(tempRateEnd: TempRateCompleted,
                 basalRateChange: BasalRateChange) : this(null, tempRateEnd, basalRateChange, null, null,
             tempRateEnd)
     constructor(pumpingSuspended: PumpingSuspended,
                 pumpingResumed: PumpingResumed,
-                basalRateChange: BasalRateChange) : this(null, null, basalRateChange, pumpingSuspended,
+                basalRateChange: BasalRateChange?) : this(null, null, basalRateChange, pumpingSuspended,
             pumpingResumed, pumpingSuspended)
 
     override val rate: Double?
-        get() = basalRateChange.rate
+        get() = if (suspended != null) 0.0 else basalRateChange?.rate
     override val percent: Double?
-        get() = tempRateStart?.percent
+        get() = if (suspended != null) 0.0 else tempRateStart?.percent
     override val duration: Duration
         get() = if (suspended != null && resumed != null)
                 Duration(suspended.time, resumed.time)
             else if (tempRateStart != null && tempRateEnd != null)
                 Duration(tempRateStart.time, tempRateEnd.time)
-            else if (tempRateStart != null)
-                Duration(tempRateStart.time, basalRateChange.time)
-            else
-                Duration.ZERO
+            else if (tempRateStart != null && tempRateEnd == null)
+                tempRateStart.duration
+            else if (tempRateStart != null && tempRateEnd != null)
+                Duration(tempRateStart.time, tempRateEnd.time)
+            else Duration.ZERO
 }

@@ -153,9 +153,9 @@ class TandemPump(private val source: BufferedSource, private val sink: BufferedS
         }
 
         fun temp() : TandemTemporaryBasalRecord? {
-            val result = if (tempBasalStart != null && basalRateChange != null)
+            val result = if (tempBasalStart != null)
                 TandemTemporaryBasalRecord(tempBasalStart, tempRateCompleted, basalRateChange)
-            else if (basalRateChange != null && pumpingSuspended != null && pumpingResumed != null)
+            else if (pumpingSuspended != null && pumpingResumed != null)
                 TandemTemporaryBasalRecord(pumpingSuspended, pumpingResumed, basalRateChange)
             else {
                 null
@@ -186,11 +186,11 @@ class TandemPump(private val source: BufferedSource, private val sink: BufferedS
                                         null
                                 }
                                 is TempRateCompleted -> {
-                                    basalRecordHolder = basalRecordHolder.copy(tempRateCompleted = it)
-                                    basalRecordHolder.temp()
+                                    basalRecordHolder = BasalRecordHolder(tempRateCompleted = it)
+                                    null
                                 }
                                 is PumpingResumed -> {
-                                    basalRecordHolder = basalRecordHolder.copy(pumpingResumed = it)
+                                    basalRecordHolder = BasalRecordHolder(pumpingResumed = it)
                                     null
                                 }
                                 is TempRateStart -> {

@@ -17,6 +17,7 @@ import java.io.File
 import io.fabric.sdk.android.Fabric;
 import com.crashlytics.android.Crashlytics;
 import com.kludgenics.cgmlogger.extension.transaction
+import net.danlew.android.joda.JodaTimeAndroid
 
 /**
  * Created by matthiasgranberry on 5/28/15.
@@ -25,7 +26,7 @@ public class LoggerApplication : Application(), AnkoLogger {
     override fun onCreate() {
         super.onCreate()
         debug("start")
-        // JodaTimeAndroid.init(this);
+        JodaTimeAndroid.init(this);
         Fabric.with(this, Crashlytics());
         // should throw as migration is required
         debug("trying realm for migration")

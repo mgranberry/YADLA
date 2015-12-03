@@ -1,5 +1,5 @@
 buildscript {
-    ext.realm_version = '0.85.0'
+    ext.realm_version = '0.85.1'
     ext.play_services_version = '8.3.0'
     ext.android_support_version = '23.1.1'
     repositories {
@@ -81,7 +81,7 @@ dependencies {
     // sdk19, sdk21, sdk23 are also available
     compile 'org.jetbrains.anko:anko-support-v4:0.7.2'
     // In case you need support.v4 bindings
-    compile 'joda-time:joda-time:2.9'
-    // compile 'net.danlew:android.joda:2.8.0'
+    // compile 'joda-time:joda-time:2.9'
+    compile 'net.danlew:android.joda:2.9.0@aar'
     compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
 }

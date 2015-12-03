@@ -1,5 +1,6 @@
-package com.kludgenics.alrightypump
+package com.kludgenics.alrightypump.device
 
+import com.kludgenics.alrightypump.DateTimeChangeRecord
 import com.kludgenics.alrightypump.therapy.SmbgRecord
 import org.joda.time.Chronology
 

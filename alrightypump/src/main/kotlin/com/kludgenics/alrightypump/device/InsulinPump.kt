@@ -1,9 +1,8 @@
-package com.kludgenics.alrightypump
+package com.kludgenics.alrightypump.device
 
 import com.kludgenics.alrightypump.therapy.BasalRecord
 import com.kludgenics.alrightypump.therapy.BolusRecord
 import com.kludgenics.alrightypump.therapy.ConsumableRecord
-import com.kludgenics.alrightypump.therapy.Record
 import org.joda.time.Chronology
 
 

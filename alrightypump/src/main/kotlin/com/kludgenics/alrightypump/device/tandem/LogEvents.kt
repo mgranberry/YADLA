@@ -424,7 +424,7 @@ data class AlarmCleared(
 data class CartridgeFilled(
         public val insulinVolume: Int,
         public val floatVolume: Float,
-        public val rawRecord: LogEvent) : LogEvent by rawRecord {
+        public val rawRecord: LogEvent) : LogEvent by rawRecord, CartridgeChangeRecord, TandemTherapyRecord {
     constructor (rawRecord: LogEvent) : this(rawRecord = rawRecord,
             insulinVolume = rawRecord.data1, floatVolume = rawRecord.data2.asFloat())
 }
@@ -497,14 +497,14 @@ data class DataLogCorruption(public val rawRecord: LogEvent) : LogEvent by rawRe
 
 data class CannulaFilled(
         public val primed: Float,
-        public val rawRecord: LogEvent) : LogEvent by rawRecord {
+        public val rawRecord: LogEvent) : LogEvent by rawRecord, CannulaChangedRecord, TandemTherapyRecord {
     constructor (rawRecord: LogEvent) : this(rawRecord = rawRecord,
             primed = rawRecord.data1.asFloat())
 }
 
 data class TubingFilled(
         public val primed: Float,
-        public val rawRecord: LogEvent) : LogEvent by rawRecord {
+        public val rawRecord: LogEvent) : LogEvent by rawRecord, CannulaChangedRecord, TandemTherapyRecord {
     constructor (rawRecord: LogEvent) : this(rawRecord = rawRecord,
             primed = rawRecord.data1.asFloat())
 }

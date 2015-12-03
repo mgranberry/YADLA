@@ -18,10 +18,13 @@ open class DexcomG4(private val source: BufferedSource,
                     private val sink: BufferedSink) : ContinuousGlucoseMonitor {
 
     companion object {
-        public const val SOURCE = "alrightypump-DexCom-G4"
+        public val source: String get() = "alrightypump-Dexcom-G4-$serial"
+        private var _serial = ""
+        public val serial: String get() = _serial
     }
 
     var rawEnabled = true
+    val serialNumber = requestSerialNumber()
 
     override val cgmRecords: Sequence<DexcomCgmRecord>
         get() =
@@ -167,6 +170,17 @@ open class DexcomG4(private val source: BufferedSource,
         return if (response is XmlDexcomResponse)
             response.payloadString.utf8()
         else null
+    }
+
+    public fun requestSerialNumber(): String? {
+        val page = readDataPageRange(RecordPage.MANUFACTURING_DATA)
+        if (page != null) {
+            val pages = readDataPages(RecordPage.MANUFACTURING_DATA, page.first)
+            pages.filterIsInstance<ManufacturingData>().flatMap { it.records }.forEach {
+                _serial = it.xml.substringAfter("SerialNumber=\"").substringBefore('"')
+            }
+        }
+        return _serial
     }
 
     public fun readDataPages(recordType: Int, start: Int, count: Int = 1): List<RecordPage> {

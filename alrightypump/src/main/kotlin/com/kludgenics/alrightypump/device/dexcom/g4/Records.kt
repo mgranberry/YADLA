@@ -38,7 +38,7 @@ interface RecordPage {
             buffer.require(9)
             val type = buffer.getByte(8).toInt() and 0xFF
             return when (type) {
-            // MANUFACTURING_DATA -> ManufacturingData.parse(buffer)
+                MANUFACTURING_DATA -> ManufacturingData.parse(buffer)
                 SENSOR_DATA -> SgvData.parse(buffer)
                 EGV_DATA -> EgvData.parse(buffer)
                 CAL_SET -> CalData.parse(buffer)
@@ -53,11 +53,6 @@ interface RecordPage {
 
     val header: PageHeader
     val records: List<DexcomRecord>
-}
-
-interface XMLPage {
-    val header: PageHeader
-    val xml: String
 }
 
 interface DexcomRecord {
@@ -101,15 +96,28 @@ public data class PageHeader(public val index: Long,
     }
 }
 
-public data class ManufacturingData(public override val header: PageHeader,
-                                    public override val xml: String) : XMLPage {
+public data class ManufacturingPage(public override val systemSeconds: Long,
+                                    public override val displaySeconds: Long,
+                                    val xml: String) : DexcomRecord {
     companion object {
-        public fun parse(buffer: Buffer): ManufacturingData {
+        public fun parse(buffer: Buffer): ManufacturingPage {
             buffer.require(35)
             val header = PageHeader.parse(buffer)
-            buffer.skip(7)
+            val systemSeconds = 0L
+            val displaySeconds = 0L
             val xml = buffer.readUtf8()
-            return ManufacturingData(header, xml)
+            return ManufacturingPage(systemSeconds, displaySeconds, xml)
+        }
+    }
+}
+
+public data class ManufacturingData(public override val header: PageHeader,
+                                    public override val records: List<ManufacturingPage>) : RecordPage {
+    companion object {
+        public fun parse(buffer: Buffer): ManufacturingData {
+            val header = PageHeader.parse(buffer)
+            val records = listOf(ManufacturingPage.parse(buffer))
+            return ManufacturingData(header, records)
         }
     }
 }
@@ -146,7 +154,7 @@ public data class EgvData(public override val header: PageHeader,
             val header = PageHeader.parse(buffer)
             val records = ArrayList<EgvRecord>(header.size.toInt())
             for (i in 1..header.size)
-                records.add(EgvRecord.parse((header.index + i).toString(), buffer))
+                records.add(EgvRecord.parse("${header.recordType}-${header.index + i}", buffer))
             return EgvData(header, records)
         }
     }
@@ -167,7 +175,7 @@ public data class CalSetRecord(public override val id: String,
     override val time: Instant
         get() = displayTime
     override val source: String
-        get() = DexcomG4.SOURCE
+        get() = DexcomG4.source
 
     public data class CalSubRecord(public val systemSecondsEntered: Long,
                                    public val systemSecondsApplied: Long,
@@ -213,7 +221,7 @@ public data class CalData(public override val header: PageHeader,
             val header = PageHeader.parse(buffer)
             val records = ArrayList<CalSetRecord>(header.size.toInt())
             for (i in 1..header.size) {
-                val record = CalSetRecord.parse((header.index + i).toString(), buffer, if (header.revision == 3) 249 else 148)
+                val record = CalSetRecord.parse("${header.recordType}-${header.index + i}", buffer, if (header.revision == 3) 249 else 148)
                 records.add(record)
             }
             return CalData(header, records)
@@ -229,7 +237,7 @@ public data class InsertionRecord(public override val id: String,
     override val time: Instant
         get() = displayTime
     override val source: String
-        get() = DexcomG4.SOURCE
+        get() = DexcomG4.source
     override val removed: Boolean
         get() = insertionSeconds == -1
     val insertionTime: Instant get() = DexcomRecord.toInstant(insertionSeconds.toLong())
@@ -264,7 +272,7 @@ public data class InsertionData(public override val header: PageHeader,
             val header = PageHeader.parse(buffer)
             val records = ArrayList<InsertionRecord>(header.size.toInt())
             for (i in 1..header.size)
-                records.add(InsertionRecord.parse((header.index + i).toString(), buffer))
+                records.add(InsertionRecord.parse("${header.recordType}-${header.index + i}".toString(), buffer))
             return InsertionData(header, records)
         }
     }
@@ -313,7 +321,7 @@ public data class MeterRecord(public override val id: String,
     override val manual: Boolean
         get() = true
     override val source: String
-        get() = DexcomG4.SOURCE
+        get() = DexcomG4.source
 
     val meterTime: Instant get() = DexcomRecord.toInstant(meterSeconds)
 
@@ -337,7 +345,7 @@ public data class MeterData(public override val header: PageHeader,
             val header = PageHeader.parse(buffer)
             val records = ArrayList<MeterRecord>(header.size.toInt())
             for (i in 1..header.size)
-                records.add(MeterRecord.parse((header.index + i).toString(), buffer))
+                records.add(MeterRecord.parse("${header.recordType}-${header.index + i}", buffer))
             return MeterData(header, records)
         }
     }
@@ -346,7 +354,7 @@ public data class MeterData(public override val header: PageHeader,
 interface EventRecord : Record, DexcomRecord {
     val rawRecord: UserEventRecord
     override val source: String
-        get() = DexcomG4.SOURCE
+        get() = DexcomG4.source
 }
 
 public data class FoodEventRecord(public override val id: String,
@@ -443,7 +451,7 @@ public data class UserEventData(public override val header: PageHeader,
             val header = PageHeader.parse(buffer)
             val records = ArrayList<EventRecord>(header.size.toInt())
             for (i in 1..header.size)
-                records.add(UserEventRecord.parse((header.index + i).toString(), buffer))
+                records.add(UserEventRecord.parse("${header.recordType}-${header.index + i}", buffer))
             return UserEventData(header, records)
         }
     }

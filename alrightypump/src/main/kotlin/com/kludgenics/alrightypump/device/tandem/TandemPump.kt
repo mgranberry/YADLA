@@ -1,10 +1,10 @@
 package com.kludgenics.alrightypump.device.tandem
 
 import com.kludgenics.alrightypump.DateTimeChangeRecord
-import com.kludgenics.alrightypump.DeviceFeature
 import com.kludgenics.alrightypump.Glucometer
 import com.kludgenics.alrightypump.InsulinPump
 import com.kludgenics.alrightypump.therapy.BasalRecord
+import com.kludgenics.alrightypump.therapy.ConsumableRecord
 import com.kludgenics.alrightypump.therapy.SmbgRecord
 import okio.BufferedSink
 import okio.BufferedSource
@@ -17,9 +17,10 @@ import java.util.*
  * Created by matthias on 11/19/15.
  */
 class TandemPump(private val source: BufferedSource, private val sink: BufferedSink) : InsulinPump, Glucometer {
+
     companion object {
         @JvmField final val EPOCH = Instant.parse("2008-01-01T00:00:00")
-        const val ITERATION_STEP = 50
+        const val ITERATION_STEP = 200
     }
 
     val recordCache = TreeMap<Int, LogEvent>()
@@ -28,8 +29,6 @@ class TandemPump(private val source: BufferedSource, private val sink: BufferedS
 
     override val chronology: Chronology
         get() = ISOChronology.getInstance()
-    override val supportedFeatures: Set<DeviceFeature>
-        get() = setOf()
     override val firmwareVersions: List<String>
         get() = throw UnsupportedOperationException()
     override val serialNumbers: List<String>
@@ -42,9 +41,10 @@ class TandemPump(private val source: BufferedSource, private val sink: BufferedS
         get() = throw UnsupportedOperationException()
     override val smbgRecords: Sequence<SmbgRecord>
         get() = records.filterIsInstance<SmbgRecord>()
-
-    val bolusRecords: Sequence<TandemBolus> get () = BolusWizardAssemblingSequence()
-    val basalRecords: Sequence<BasalRecord> get() = BasalRateAssemblingSequence()
+    override val bolusRecords: Sequence<TandemBolus> get () = BolusWizardAssemblingSequence()
+    override val basalRecords: Sequence<TandemBasalRecord> get() = BasalRateAssemblingSequence()
+    override val consumableRecords: Sequence<ConsumableRecord>
+        get() = records.filterIsInstance<ConsumableRecord>()
 
     val logRange: IntRange = LogSizeResp(commandResponse(LogSizeReq()).payload).range
 

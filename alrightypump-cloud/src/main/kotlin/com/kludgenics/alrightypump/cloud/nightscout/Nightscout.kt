@@ -6,10 +6,7 @@ import com.kludgenics.alrightypump.device.dexcom.g4.DexcomCgmRecord
 import com.kludgenics.alrightypump.therapy.*
 import com.squareup.moshi.JsonDataException
 import com.squareup.moshi.Moshi
-import com.squareup.okhttp.HttpUrl
-import com.squareup.okhttp.Interceptor
-import com.squareup.okhttp.OkHttpClient
-import com.squareup.okhttp.Response
+import com.squareup.okhttp.*
 import okio.ByteString
 import org.joda.time.Instant
 import retrofit.MoshiConverterFactory
@@ -25,14 +22,16 @@ class Nightscout(private val url: HttpUrl,
                  private val okHttpClient: OkHttpClient = OkHttpClient()) {
     private val treatmentMap = TreeMap<TherapyKey, Record>()
     private val entryMap = TreeMap<TherapyKey, Record>()
-    private data class TherapyKey (val instant: Instant, val recordType: String)
+
+    private data class TherapyKey(val instant: Instant, val recordType: String)
+
     private val retrofit: Retrofit
     private val nightscoutApi: NightscoutApi
     public var overwriteEntries: Boolean = true
     public var overwriteTreatments: Boolean = false
     public var entryPageSize: Int = 576
 
-    public val entries : Sequence<NightscoutRecord> get() = (RestCallSequence(Instant.parse("2008-01-01T01:00:00Z"),
+    public val entries: Sequence<NightscoutRecord> get() = (RestCallSequence(Instant.parse("2008-01-01T01:00:00Z"),
             Instant.now(),
             entryPageSize) {
         start, end, count ->
@@ -40,7 +39,7 @@ class Nightscout(private val url: HttpUrl,
                 .getRecordsBetween(start.millis, end.millis, count)
                 .execute()
                 .body()
-        }).mapNotNull {
+    }).mapNotNull {
         when (it.rawEntry) {
             is NightscoutSgvJson -> NightscoutCgmRecord(it.rawEntry)
             else -> null
@@ -51,10 +50,11 @@ class Nightscout(private val url: HttpUrl,
     public val treatments: Sequence<NightscoutTreatment> get() = RestCallSequence(Instant.parse("2008-01-01T01:00:00Z"),
             Instant.now(),
             treatmentPageSize) {
-        start, end, count -> nightscoutApi
-            .getTreatmentsBetween(start.toString(), end.toString(), count)
-            .execute()
-            .body()
+        start, end, count ->
+        nightscoutApi
+                .getTreatmentsBetween(start.toString(), end.toString(), count)
+                .execute()
+                .body()
     }
 
     public fun postRecords(records: Sequence<Record>) {
@@ -67,8 +67,11 @@ class Nightscout(private val url: HttpUrl,
                 is FoodRecord,
                 is CgmInsertionRecord,
                 is TemporaryBasalRecord,
-                // is ScheduledBasalRecord,
-                is BolusRecord-> {
+                is CannulaChangedRecord,
+                is CartridgeChangeRecord,
+                is CannulaChangedRecord,
+                    // is ScheduledBasalRecord,
+                is BolusRecord -> {
                     val treatment = NightscoutTreatment(HashMap())
                     treatment.applyRecord(it)
                     treatment
@@ -77,40 +80,52 @@ class Nightscout(private val url: HttpUrl,
             }
         }.partition { it is NightscoutApiTreatment }
         while (!entryRecords.isEmpty()) {
-            //println("entries:$entries")
             val r = entryRecords.filterIsInstance<NightscoutEntryJson>().mapIndexed {
-                i, nightscoutEntryJson -> i to nightscoutEntryJson }.partition { it.first < 1000
+                i, nightscoutEntryJson ->
+                i to nightscoutEntryJson
+            }.partition {
+                it.first < 1000
             }
             val batch = r.first.map { it.second }.toArrayList()
-            println("posting $batch")
-
             entryRecords = r.second.map { it.second }
-            //println("entries: $entries")
             try {
                 if (!batch.isEmpty())
-                    nightscoutApi.postRecords(batch).execute()
+                    nightscoutApi.postRecords(batch).enqueue(object : retrofit.Callback<MutableList<NightscoutEntryJson>> {
+                        override fun onResponse(response: retrofit.Response<MutableList<NightscoutEntryJson>>?, retrofit: Retrofit?) {
+                        }
+
+                        override fun onFailure(t: Throwable?) {
+                        }
+
+                    })
             } catch (e: JsonDataException) {
 
             }
         }
-        println("treatments: $treatmentRecords")
-        while (!treatmentRecords.isEmpty()) {
-            //println("entries:$entries")
-            val r = treatmentRecords.filterIsInstance<NightscoutTreatment>().mapIndexed {
-                i, treatment -> i to treatment
-            }.partition { it.first < 50 }
-            val batch = r.first.map { it.second }.toArrayList()
-            println("posting $batch")
+        val t = treatmentRecords.filterIsInstance<NightscoutTreatment>().fold(arrayListOf<NightscoutTreatment>()) {
+            arrayList: ArrayList<NightscoutTreatment>, nightscoutTreatment: NightscoutTreatment ->
+            if (arrayList.size >= 1) {
+                nightscoutApi.postTreatments(arrayList).enqueue(object : retrofit.Callback<ResponseBody> {
+                    override fun onResponse(response: retrofit.Response<ResponseBody>?, retrofit: Retrofit?) {
+                    }
 
-            treatmentRecords = r.second.map { it.second }
-            try {
-                if (!batch.isEmpty())
-                    nightscoutApi.postTreatments(batch).execute()
-            } catch (e: JsonDataException) {
+                    override fun onFailure(t: Throwable?) {
+                    }
 
+                })
+                arrayList.clear()
             }
+            arrayList.add(nightscoutTreatment)
+            arrayList
         }
+        nightscoutApi.postTreatments(t).enqueue(object : retrofit.Callback<ResponseBody> {
+            override fun onResponse(response: retrofit.Response<ResponseBody>?, retrofit: Retrofit?) {
+            }
 
+            override fun onFailure(t: Throwable?) {
+            }
+
+        })
     }
 
     private class RestCallSequence<T:NightscoutApiEntry>(val startInstant: Instant,

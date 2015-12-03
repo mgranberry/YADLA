@@ -1,6 +1,6 @@
 package com.kludgenics.alrightypump.device.dexcom.g4
 
-import com.kludgenics.alrightypump.ContinuousGlucoseMonitor
+import com.kludgenics.alrightypump.device.ContinuousGlucoseMonitor
 import com.kludgenics.alrightypump.DateTimeChangeRecord
 import com.kludgenics.alrightypump.therapy.SmbgRecord
 import okio.BufferedSink
@@ -38,7 +38,7 @@ open class DexcomG4(private val source: BufferedSource,
 
 
     override val smbgRecords: Sequence<SmbgRecord>
-        get() = meterRecords
+        get() = DataPageIterator<MeterRecord>(RecordPage.METER_DATA).asSequence()
 
     override val dateTimeChangeRecords: Sequence<DateTimeChangeRecord>
         get() = throw UnsupportedOperationException()
@@ -57,8 +57,7 @@ open class DexcomG4(private val source: BufferedSource,
     public val eventRecords: Sequence<EventRecord> get() = DataPageIterator<EventRecord>(RecordPage.USER_EVENT_DATA).asSequence()
     public val settingsRecords: Sequence<UserSettingsRecord> get() = DataPageIterator<UserSettingsRecord>(RecordPage.USER_SETTING_DATA).asSequence()
     public val calibrationRecords: Sequence<CalSetRecord> get() = DataPageIterator<CalSetRecord>(RecordPage.CAL_SET).asSequence()
-    public val meterRecords: Sequence<MeterRecord> get() = DataPageIterator<MeterRecord>(RecordPage.METER_DATA).asSequence()
-    public val insertionRecords: Sequence<InsertionRecord> get() = DataPageIterator<InsertionRecord>(RecordPage.INSERTION_TIME).asSequence()
+    override public val consumableRecords: Sequence<InsertionRecord> get() = DataPageIterator<InsertionRecord>(RecordPage.INSERTION_TIME).asSequence()
 
     public val version: String? by lazy { requestVersion() }
     public val databasePartitionInfo: String? by lazy { readDatabasePartitionInfo() }

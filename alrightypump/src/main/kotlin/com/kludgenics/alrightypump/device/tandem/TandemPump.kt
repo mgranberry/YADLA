@@ -1,8 +1,8 @@
 package com.kludgenics.alrightypump.device.tandem
 
 import com.kludgenics.alrightypump.DateTimeChangeRecord
-import com.kludgenics.alrightypump.Glucometer
-import com.kludgenics.alrightypump.InsulinPump
+import com.kludgenics.alrightypump.device.Glucometer
+import com.kludgenics.alrightypump.device.InsulinPump
 import com.kludgenics.alrightypump.therapy.BasalRecord
 import com.kludgenics.alrightypump.therapy.ConsumableRecord
 import com.kludgenics.alrightypump.therapy.SmbgRecord

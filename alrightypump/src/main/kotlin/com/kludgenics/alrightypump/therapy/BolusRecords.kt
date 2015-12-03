@@ -28,7 +28,7 @@ interface ExtendedBolusRecord: BolusRecord {
     override val expectedExtendedDuration: Duration
 }
 
-interface ComboBolusRecord: BolusRecord {
+interface ComboBolusRecord: BolusRecord, NormalBolusRecord, ExtendedBolusRecord {
     override val requestedNormal: Double
     override val requestedExtended: Double
     override val expectedExtendedDuration: Duration

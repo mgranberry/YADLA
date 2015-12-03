@@ -14,6 +14,7 @@ import com.squareup.okhttp.ResponseBody
 import org.joda.time.Instant
 import retrofit.Call
 import retrofit.http.*
+import java.text.DecimalFormat
 import kotlin.properties.getValue
 
 interface NightscoutApiEntry : NightscoutEntry {
@@ -75,6 +76,11 @@ interface NightscoutApiProfileChangeTreatment : NightscoutApiBaseTreatment {
 }
 
 data class NightscoutTreatment(public val map: MutableMap<String, Any?>) : NightscoutApiTreatment {
+    companion object {
+        val bolusFormat = DecimalFormat("####.###")
+        val basalFormat = DecimalFormat("##.####")
+    }
+
     // these two aren't present, but it is useful to unify treatments and entries
     override val device: String get() = enteredBy
     override val type: String get() = eventType
@@ -96,29 +102,50 @@ data class NightscoutTreatment(public val map: MutableMap<String, Any?>) : Night
     override val profile: String? by map
 
     public fun applyRecord(record: Record) {
-        println(record)
         map.putAll("_id" to "${record.source}-${record.id}",
                 "enteredBy" to record.source,
                 "created_at" to record.time.toString(),
                 //"notes" to record.toString(),
                 "eventType" to "<none>")
-        if (record is BolusRecord) {
-            map.putAll("insulin" to record.requestedNormal)
-            if (record.bolusWizard != null)
+        if (record is NormalBolusRecord) {
+            map.put("insulin", bolusFormat.format(record.requestedNormal).toDouble())
+            if (record.bolusWizard != null) {
                 map.putAll("glucose" to if (record.bolusWizard?.bg?.glucose != 0.0) record.bolusWizard?.bg?.glucose else null,
-                        "units" to if (record.bolusWizard?.bg?.unit == GlucoseUnit.MGDL) "mg/dl" else "mmol",
-                        "carbs" to record.bolusWizard?.carbs)
+                        "units" to if (record.bolusWizard?.bg != null)
+                            if (record.bolusWizard?.bg?.unit == GlucoseUnit.MGDL)
+                                "mg/dl"
+                            else "mmol"
+                        else null,
+                        "carbs" to if (record.bolusWizard?.carbs != 1) record.bolusWizard?.carbs else null,
+                        "eventType" to
+                                if ((record.bolusWizard?.recommendation?.carbBolus ?: 0.0) >=
+                                (record.bolusWizard?.recommendation?.correctionBolus ?: 0.0)) "Meal Bolus"
+                        else "Correction Bolus")
+            }
         }
         if (record is TemporaryBasalRecord) {
-            map.putAll("rate" to record.rate,
+            if (record.rate != null) {
+                map["rate"] = basalFormat.format(record.rate!!).toDouble()
+                map["absolute"] = basalFormat.format(record.rate!!).toDouble()
+            }
+            map.putAll(
                     "duration" to record.duration.standardMinutes,
                     "percent" to record.percent?.minus(100.0),
-                    "absolute" to record.rate,
                     "eventType" to "Temp Basal")
         }
         if (record is FoodRecord) {
             map.putAll("carbs" to record.carbohydrateGrams)
         }
+        if (record is CgmInsertionRecord) {
+            map.putAll("eventType" to "Sensor Start")
+        }
+        if (record is CannulaChangedRecord) {
+            map.putAll("eventType" to "Site Change")
+        }
+        if (record is CartridgeChangeRecord) {
+            map.putAll("eventType" to "Insulin Change")
+        }
+
     }
 
     data class NightscoutCarbTreatment(public override val carbs: Int,

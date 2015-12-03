@@ -38,7 +38,7 @@ data class TandemBolusWizard(val event1: BolusRequest1,
         get() = TandemBloodGlucoseTarget(event2.targetBg)
     override val recommendation: BolusWizardRecord.Recommendation
         get() = TandemBolusRecommendation(carbBolus = event3.foodBolusRecommendation.toDouble(),
-                correctionBolus = event3.foodBolusRecommendation.toDouble(),
+                correctionBolus = event3.correctionBolusRecommendation.toDouble(),
                 totalBolus = event3.totalBolus.toDouble())
 }
 

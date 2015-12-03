@@ -9,7 +9,7 @@ import org.joda.time.Instant
 data class DexcomCgmRecord(public override val id: String,
                            public override val time: Instant,
                            public override val value: DexcomG4GlucoseValue,
-                           public override val source: String = DexcomG4.SOURCE,
+                           public override val source: String = DexcomG4.source,
                            public val egvRecord: EgvRecord,
                            public val sgvRecord: SgvRecord?,
                            public val calSetRecord: CalSetRecord?) : CgmRecord {

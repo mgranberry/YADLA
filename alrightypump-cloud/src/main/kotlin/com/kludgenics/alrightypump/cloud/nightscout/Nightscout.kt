@@ -19,7 +19,7 @@ import java.util.*
  */
 
 class Nightscout(private val url: HttpUrl,
-                 private val okHttpClient: OkHttpClient = OkHttpClient()) {
+                 val okHttpClient: OkHttpClient = OkHttpClient()) {
     private val treatmentMap = TreeMap<TherapyKey, Record>()
     private val entryMap = TreeMap<TherapyKey, Record>()
 

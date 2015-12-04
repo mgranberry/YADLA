@@ -123,6 +123,13 @@ data class NightscoutTreatment(public val map: MutableMap<String, Any?>) : Night
                         else "Correction Bolus")
             }
         }
+        if (record is ExtendedBolusRecord) {
+            map.putAll("enteredInsulin" to basalFormat.format((record.requestedNormal?:0.0) + record.requestedExtended).toDouble(),
+                    "duration" to (record.extendedDuration ?: record.expectedExtendedDuration).standardMinutes,
+                    "relative" to basalFormat.format((record.deliveredExtended ?: record.requestedExtended)
+                             / (record.expectedExtendedDuration.standardMinutes / 60.00)).toDouble(),
+                    "eventType" to "Combo Bolus")
+        }
         if (record is TemporaryBasalRecord) {
             if (record.rate != null) {
                 map["rate"] = basalFormat.format(record.rate!!).toDouble()

@@ -87,8 +87,8 @@ data class TandemExtendedBolus(public val extendedActivated: BolexActivated,
     override val requestedExtended: Double
         get() = extendedActivated.bolusSize.toDouble()
 
-    override val deliveredExtended: Double?
-        get() = bolexCompleted?.insulinDelivered?.toDouble() ?: deliveredExtended
+    override val deliveredExtended: Double
+        get() = bolexCompleted?.insulinDelivered?.toDouble() ?: requestedExtended
 
     override val extendedDuration: Duration?
         get() = if (bolexCompleted != null)
@@ -118,8 +118,8 @@ data class TandemComboBolus(public val bolusActivated: BolusActivated,
     override val requestedExtended: Double
         get() = extendedActivated.bolusSize.toDouble()
 
-    override val deliveredExtended: Double?
-        get() = bolexCompleted?.insulinDelivered?.toDouble() ?: deliveredExtended
+    override val deliveredExtended: Double
+        get() = bolexCompleted?.insulinDelivered?.toDouble() ?: requestedExtended
 
     override val extendedDuration: Duration?
         get() = if (bolexCompleted != null)

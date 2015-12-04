@@ -3,25 +3,22 @@ package com.kludgenics.alrightypump
 import com.fazecast.jSerialComm.SerialPort
 import com.kludgenics.alrightypump.cloud.nightscout.Nightscout
 import com.kludgenics.alrightypump.device.dexcom.g4.DexcomG4
-import com.kludgenics.alrightypump.device.dexcom.g4.RecordPage
-import com.kludgenics.alrightypump.device.tandem.LogSizeReq
-import com.kludgenics.alrightypump.device.tandem.LogSizeResp
 import com.kludgenics.alrightypump.device.tandem.TandemPump
 import com.kludgenics.alrightypump.therapy.TreeMapTherapyTimeline
 import com.squareup.okhttp.HttpUrl
 import org.joda.time.DateTime
-import org.joda.time.Duration
 import org.joda.time.Period
 
 
 fun main(args: Array<String>) {
     val ports = SerialPort.getCommPorts()
     val timeline = TreeMapTherapyTimeline()
-    val startTime = DateTime.now() - Period.months(36)
+    val startTime = DateTime.now() - Period.months(3)
     ports.forEach {
         println("Looking for device on ${it.descriptivePortName}")
         when (it.descriptivePortName) {
             "Tandem Virtual COM Port" -> {
+                println("Found Tandem pump. Fetching data.")
                 it.baudRate = 115200 * 12
                 val connection = SerialConnection(it)
                 connection.use {
@@ -31,6 +28,7 @@ fun main(args: Array<String>) {
                 }
             }
             "DexCom Gen4 USB Serial" -> {
+                println("Found DexCom G4.  Fetching data.")
                 val connection = SerialConnection(it)
                 connection.use {
                     val g4 = DexcomG4(connection.source(), connection.sink())

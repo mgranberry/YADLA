@@ -42,7 +42,6 @@ fun main(args: Array<String>) {
     val nightscout_url = System.getenv("NIGHTSCOUT_HOST") ?: args.getOrNull(0)
     if (nightscout_url == null) {
         println("Error: must set environment variable NIGHTSCOUT_HOST or provide Nightscout URL on command line.  This should look like https://key@hostname.example.com:1234/")
-        println(args)
     } else {
         val nightscout = Nightscout(HttpUrl.parse(nightscout_url))
         println("Uploading ${timeline.events.count()} records to $nightscout_url")

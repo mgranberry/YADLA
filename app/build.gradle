@@ -60,6 +60,7 @@ dependencies {
         transitive = true;
     }
     compile project(':alrightypump-cloud')
+    compile project(':alrightypump-android')
     compile "com.android.support:recyclerview-v7:$android_support_version"
     compile "com.android.support:gridlayout-v7:$android_support_version"
     compile "com.android.support:cardview-v7:$android_support_version"

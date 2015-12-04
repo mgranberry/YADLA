@@ -1,12 +1,13 @@
 
 buildscript {
-    ext.kotlin_version = '1.0.0-beta-1103'
+    ext.kotlin_version = '1.0.0-beta-2423'
     ext.realm_version = '0.84.1'
     ext.play_services_version = '8.1.0'
     ext.android_support_version = '23.1.0'
     repositories {
         jcenter()
         maven { url 'https://maven.fabric.io/public' }
+        mavenCentral()
     }
     dependencies {
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
@@ -15,6 +16,12 @@ buildscript {
 
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
+
+repositories {
+    jcenter()
+    maven { url "https://jitpack.io" }
+    mavenCentral()
+}
 
 android {
     compileSdkVersion 23
@@ -32,10 +39,14 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+    sourceSets {
+        main.java.srcDirs += 'src/main/kotlin'
+    }
 }
 
 dependencies {
-    compile 'com.android.support:appcompat-v7:23.+'
     compile fileTree(dir: 'libs', include: ['*.jar'])
     testCompile 'junit:junit:4.12'
+    compile 'com.squareup.okio:okio:1.6.0'
+    compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
 }

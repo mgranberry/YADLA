@@ -77,8 +77,8 @@ interface NightscoutApiProfileChangeTreatment : NightscoutApiBaseTreatment {
 
 data class NightscoutTreatment(public val map: MutableMap<String, Any?>) : NightscoutApiTreatment {
     companion object {
-        val bolusFormat = DecimalFormat("####.###")
-        val basalFormat = DecimalFormat("##.####")
+        val bolusFormat = DecimalFormat("####.##")
+        val basalFormat = DecimalFormat("###.###")
     }
 
     // these two aren't present, but it is useful to unify treatments and entries

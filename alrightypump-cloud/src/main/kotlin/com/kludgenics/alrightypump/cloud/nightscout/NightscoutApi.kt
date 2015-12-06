@@ -107,8 +107,9 @@ data class NightscoutTreatment(public val map: MutableMap<String, Any?>) : Night
                 "created_at" to record.time.toString(),
                 //"notes" to record.toString(),
                 "eventType" to "<none>")
-        if (record is NormalBolusRecord) {
+        if (record is NormalBolusRecord)
             map.put("insulin", bolusFormat.format(record.requestedNormal).toDouble())
+        if (record is BolusRecord) {
             if (record.bolusWizard != null) {
                 map.putAll("glucose" to if (record.bolusWizard?.bg?.glucose != 0.0) record.bolusWizard?.bg?.glucose else null,
                         "units" to if (record.bolusWizard?.bg != null)

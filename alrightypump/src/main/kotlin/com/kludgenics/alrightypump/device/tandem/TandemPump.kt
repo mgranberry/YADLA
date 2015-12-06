@@ -42,7 +42,7 @@ class TandemPump(private val source: BufferedSource, private val sink: BufferedS
     override val smbgRecords: Sequence<SmbgRecord>
         get() = records.filterIsInstance<SmbgRecord>()
     override val bolusRecords: Sequence<TandemBolus> get () = BolusWizardAssemblingSequence()
-    override val basalRecords: Sequence<TandemBasalRecord> get() = BasalRateAssemblingSequence()
+    override val basalRecords: Sequence<BasalRecord> get() = BasalRateAssemblingSequence()
     override val consumableRecords: Sequence<ConsumableRecord>
         get() = records.filterIsInstance<ConsumableRecord>()
 
@@ -165,11 +165,11 @@ class TandemPump(private val source: BufferedSource, private val sink: BufferedS
 
     }
 
-    private inner class BasalRateAssemblingSequence : Sequence<TandemBasalRecord> {
+    private inner class BasalRateAssemblingSequence : Sequence<BasalRecord> {
 
-        override fun iterator() = object: Iterator<TandemBasalRecord> {
+        override fun iterator() = object: Iterator<BasalRecord> {
             var basalRecordHolder = BasalRecordHolder()
-            val recordIterator: Iterator<TandemBasalRecord>
+            val recordIterator: Iterator<BasalRecord>
 
             init {
                 recordIterator = records.filterIsInstance<BasalRecord>()
@@ -187,7 +187,7 @@ class TandemPump(private val source: BufferedSource, private val sink: BufferedS
                                 }
                                 is TempRateCompleted -> {
                                     basalRecordHolder = BasalRecordHolder(tempRateCompleted = it)
-                                    null
+                                    it
                                 }
                                 is PumpingResumed -> {
                                     basalRecordHolder = BasalRecordHolder(pumpingResumed = it)
@@ -208,7 +208,7 @@ class TandemPump(private val source: BufferedSource, private val sink: BufferedS
                         }.iterator()
             }
 
-            override fun next(): TandemBasalRecord {
+            override fun next(): BasalRecord {
                 return recordIterator.next()
             }
 

@@ -246,7 +246,7 @@ data class TempRateStart(
         public override val percent: Double,
         public override val duration: Duration,
         public override val tempRateId: Int,
-        public val rawRecord: LogEvent) : LogEvent by rawRecord, TempBasalEventRecord {
+        public val rawRecord: LogEvent) : LogEvent by rawRecord, TempBasalEventRecord, TemporaryBasalStartRecord {
     override val rate: Double?
         get() = null
 

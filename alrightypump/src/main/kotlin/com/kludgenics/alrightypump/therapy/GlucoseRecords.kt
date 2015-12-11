@@ -14,3 +14,7 @@ interface CgmRecord : GlucoseRecord {
     override val manual: Boolean
         get() = false
 }
+
+interface RawCgmRecord: CgmRecord {
+    override val value: RawGlucoseValue
+}

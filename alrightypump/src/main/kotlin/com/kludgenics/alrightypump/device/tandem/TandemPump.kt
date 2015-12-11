@@ -173,7 +173,7 @@ class TandemPump(private val source: BufferedSource, private val sink: BufferedS
 
             init {
                 recordIterator = records.filterIsInstance<BasalRecord>()
-                        .mapNotNull {
+                        .flatMap {
                             when (it) {
                                 is BasalRateChange -> {
                                     basalRecordHolder = basalRecordHolder.copy(basalRateChange = it)
@@ -181,29 +181,39 @@ class TandemPump(private val source: BufferedSource, private val sink: BufferedS
                                             BasalRateChange.MASK_SEGMENT_CHANGE or
                                             BasalRateChange.MASK_PUMP_RESUME or
                                             BasalRateChange.MASK_TEMP_END) != 0) {
-                                        basalRecordHolder.scheduled()
+                                        val v = basalRecordHolder.scheduled()
+                                        if (v != null)
+                                            sequenceOf<BasalRecord>(v)
+                                        else
+                                            emptySequence()
                                     } else
-                                        null
+                                        emptySequence()
                                 }
                                 is TempRateCompleted -> {
                                     basalRecordHolder = BasalRecordHolder(tempRateCompleted = it)
-                                    it
+                                    sequenceOf(it)
                                 }
                                 is PumpingResumed -> {
                                     basalRecordHolder = BasalRecordHolder(pumpingResumed = it)
-                                    null
+                                    emptySequence<BasalRecord>()
                                 }
                                 is TempRateStart -> {
                                     val v = basalRecordHolder.copy(tempBasalStart = it).temp()
                                     basalRecordHolder = BasalRecordHolder()
-                                    v
+                                    if (v != null)
+                                        sequenceOf<BasalRecord>(v, it)
+                                    else
+                                        emptySequence()
                                 }
                                 is PumpingSuspended -> {
                                     val v = basalRecordHolder.copy(pumpingSuspended = it).temp()
                                     basalRecordHolder = BasalRecordHolder()
-                                    v
+                                    if (v != null)
+                                        sequenceOf(v)
+                                    else
+                                        emptySequence()
                                 }
-                                else -> null
+                                else -> emptySequence<BasalRecord>()
                             }
                         }.iterator()
             }

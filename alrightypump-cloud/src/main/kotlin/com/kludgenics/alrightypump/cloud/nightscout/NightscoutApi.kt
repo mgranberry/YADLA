@@ -102,16 +102,16 @@ data class NightscoutTreatment(public val map: MutableMap<String, Any?>) : Night
     override val profile: String? by map
 
     public fun applyRecord(record: Record) {
-        map.putAll("_id" to "${record.source}-${record.id}",
+        map.putAll(arrayOf<Pair<String, Any?>>("_id" to "${record.source}-${record.id}",
                 "enteredBy" to record.source,
                 "created_at" to record.time.toString(),
                 //"notes" to record.toString(),
-                "eventType" to "<none>")
+                "eventType" to "<none>"))
         if (record is NormalBolusRecord)
             map.put("insulin", bolusFormat.format(record.requestedNormal).toDouble())
         if (record is BolusRecord) {
             if (record.bolusWizard != null) {
-                map.putAll("glucose" to if (record.bolusWizard?.bg?.glucose != 0.0) record.bolusWizard?.bg?.glucose else null,
+                map.putAll(arrayOf("glucose" to if (record.bolusWizard?.bg?.glucose != 0.0) record.bolusWizard?.bg?.glucose else null,
                         "units" to if (record.bolusWizard?.bg != null)
                             if (record.bolusWizard?.bg?.unit == GlucoseUnit.MGDL)
                                 "mg/dl"
@@ -120,16 +120,16 @@ data class NightscoutTreatment(public val map: MutableMap<String, Any?>) : Night
                         "carbs" to if (record.bolusWizard?.carbs != 1) record.bolusWizard?.carbs else null,
                         "eventType" to
                                 if ((record.bolusWizard?.recommendation?.carbBolus ?: 0.0) >=
-                                (record.bolusWizard?.recommendation?.correctionBolus ?: 0.0)) "Meal Bolus"
-                        else "Correction Bolus")
+                                        (record.bolusWizard?.recommendation?.correctionBolus ?: 0.0)) "Meal Bolus"
+                                else "Correction Bolus"))
             }
         }
         if (record is ExtendedBolusRecord) {
-            map.putAll("enteredInsulin" to basalFormat.format((record.requestedNormal?:0.0) + record.requestedExtended).toDouble(),
+            map.putAll(arrayOf<Pair<String, Any?>>("enteredInsulin" to basalFormat.format((record.requestedNormal ?: 0.0) + record.requestedExtended).toDouble(),
                     "duration" to (record.extendedDuration ?: record.expectedExtendedDuration).standardMinutes,
                     "relative" to basalFormat.format((record.deliveredExtended ?: record.requestedExtended)
-                             / (record.expectedExtendedDuration.standardMinutes / 60.00)).toDouble(),
-                    "eventType" to "Combo Bolus")
+                            / (record.expectedExtendedDuration.standardMinutes / 60.00)).toDouble(),
+                    "eventType" to "Combo Bolus"))
         }
         if (record is TemporaryBasalRecord) {
             if (record.rate != null) {
@@ -137,21 +137,21 @@ data class NightscoutTreatment(public val map: MutableMap<String, Any?>) : Night
                 map["absolute"] = basalFormat.format(record.rate!!).toDouble()
             }
             map.putAll(
-                    "duration" to record.duration.standardMinutes,
-                    "percent" to record.percent?.minus(100.0),
-                    "eventType" to "Temp Basal")
+                    arrayOf("duration" to record.duration.standardMinutes,
+                            "percent" to record.percent?.minus(100.0),
+                            "eventType" to "Temp Basal"))
         }
         if (record is FoodRecord) {
-            map.putAll("carbs" to record.carbohydrateGrams)
+            map.putAll(arrayOf<Pair<String, Any?>>("carbs" to record.carbohydrateGrams))
         }
         if (record is CgmInsertionRecord) {
-            map.putAll("eventType" to "Sensor Start")
+            map.putAll(arrayOf<Pair<String, Any?>>("eventType" to "Sensor Start"))
         }
         if (record is CannulaChangedRecord) {
-            map.putAll("eventType" to "Site Change")
+            map.putAll(arrayOf<Pair<String, Any?>>("eventType" to "Site Change"))
         }
         if (record is CartridgeChangeRecord) {
-            map.putAll("eventType" to "Insulin Change")
+            map.putAll(arrayOf<Pair<String, Any?>>("eventType" to "Insulin Change"))
         }
 
     }
@@ -219,28 +219,28 @@ class NightscoutJsonAdapter {
     @ToJson
     public fun entryToJson(entry: NightscoutEntryJson): Map<String, Any?> {
         val map = hashMapOf<String, Any?>()
-        map.putAll("_id" to entry._id,
+        map.putAll(arrayOf("_id" to entry._id,
                 "date" to entry.date.millis,
                 "dateString" to entry.dateString,
                 "device" to entry.device,
-                "type" to entry.type)
+                "type" to entry.type))
         when (entry.rawEntry) {
             is NightscoutApiSgvEntry -> {
-                map.putAll("sgv" to entry.rawEntry.sgv,
+                map.putAll(arrayOf("sgv" to entry.rawEntry.sgv,
                         "direction" to entry.rawEntry.direction,
                         "filtered" to entry.rawEntry.filtered,
                         "unfiltered" to entry.rawEntry.unfiltered,
                         "noise" to entry.rawEntry.noise,
                         "rssi" to entry.rawEntry.rssi,
-                        "type" to "sgv")
+                        "type" to "sgv"))
             }
             is NightscoutApiMbgEntry ->
-                map.putAll("mbg" to entry.rawEntry.mbg)
+                map.putAll(arrayOf<Pair<String, Any?>>("mbg" to entry.rawEntry.mbg))
             is NightscoutApiCalEntry ->
-                map.putAll("slope" to entry.rawEntry.slope,
+                map.putAll(arrayOf<Pair<String, Any?>>("slope" to entry.rawEntry.slope,
                         "intercept" to entry.rawEntry.intercept,
                         "scale" to entry.rawEntry.scale,
-                        "decay" to entry.rawEntry.decay)
+                        "decay" to entry.rawEntry.decay))
         }
         return map
     }
@@ -315,6 +315,11 @@ data class NightscoutSgvJson(public override val _id: String?,
             device = record.source, sgv = record.value.mgdl!!.toInt(), direction = directionString(record.egvRecord.trendArrow), rssi = record.sgvRecord?.rssi,
             unfiltered = record.sgvRecord?.unfiltered,
             filtered = record.sgvRecord?.filtered, noise = record.egvRecord.noise)
+
+    constructor(record: RawCgmRecord) : this(_id = null, type = "sgv", date = record.time, dateString = record.time.toString(),
+            device = record.source, sgv = record.value.mgdl!!.toInt(), direction = null, rssi = null,
+            unfiltered = record.value.unfiltered,
+            filtered = record.value.filtered, noise = null)
 
     constructor(record: CgmRecord) : this(_id = null, type = "sgv", date = record.time, dateString = record.time.toString(),
             device = record.source, sgv = record.value.mgdl!!.toInt(), direction = null, rssi = null, unfiltered = null,

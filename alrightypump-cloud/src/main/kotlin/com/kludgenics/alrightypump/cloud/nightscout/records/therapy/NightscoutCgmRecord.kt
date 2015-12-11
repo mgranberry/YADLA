@@ -6,8 +6,8 @@ import com.kludgenics.alrightypump.therapy.*
 /**
  * Created by matthias on 12/1/15.
  */
-data class NightscoutCgmRecord(public override val rawEntry: NightscoutApiSgvEntry): CgmRecord, NightscoutRecord {
-    override val value: GlucoseValue
+data class NightscoutCgmRecord(public override val rawEntry: NightscoutApiSgvEntry): RawCgmRecord, NightscoutRecord {
+    override val value: RawGlucoseValue
         get() = NightscoutGlucoseValue(rawEntry)
 }
 

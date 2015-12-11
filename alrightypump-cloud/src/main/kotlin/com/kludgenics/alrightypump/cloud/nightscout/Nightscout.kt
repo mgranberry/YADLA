@@ -58,15 +58,17 @@ class Nightscout(private val url: HttpUrl,
     }
 
     public fun postRecords(records: Sequence<Record>) {
-        var (treatmentRecords, entryRecords) = records.mapNotNull {
+        var (treatmentRecords, entryRecords) = records.flatMap {
             when (it) {
-                is CalibrationRecord -> NightscoutEntryJson(NightscoutCalJson(it))
-                is DexcomCgmRecord -> NightscoutEntryJson(NightscoutSgvJson(it))
-                is CgmRecord -> NightscoutEntryJson(NightscoutSgvJson(it))
-                is SmbgRecord -> NightscoutEntryJson(NightscoutMbgJson(it))
+                is CalibrationRecord -> sequenceOf(NightscoutEntryJson(NightscoutCalJson(it)))
+                is DexcomCgmRecord -> sequenceOf(NightscoutEntryJson(NightscoutSgvJson(it))) // TODO this is the only place where there is a device dependency :(
+                is RawCgmRecord -> sequenceOf(NightscoutEntryJson(NightscoutSgvJson(it)))
+                is CgmRecord -> sequenceOf(NightscoutEntryJson(NightscoutSgvJson(it)))
+                is SmbgRecord -> sequenceOf(NightscoutEntryJson(NightscoutMbgJson(it)))
                 is FoodRecord,
                 is CgmInsertionRecord,
-                is TemporaryBasalRecord,
+                is TemporaryBasalStartRecord,
+                is TermoraryBasalEndRecord,
                 is CannulaChangedRecord,
                 is CartridgeChangeRecord,
                 is CannulaChangedRecord,
@@ -74,9 +76,9 @@ class Nightscout(private val url: HttpUrl,
                 is BolusRecord -> {
                     val treatment = NightscoutTreatment(HashMap())
                     treatment.applyRecord(it)
-                    treatment
+                    sequenceOf(treatment)
                 }
-                else -> null
+                else -> emptyList<Record>().asSequence()
             }
         }.partition { it is NightscoutApiTreatment }
         while (!entryRecords.isEmpty()) {
@@ -118,14 +120,16 @@ class Nightscout(private val url: HttpUrl,
             arrayList.add(nightscoutTreatment)
             arrayList
         }
-        nightscoutApi.postTreatments(t).enqueue(object : retrofit.Callback<ResponseBody> {
-            override fun onResponse(response: retrofit.Response<ResponseBody>?, retrofit: Retrofit?) {
-            }
+        if (t.isNotEmpty()) {
+            nightscoutApi.postTreatments(t).enqueue(object : retrofit.Callback<ResponseBody> {
+                override fun onResponse(response: retrofit.Response<ResponseBody>?, retrofit: Retrofit?) {
+                }
 
-            override fun onFailure(t: Throwable?) {
-            }
+                override fun onFailure(t: Throwable?) {
+                }
 
-        })
+            })
+        }
     }
 
     private class RestCallSequence<T:NightscoutApiEntry>(val startInstant: Instant,

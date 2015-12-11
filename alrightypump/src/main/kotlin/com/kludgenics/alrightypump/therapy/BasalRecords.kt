@@ -18,6 +18,8 @@ interface TemporaryBasalRecord: BasalRecord {
     val duration: Duration
 }
 
+interface TemporaryBasalStartRecord: TemporaryBasalRecord
+
 interface TermoraryBasalEndRecord: TemporaryBasalRecord {
     override val rate: Double? get() = null
     override val duration: Duration get() = Duration.ZERO

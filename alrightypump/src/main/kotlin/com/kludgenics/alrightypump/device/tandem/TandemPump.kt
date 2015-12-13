@@ -29,9 +29,7 @@ class TandemPump(private val source: BufferedSource, private val sink: BufferedS
 
     override val chronology: Chronology
         get() = ISOChronology.getInstance()
-    override val firmwareVersions: List<String>
-        get() = throw UnsupportedOperationException()
-    override val serialNumbers: List<String>
+    override val serialNumber: String
         get() = throw UnsupportedOperationException()
     override val outOfRangeLow: Double
         get() = 19.0

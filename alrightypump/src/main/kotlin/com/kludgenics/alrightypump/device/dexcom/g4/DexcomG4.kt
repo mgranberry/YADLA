@@ -24,7 +24,7 @@ open class DexcomG4(private val source: BufferedSource,
     }
 
     var rawEnabled = true
-    val serialNumber = requestSerialNumber()
+    override val serialNumber = requestSerialNumber()
 
     override val cgmRecords: Sequence<DexcomCgmRecord>
         get() =
@@ -163,15 +163,14 @@ open class DexcomG4(private val source: BufferedSource,
         } else null
     }
 
-    private fun requestVersion(): String? {
+    private fun requestVersion(): String {
         val command = ReadFirmwareHeader()
         val response = commandResponse(command)
-        return if (response is XmlDexcomResponse)
-            response.payloadString.utf8()
-        else null
+        response as XmlDexcomResponse
+        return response.payloadString.utf8()
     }
 
-    public fun requestSerialNumber(): String? {
+    public fun requestSerialNumber(): String {
         val page = readDataPageRange(RecordPage.MANUFACTURING_DATA)
         if (page != null) {
             val pages = readDataPages(RecordPage.MANUFACTURING_DATA, page.first)

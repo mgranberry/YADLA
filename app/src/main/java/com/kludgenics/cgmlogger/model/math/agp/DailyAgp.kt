@@ -60,8 +60,7 @@ public class DailyAgp(val dateTime: DateTime = DateTime(), val period: Period = 
         realm.use {
             val timeAtStartOfDay = dateTime.withTimeAtStartOfDay()
             val res = realm.where(BloodGlucoseRecord::class.java)
-                    .greaterThanOrEqualTo("date", (timeAtStartOfDay.minus(period)).millis)
-                    .lessThanOrEqualTo("date", timeAtStartOfDay.millis)
+                    .between("date", (timeAtStartOfDay.minus(period)).toDate(), timeAtStartOfDay.toDate())
                     .findAll()
             val dateBgPairs = res.map { it.dateTime.minuteOfDay().get() / 30 to it.value }
             val map = TreeMap<Int, MutableList<Pair<Int, Double>>>()

@@ -17,9 +17,8 @@ apply plugin: 'io.fabric'
 
 repositories {
     jcenter()
-    maven { url 'http://oss.jfrog.org/artifactory/oss-snapshot-local' }
-    maven { url "https://oss.sonatype.org/content/repositories/snapshots/" }
-    maven { url "https://jitpack.io" }
+    // maven { url 'http://oss.jfrog.org/artifactory/oss-snapshot-local' }
+    // maven { url "https://oss.sonatype.org/content/repositories/snapshots/" }
     maven { url 'https://maven.fabric.io/public' }
 }
 
@@ -52,6 +51,18 @@ android {
         sourceCompatibility JavaVersion.VERSION_1_6
         targetCompatibility JavaVersion.VERSION_1_6
     }
+    buildTypes {
+        debug {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'),
+                    'proguard-rules.pro'
+        }
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'),
+                    'proguard-rules.pro'
+        }
+    }
 }
 
 dependencies {
@@ -78,11 +89,9 @@ dependencies {
     compile 'com.google.code.gson:gson:2.4'
     compile "io.realm:realm-android:$realm_version"
     kapt "io.realm:realm-android:$realm_version"
-    compile 'org.jetbrains.anko:anko-sdk21:0.7.2'
+    compile 'org.jetbrains.anko:anko-sdk21:0.8'
     // sdk19, sdk21, sdk23 are also available
-    compile 'org.jetbrains.anko:anko-support-v4:0.7.2'
-    // In case you need support.v4 bindings
-    // compile 'joda-time:joda-time:2.9'
+    compile 'org.jetbrains.anko:anko-support-v4:0.8'
     compile 'net.danlew:android.joda:2.9.0@aar'
     compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
 }

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 0x5740, 0x0483 t:slim -->
+    <usb-device vendor-id="1155" product-id="22336"/>
+    <!-- 0x0047, 0x22a3 DexCom receiver -->
+    <usb-device vendor-id="8867" product-id="71"/>
+</resources>

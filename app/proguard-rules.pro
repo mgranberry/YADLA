@@ -62,7 +62,9 @@
 -keepclasseswithmembers class * {
     public <init>(android.content.Context, android.util.AttributeSet);
 }
-
+-keepclassmembers class * {
+    public void reifySafeCheckcast(java.lang.string);
+}
 -keepclasseswithmembers class * {
     public <init>(android.content.Context, android.util.AttributeSet, int);
 }

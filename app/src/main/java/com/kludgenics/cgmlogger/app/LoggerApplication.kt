@@ -16,6 +16,7 @@ import org.jetbrains.anko.info
 import java.io.File
 import io.fabric.sdk.android.Fabric;
 import com.crashlytics.android.Crashlytics;
+import com.kludgenics.alrightypump.android.AndroidDeviceHelper
 import com.kludgenics.cgmlogger.extension.transaction
 import net.danlew.android.joda.JodaTimeAndroid
 

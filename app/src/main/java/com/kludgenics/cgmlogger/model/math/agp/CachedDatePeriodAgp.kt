@@ -68,10 +68,10 @@ public object AgpUtil: AnkoLogger {
         removeList.forEach { it.removeFromRealm() }
     }
 
-    fun getLatestCached(context: Context,
+    inline fun getLatestCached(context: Context,
                         period: Period,
                         dateTime: DateTime = DateTime().withTimeAtStartOfDay(),
-                        updated: ((Future<CachedDatePeriodAgp>)->Unit)? = null): CachedDatePeriodAgp {
+                        crossinline updated: ( (Future<CachedDatePeriodAgp>)->Unit)): CachedDatePeriodAgp {
         val realm = Realm.getDefaultInstance()
         realm.use {
             info("$period Querying cache")
@@ -86,7 +86,7 @@ public object AgpUtil: AnkoLogger {
                     val f = context.asyncResult(executor) {
                         calculateAndCacheAgp(dateTime, period)
                     }
-                    updated?.invoke(f)
+                    updated.invoke(f)
                 }
                 CachedDatePeriodAgp(date = dateTime.toDate(), period = period.days)
             } else if (result.dateTime != dateTime) {
@@ -96,7 +96,7 @@ public object AgpUtil: AnkoLogger {
                     val f = context.asyncResult(executor) {
                         calculateAndCacheAgp(dateTime, period)
                     }
-                    updated?.invoke(f)
+                    updated.invoke(f)
                     info("ending bg")
                 }
                 CachedDatePeriodAgp(result.outer, result.inner, result.median, result.date, result.period)
@@ -107,7 +107,7 @@ public object AgpUtil: AnkoLogger {
         }
     }
 
-    private fun calculateAndCacheAgp(dateTime: DateTime, period: Period): CachedDatePeriodAgp {
+    fun calculateAndCacheAgp(dateTime: DateTime, period: Period): CachedDatePeriodAgp {
         info ("$period Calculating agp: $dateTime, $period")
         val currentAgp = DailyAgp(dateTime, period)
         info("$period Storing cached AGP")

@@ -146,7 +146,7 @@ class TandemPump(private val source: BufferedSource, private val sink: BufferedS
                                           val pumpingResumed: PumpingResumed? = null) {
         fun scheduled() : TandemScheduledBasalRecord? {
             return if (basalRateChange != null)
-                TandemScheduledBasalRecord(rateChange = basalRateChange!!, schedule = null)
+                TandemScheduledBasalRecord(rateChange = basalRateChange, schedule = null)
             else null
         }
 

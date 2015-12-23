@@ -36,7 +36,6 @@ abstract class AbstractMapTherapyTimeline: TherapyTimeline {
     }
 
     override fun merge(predicate: (Record) -> Boolean, vararg additionalEvents: Sequence<Record>) {
-        val e = additionalEvents.map { it }
         val events = additionalEvents.flatMap { it.takeWhile(predicate).asIterable() }
         for (event in events)
             _events.getOrPut(event.time, _eventSet ).add(event)

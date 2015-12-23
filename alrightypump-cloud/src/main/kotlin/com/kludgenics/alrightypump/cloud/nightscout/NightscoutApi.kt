@@ -247,7 +247,7 @@ class NightscoutJsonAdapter {
 
     @FromJson
     public fun entryFromJson(entry: MutableMap<String, String>): NightscoutEntryJson {
-        return when (entry.getOrElse("type", { null })) {
+        return when (entry["type"] ?:  null) {
             "sgv" -> {
                 NightscoutEntryJson(NightscoutSgvJson(_id = entry["_id"] as String,
                         type = entry["type"]!!,
@@ -277,7 +277,7 @@ class NightscoutJsonAdapter {
                     intercept = entry["intercept"]?.toDouble()!!,
                     scale = entry["scale"]?.toDouble()!!,
                     decay = entry["decay"]?.toDouble()))
-            else -> throw JsonDataException("Invalid type: ${entry.getOrElse("type", { "null" })}")
+            else -> throw JsonDataException("Invalid type: ${entry["type"] ?: null}")
         }
     }
 }

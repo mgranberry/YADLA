@@ -1,5 +1,6 @@
-package com.kludgenics.cgmlogger.extension
 
+package com.kludgenics.cgmlogger.extension
+/*
 import android.location.Location
 import com.google.android.gms.location.Geofence
 import com.google.android.gms.location.GeofencingRequest
@@ -26,19 +27,6 @@ public fun Location.probabilityWithin(neighbor: Location) : Double {
     val sigma = this.accuracy.toDouble()
     val distance = this.distanceTo(neighbor).toDouble()
     return 1 - (cumulativeDensityFunction(distance, 0.0, sigma) - cumulativeDensityFunction(-distance, 0.0, sigma))
-}
-
-public fun Location.toGeofence(radius: Float, requestId: String? = null,
-                               loiteringDelayMs: Int? = null,
-                               expirationDurationMillis: Long? = null,
-                               transitionTypes: Int? = null) : Geofence? {
-    return Geofence {
-        if (requestId != null) setRequestId(requestId)
-        if (expirationDurationMillis != null) setExpirationDuration(expirationDurationMillis)
-        if (transitionTypes != null) setTransitionTypes(transitionTypes)
-        if (loiteringDelayMs != null) setLoiteringDelay(loiteringDelayMs)
-        setCircularRegion(this@toGeofence.latitude, this@toGeofence.longitude, radius)
-    }
 }
 
 private inline fun Geofence(init: Geofence.Builder.() -> Geofence.Builder?): Geofence? {
@@ -68,3 +56,5 @@ public fun GeofencingRequest.Builder.Geofences(geofences: List<Geofence.Builder.
     }
     return this
 }
+
+ */

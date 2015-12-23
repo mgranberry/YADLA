@@ -11,9 +11,6 @@ import com.kludgenics.cgmlogger.app.R
 import com.squareup.okhttp.HttpUrl
 import com.squareup.okhttp.OkHttpClient
 import org.jetbrains.anko.*
-import org.joda.time.DateTime
-import retrofit.GsonConverterFactory
-import retrofit.Retrofit
 
 /**
  * Created by matthiasgranberry on 5/31/15.
@@ -124,14 +121,14 @@ public class TaskService : GcmTaskService(), AnkoLogger {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         return when (intent?.action) {
             ACTION_SYNC_NOW -> {
-                async {
+                async() {
                     onRunTask(TaskParams(TASK_SYNC_ENTRIES_PERIODIC))
                     onRunTask(TaskParams(TASK_SYNC_TREATMENTS))
                 }
                 2
             }
             ACTION_SYNC_FULL -> {
-                async {
+                async() {
                     onRunTask(TaskParams(TASK_SYNC_ENTRIES_FULL))
                     onRunTask(TaskParams(TASK_SYNC_TREATMENTS))
                 }

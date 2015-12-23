@@ -1,14 +1,12 @@
 package com.kludgenics.cgmlogger.app
 
 import android.app.Application
-import android.util.Log
 import com.kludgenics.cgmlogger.extension.where
 import com.kludgenics.cgmlogger.model.math.agp.CachedDatePeriodAgp
 import com.kludgenics.cgmlogger.model.math.bgi.CachedBgi
 import com.kludgenics.cgmlogger.model.math.trendline.CachedPeriod
 import io.realm.Realm
 import io.realm.RealmConfiguration
-// import net.danlew.android.joda.JodaTimeAndroid
 import org.jetbrains.anko.AnkoLogger
 import org.jetbrains.anko.async
 import org.jetbrains.anko.debug
@@ -16,7 +14,6 @@ import org.jetbrains.anko.info
 import java.io.File
 import io.fabric.sdk.android.Fabric;
 import com.crashlytics.android.Crashlytics;
-import com.kludgenics.alrightypump.android.AndroidDeviceHelper
 import com.kludgenics.cgmlogger.extension.transaction
 import net.danlew.android.joda.JodaTimeAndroid
 
@@ -49,7 +46,7 @@ public class LoggerApplication : Application(), AnkoLogger {
             }
         }
 
-        async {
+        async() {
             val realm = Realm.getDefaultInstance()
             realm.use {
                 var toFile = File("/sdcard/cgm.realm")

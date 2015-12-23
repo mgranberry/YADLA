@@ -50,7 +50,7 @@ class DailyCardPresenter(val period: Period, val listId: Int): Closeable {
     }*/
 
     private fun updateCards() {
-        async {
+        async() {
             val realm = Realm.getDefaultInstance()
             val endTime = DateTime.now().withTimeAtStartOfDay().plusDays(1)
             val startTime = (endTime - period) - Period.days(1)

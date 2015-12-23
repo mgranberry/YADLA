@@ -8,10 +8,7 @@ import android.view.Menu
 import android.view.MenuItem
 import com.kludgenics.cgmlogger.app.adapter.AgpAdapter
 import com.kludgenics.cgmlogger.app.service.TaskService
-import org.jetbrains.anko.AnkoLogger
-import org.jetbrains.anko.ctx
-import org.jetbrains.anko.find
-import org.jetbrains.anko.onClick
+import org.jetbrains.anko.*
 import org.joda.time.Period
 
 public class MainActivity : BaseActivity(), AnkoLogger {
@@ -37,7 +34,6 @@ public class MainActivity : BaseActivity(), AnkoLogger {
 
         val recycler = find<RecyclerView>(R.id.recycler)
         recycler.adapter = AgpAdapter(listOf(1, 3, 7, 14, 30, 60, 90).map { Period.days(it) })
-        // recycler.setAdapter(AgpAdapter((1 .. 90).map{Period.days(it)}))
         recycler.layoutManager = LinearLayoutManager(ctx)
     }
 

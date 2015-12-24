@@ -8,6 +8,7 @@ import com.kludgenics.cgmlogger.model.flatbuffers.path.AgpPathBuffer
 import com.kludgenics.cgmlogger.model.flatbuffers.path.PathDataBuffer
 import io.realm.Realm
 import io.realm.RealmObject
+import io.realm.Sort
 import io.realm.annotations.RealmClass
 import org.jetbrains.anko.AnkoLogger
 import org.jetbrains.anko.async
@@ -77,7 +78,7 @@ public object AgpUtil: AnkoLogger {
             info("$period Querying cache")
             val result = realm.where<CachedDatePeriodAgp> {
                 equalTo("period", period.days)
-            }.findAllSorted("date", false).firstOrNull()
+            }.findAllSorted("date", Sort.DESCENDING).firstOrNull()
 
             return if (result == null) {
                 info("$period Result not cached, returning dummy")

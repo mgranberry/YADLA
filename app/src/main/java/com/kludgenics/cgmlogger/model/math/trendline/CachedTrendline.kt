@@ -10,6 +10,7 @@ import com.kludgenics.cgmlogger.model.realm.glucose.BloodGlucoseRecord
 import io.realm.Realm
 import io.realm.RealmObject
 import io.realm.RealmResults
+import io.realm.Sort
 import io.realm.annotations.RealmClass
 import org.jetbrains.anko.AnkoLogger
 import org.jetbrains.anko.async
@@ -88,7 +89,7 @@ public object PeriodUtil: AnkoLogger {
             val result = realm.where<CachedPeriod> {
                 equalTo("period", period.days)
                 equalTo("date", dateTime.toDate())
-            }.findAllSorted("date", false).firstOrNull()
+            }.findAllSorted("date", Sort.DESCENDING).firstOrNull()
 
             return if (result == null) {
                 info("$period Result not cached, returning dummy")
@@ -151,26 +152,26 @@ class DailyTrendline(val dateTime: DateTime, val period: Period, val low: Double
         realm.where<BloodGlucoseRecord> {
             greaterThanOrEqualTo("date", dateTime.millis)
             lessThan("date", (dateTime.plus(period)).millis)
-        }.findAllSorted("date", false)
+        }.findAllSorted("date", Sort.DESCENDING)
     }
 
     private val inRangeValues: RealmResults<BloodGlucoseRecord> by lazy(LazyThreadSafetyMode.NONE) {
         periodValues.where {
             greaterThan("value", low)
             lessThan("value", high)
-        }.findAllSorted("date", false)
+        }.findAllSorted("date", Sort.DESCENDING)
     }
 
     private val lowValues: RealmResults<BloodGlucoseRecord> by lazy(LazyThreadSafetyMode.NONE) {
         periodValues.where {
             lessThanOrEqualTo("value", low)
-        }.findAllSorted("date", false)
+        }.findAllSorted("date", Sort.DESCENDING)
     }
 
     private val highValues: RealmResults<BloodGlucoseRecord> by lazy(LazyThreadSafetyMode.NONE) {
         periodValues.where {
             greaterThanOrEqualTo("value", high)
-        }.findAllSorted("date", false)
+        }.findAllSorted("date", Sort.DESCENDING)
     }
 
     override public fun close() {

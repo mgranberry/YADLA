@@ -9,6 +9,7 @@ import com.kludgenics.cgmlogger.model.realm.glucose.BloodGlucoseRecord
 import com.kludgenics.cgmlogger.model.realm.glucose.populateData
 import io.realm.Realm
 import io.realm.RealmResults
+import io.realm.Sort
 import org.jetbrains.anko.AnkoLogger
 import org.jetbrains.anko.info
 import org.joda.time.DateTime
@@ -36,7 +37,7 @@ object BgPostprocessor: AnkoLogger {
         val BGs = sortedMapOf<Long, MutableList<BloodGlucoseRecord>>()
         realm.where<BloodGlucoseRecord> {
             between("date", start, end)
-        }.findAllSorted("date", RealmResults.SORT_ORDER_ASCENDING)
+        }.findAllSorted("date", Sort.ASCENDING)
                 .groupByTo(BGs) { DateTime(it.date).withTimeAtStartOfDay().millis }
         BGs.filter { it.key !in bgPeriods }
                 .forEach {

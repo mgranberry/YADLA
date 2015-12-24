@@ -8,6 +8,7 @@ import com.kludgenics.cgmlogger.model.flatbuffers.path.BloodGlucosePeriod
 import com.kludgenics.cgmlogger.model.math.bgi.Bgi
 import io.realm.RealmList
 import io.realm.RealmObject
+import io.realm.Sort
 import io.realm.annotations.PrimaryKey
 import io.realm.annotations.Required
 import org.joda.time.DateTime
@@ -53,8 +54,8 @@ public fun RealmList<BloodGlucoseRecord>.createBloodGlucosePeriod(builder: FlatB
                                                                   highThreshold: Double = 180.0): Int {
     val average: Float = where().average("value").toFloat()
     val median = this[size / 2].value.toFloat()
-    val rhMax = Bgi.rh(where().findAllSorted("value", false).first().value).toFloat()
-    val rlMax = Bgi.rl(where().findAllSorted("value", true).first().value).toFloat()
+    val rhMax = Bgi.rh(where().findAllSorted("value", Sort.DESCENDING).first().value).toFloat()
+    val rlMax = Bgi.rl(where().findAllSorted("value", Sort.ASCENDING).first().value).toFloat()
     val hbgi = Bgi.hbgi(this).toFloat()
     val lbgi = Bgi.lbgi(this).toFloat()
     val adrr = Bgi.adrr(this).toFloat()

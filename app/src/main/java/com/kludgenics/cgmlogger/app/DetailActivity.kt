@@ -19,6 +19,7 @@ import com.kludgenics.cgmlogger.model.math.agp.AgpUtil
 import com.kludgenics.cgmlogger.model.realm.glucose.BgByPeriod
 import io.realm.Realm
 import io.realm.RealmResults
+import io.realm.Sort
 import org.jetbrains.anko.AnkoLogger
 import org.jetbrains.anko.ctx
 import org.jetbrains.anko.find
@@ -73,7 +74,7 @@ public class DetailActivity : BaseActivity(), AnkoLogger {
         val results = realm.where<BgByPeriod> {
             greaterThanOrEqualTo("start", DateTime().minus(period).minusDays(1).millis)
             equalTo("duration", 86400000L)
-        }.findAllSorted("start", RealmResults.SORT_ORDER_DESCENDING)
+        }.findAllSorted("start", Sort.DESCENDING)
         recycler.adapter = TrendlineAdapter(results)
         recycler.layoutManager = LinearLayoutManager(ctx)
     }

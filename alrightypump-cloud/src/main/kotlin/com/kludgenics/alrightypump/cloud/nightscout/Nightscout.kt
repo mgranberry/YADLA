@@ -8,6 +8,7 @@ import com.squareup.moshi.JsonDataException
 import com.squareup.moshi.Moshi
 import com.squareup.okhttp.*
 import okio.ByteString
+import org.joda.time.DateTime
 import org.joda.time.Instant
 import retrofit.MoshiConverterFactory
 import retrofit.Retrofit
@@ -20,12 +21,15 @@ import javax.inject.Named
  * Created by matthias on 11/29/15.
  */
 
+class Nightscout @Inject constructor (@Named("Nightscout") url: HttpUrl,
+                                      okHttpClient: OkHttpClient) {
 
-class Nightscout @Inject constructor (@Named("NightscoutUrl") url: HttpUrl,
-                                      @Named("OkHttpClient") okHttpClient: OkHttpClient) {
+    companion object {
+        const final val FETCH_SIZE = 50000
+    }
+
     private val retrofit: Retrofit
     private val nightscoutApi: NightscoutApi
-    public var entryPageSize: Int = 576
 
     public val entries: Sequence<NightscoutRecord> get() = entries().mapNotNull {
         when (it.rawEntry) {
@@ -34,29 +38,24 @@ class Nightscout @Inject constructor (@Named("NightscoutUrl") url: HttpUrl,
         }
     }
 
-    private fun entries(since: Instant = Instant.parse("2008-01-01T01:00:00Z"),
-                        until: Instant = Instant.now()): RestCallSequence<NightscoutEntryJson> {
-        return (RestCallSequence(since,
-                until,
-                entryPageSize) {
-            start, end, count ->
+    public fun entries(range: ClosedRange<Instant> = InstantRange(Instant.parse("2008-01-01T01:00:00Z"),
+            Instant.now())): Sequence<NightscoutEntryJson> {
+        return (RestCallSequence(range) {
+            start, end ->
             nightscoutApi
-                    .getRecordsBetween(start.millis, end.millis, count)
+                    .getRecordsBetween(start.millis, end.millis, FETCH_SIZE)
                     .execute()
                     .body()
         })
     }
 
-    public var treatmentPageSize: Int = 100
-    public val treatments: Sequence<NightscoutTreatment> get() = treatments(Instant.parse("2008-01-01T01:00:00Z"))
-    private fun treatments(since: Instant = Instant.parse("2008-01-01T01:00:00Z"),
-                           until: Instant = Instant.now()): RestCallSequence<NightscoutTreatment> {
-        return RestCallSequence(since,
-                until,
-                treatmentPageSize) {
-            start, end, count ->
+    public val treatments: Sequence<NightscoutTreatment> get() = treatments()
+    public fun treatments(range: ClosedRange<Instant> = InstantRange(Instant.parse("2008-01-01T01:00:00Z"),
+                          Instant.now())): Sequence<NightscoutTreatment> {
+        return RestCallSequence(range) {
+            start, end ->
             nightscoutApi
-                    .getTreatmentsBetween(start.toString(), end.toString(), count)
+                    .getTreatmentsBetween(start.toString(), end.toString(), FETCH_SIZE)
                     .execute()
                     .body()
         }
@@ -137,15 +136,18 @@ class Nightscout @Inject constructor (@Named("NightscoutUrl") url: HttpUrl,
         }
     }
 
-    private class RestCallSequence<T:NightscoutApiEntry>(val startInstant: Instant,
-                                                         val endInstant: Instant,
-                                                         val batchSize: Int,
-                                                         val call: (Instant, Instant, Int) -> List<T>) : Sequence<T> {
+    private class RestCallSequence<T:NightscoutApiEntry>(val range: ClosedRange<Instant>,
+                                                         val call: (Instant, Instant) -> List<T>) : Sequence<T> {
+        companion object {
+            const val batchSize = 100000
+        }
+
         override fun iterator(): Iterator<T> {
             return object : Iterator<T> {
 
-                var current = endInstant
-                var currentRecords = call(startInstant, current, batchSize)
+                var current = range.endInclusive
+                var currentRange  = range.endInclusive.toRecordRange()
+                var currentRecords = call(currentRange.start, currentRange.endInclusive).filter { range.contains(it.date) }
                 var eventIterator: Iterator<T> = currentRecords.iterator()
 
                 init {
@@ -153,12 +155,16 @@ class Nightscout @Inject constructor (@Named("NightscoutUrl") url: HttpUrl,
                 }
 
                 private fun updateIterator(): Boolean {
-                    currentRecords = call(startInstant, current, batchSize)
-                    if (currentRecords.isEmpty())
+                    if (range.contains(currentRange.start)) {
+                        currentRange = currentRange.start.minus(1).toRecordRange()
+                        currentRecords = call(currentRange.start, currentRange.endInclusive)
+                        if (currentRecords.isEmpty())
+                            return false
+                        current = currentRecords.last().date
+                        eventIterator = currentRecords.iterator()
+                        return true
+                    } else
                         return false
-                    current = currentRecords.last().date
-                    eventIterator = currentRecords.iterator()
-                    return true
                 }
 
                 override fun next(): T {
@@ -207,4 +213,28 @@ class Nightscout @Inject constructor (@Named("NightscoutUrl") url: HttpUrl,
         nightscoutApi = retrofit.create(NightscoutApi::class.java)
     }
 
+}
+
+data class InstantRange(override val start: Instant,
+                        override val endInclusive: Instant) : ClosedRange<Instant>
+
+
+public fun Instant.toRecordRange(): ClosedRange<Instant> {
+    val now = DateTime.now()
+    val dateStart = (this - 1).toDateTime().withTimeAtStartOfDay()
+
+    val range = if (now.weekOfWeekyear().roundFloorCopy() == dateStart.weekOfWeekyear().roundFloorCopy()) {
+        println("days")
+        InstantRange(dateStart.toInstant(), dateStart.plusDays(1).toInstant() - 1)
+    } else if (now.monthOfYear().roundFloorCopy() == dateStart.monthOfYear().roundFloorCopy()) {
+        println("weeks")
+        InstantRange(dateStart.weekOfWeekyear().roundFloorCopy().toInstant(),
+                dateStart.weekOfWeekyear().roundCeilingCopy().toInstant() - 1)
+    } else {
+        println("months")
+        InstantRange(dateStart.monthOfYear().roundFloorCopy().toInstant(),
+                dateStart.monthOfYear().roundCeilingCopy().toInstant() - 1)
+    }
+    println("Calculated range $range from $this")
+    return range
 }

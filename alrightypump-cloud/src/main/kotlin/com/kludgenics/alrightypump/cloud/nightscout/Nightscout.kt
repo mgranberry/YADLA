@@ -13,48 +13,53 @@ import retrofit.MoshiConverterFactory
 import retrofit.Retrofit
 import java.security.MessageDigest
 import java.util.*
+import javax.inject.Inject
+import javax.inject.Named
 
 /**
  * Created by matthias on 11/29/15.
  */
 
-class Nightscout(private val url: HttpUrl,
-                 val okHttpClient: OkHttpClient = OkHttpClient()) {
-    private val treatmentMap = TreeMap<TherapyKey, Record>()
-    private val entryMap = TreeMap<TherapyKey, Record>()
 
-    private data class TherapyKey(val instant: Instant, val recordType: String)
-
+class Nightscout @Inject constructor (@Named("NightscoutUrl") url: HttpUrl,
+                                      @Named("OkHttpClient") okHttpClient: OkHttpClient) {
     private val retrofit: Retrofit
     private val nightscoutApi: NightscoutApi
-    public var overwriteEntries: Boolean = true
-    public var overwriteTreatments: Boolean = false
     public var entryPageSize: Int = 576
 
-    public val entries: Sequence<NightscoutRecord> get() = (RestCallSequence(Instant.parse("2008-01-01T01:00:00Z"),
-            Instant.now(),
-            entryPageSize) {
-        start, end, count ->
-        nightscoutApi
-                .getRecordsBetween(start.millis, end.millis, count)
-                .execute()
-                .body()
-    }).mapNotNull {
+    public val entries: Sequence<NightscoutRecord> get() = entries().mapNotNull {
         when (it.rawEntry) {
             is NightscoutSgvJson -> NightscoutCgmRecord(it.rawEntry)
             else -> null
         }
     }
 
+    private fun entries(since: Instant = Instant.parse("2008-01-01T01:00:00Z"),
+                        until: Instant = Instant.now()): RestCallSequence<NightscoutEntryJson> {
+        return (RestCallSequence(since,
+                until,
+                entryPageSize) {
+            start, end, count ->
+            nightscoutApi
+                    .getRecordsBetween(start.millis, end.millis, count)
+                    .execute()
+                    .body()
+        })
+    }
+
     public var treatmentPageSize: Int = 100
-    public val treatments: Sequence<NightscoutTreatment> get() = RestCallSequence(Instant.parse("2008-01-01T01:00:00Z"),
-            Instant.now(),
-            treatmentPageSize) {
-        start, end, count ->
-        nightscoutApi
-                .getTreatmentsBetween(start.toString(), end.toString(), count)
-                .execute()
-                .body()
+    public val treatments: Sequence<NightscoutTreatment> get() = treatments(Instant.parse("2008-01-01T01:00:00Z"))
+    private fun treatments(since: Instant = Instant.parse("2008-01-01T01:00:00Z"),
+                           until: Instant = Instant.now()): RestCallSequence<NightscoutTreatment> {
+        return RestCallSequence(since,
+                until,
+                treatmentPageSize) {
+            start, end, count ->
+            nightscoutApi
+                    .getTreatmentsBetween(start.toString(), end.toString(), count)
+                    .execute()
+                    .body()
+        }
     }
 
     public fun postRecords(records: Sequence<Record>) {

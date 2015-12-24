@@ -7,6 +7,7 @@ import com.kludgenics.alrightypump.device.tandem.TandemPump
 import com.kludgenics.alrightypump.therapy.ConcurrentSkipListTherapyTimeline
 import com.kludgenics.alrightypump.therapy.Record
 import com.squareup.okhttp.HttpUrl
+import com.squareup.okhttp.OkHttpClient
 import org.joda.time.DateTime
 import org.joda.time.Duration
 import org.joda.time.Instant
@@ -34,9 +35,17 @@ fun downloadRecords(threads: MutableList<Thread>, lastUploads: MutableMap<String
 }
 
 fun main(args: Array<String>) {
+    val okHttpClient = OkHttpClient()
     val startTime = DateTime.now() - Period.months(3)
     var lastUploads = ConcurrentHashMap<String, DateTime>().withDefault { startTime }
-    while (true) {
+    val nightscout_url = System.getenv("NIGHTSCOUT_HOST") ?: args.getOrNull(0)
+    val nightscout = if (nightscout_url == null) {
+        println("Error: must set environment variable NIGHTSCOUT_HOST or provide Nightscout URL on command line.  This should look like https://key@hostname.example.com:1234/")
+        null
+    } else {
+        Nightscout(HttpUrl.parse(nightscout_url), okHttpClient)
+    }
+    while (nightscout != null) {
         var foundDevice = false
         val start = Instant.now()
         val timeline = ConcurrentSkipListTherapyTimeline()
@@ -82,20 +91,13 @@ fun main(args: Array<String>) {
         threads.forEach { it.join() }
         threads.clear()
         println("Time to read from devices: ${Duration(start, mid)}")
-
-        val nightscout_url = System.getenv("NIGHTSCOUT_HOST") ?: args.getOrNull(0)
-        if (nightscout_url == null) {
-            println("Error: must set environment variable NIGHTSCOUT_HOST or provide Nightscout URL on command line.  This should look like https://key@hostname.example.com:1234/")
-        } else {
-            val nightscout = Nightscout(HttpUrl.parse(nightscout_url))
-            println("Uploading ${timeline.events.count()} records to $nightscout_url")
-            nightscout.postRecords(timeline.events)
-            while (nightscout.okHttpClient.dispatcher.queuedCallCount > 0) {
-                println("Waiting on ${nightscout.okHttpClient.dispatcher.queuedCallCount} records to finish uploading.")
-                Thread.sleep(1000)
-            }
-            nightscout.okHttpClient.dispatcher.executorService.shutdown()
+        println("Uploading ${timeline.events.count()} records to $nightscout_url")
+        nightscout?.postRecords(timeline.events)
+        while (okHttpClient.dispatcher.queuedCallCount > 0) {
+            println("Waiting on ${okHttpClient.dispatcher.queuedCallCount} records to finish uploading.")
+            Thread.sleep(1000)
         }
+
         val end = Instant.now()
         println("Time to upload: ${Duration(mid, end)}")
 

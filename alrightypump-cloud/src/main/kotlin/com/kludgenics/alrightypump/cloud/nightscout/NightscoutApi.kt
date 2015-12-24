@@ -75,11 +75,13 @@ interface NightscoutApiProfileChangeTreatment : NightscoutApiBaseTreatment {
     val profile: String
 }
 
-data class NightscoutTreatment(public val map: MutableMap<String, Any?>) : NightscoutApiTreatment {
+open class NightscoutTreatment(private val _map: MutableMap<String, Any?>) : NightscoutApiTreatment {
     companion object {
         val bolusFormat = DecimalFormat("####.##")
         val basalFormat = DecimalFormat("###.###")
     }
+
+    public val map: Map<String, Any?> get() = _map
 
     // these two aren't present, but it is useful to unify treatments and entries
     override val device: String get() = enteredBy
@@ -102,16 +104,16 @@ data class NightscoutTreatment(public val map: MutableMap<String, Any?>) : Night
     override val profile: String? by map
 
     public fun applyRecord(record: Record) {
-        map.putAll(arrayOf<Pair<String, Any?>>("_id" to "${record.source}-${record.id}",
+        _map.putAll(arrayOf<Pair<String, Any?>>("_id" to "${record.source}-${record.id}",
                 "enteredBy" to record.source,
                 "created_at" to record.time.toString(),
                 //"notes" to record.toString(),
                 "eventType" to "<none>"))
         if (record is NormalBolusRecord)
-            map.put("insulin", bolusFormat.format(record.requestedNormal).toDouble())
+            _map.put("insulin", bolusFormat.format(record.requestedNormal).toDouble())
         if (record is BolusRecord) {
             if (record.bolusWizard != null) {
-                map.putAll(arrayOf("glucose" to if (record.bolusWizard?.bg?.glucose != 0.0) record.bolusWizard?.bg?.glucose else null,
+                _map.putAll(arrayOf("glucose" to if (record.bolusWizard?.bg?.glucose != 0.0) record.bolusWizard?.bg?.glucose else null,
                         "units" to if (record.bolusWizard?.bg != null)
                             if (record.bolusWizard?.bg?.unit == GlucoseUnit.MGDL)
                                 "mg/dl"
@@ -125,7 +127,7 @@ data class NightscoutTreatment(public val map: MutableMap<String, Any?>) : Night
             }
         }
         if (record is ExtendedBolusRecord) {
-            map.putAll(arrayOf<Pair<String, Any?>>("enteredInsulin" to basalFormat.format((record.requestedNormal ?: 0.0) + record.requestedExtended).toDouble(),
+            _map.putAll(arrayOf<Pair<String, Any?>>("enteredInsulin" to basalFormat.format((record.requestedNormal ?: 0.0) + record.requestedExtended).toDouble(),
                     "duration" to (record.extendedDuration ?: record.expectedExtendedDuration).standardMinutes,
                     "relative" to basalFormat.format((record.deliveredExtended ?: record.requestedExtended)
                             / (record.expectedExtendedDuration.standardMinutes / 60.00)).toDouble(),
@@ -133,74 +135,27 @@ data class NightscoutTreatment(public val map: MutableMap<String, Any?>) : Night
         }
         if (record is TemporaryBasalRecord) {
             if (record.rate != null) {
-                map["rate"] = basalFormat.format(record.rate!!).toDouble()
-                map["absolute"] = basalFormat.format(record.rate!!).toDouble()
+                _map["rate"] = basalFormat.format(record.rate!!).toDouble()
+                _map["absolute"] = basalFormat.format(record.rate!!).toDouble()
             }
-            map.putAll(
+            _map.putAll(
                     arrayOf("duration" to record.duration.standardMinutes,
                             "percent" to record.percent?.minus(100.0),
                             "eventType" to "Temp Basal"))
         }
         if (record is FoodRecord) {
-            map.putAll(arrayOf<Pair<String, Any?>>("carbs" to record.carbohydrateGrams))
+            _map.putAll(arrayOf<Pair<String, Any?>>("carbs" to record.carbohydrateGrams))
         }
         if (record is CgmInsertionRecord) {
-            map.putAll(arrayOf<Pair<String, Any?>>("eventType" to "Sensor Start"))
+            _map.putAll(arrayOf<Pair<String, Any?>>("eventType" to "Sensor Start"))
         }
         if (record is CannulaChangedRecord) {
-            map.putAll(arrayOf<Pair<String, Any?>>("eventType" to "Site Change"))
+            _map.putAll(arrayOf<Pair<String, Any?>>("eventType" to "Site Change"))
         }
         if (record is CartridgeChangeRecord) {
-            map.putAll(arrayOf<Pair<String, Any?>>("eventType" to "Insulin Change"))
+            _map.putAll(arrayOf<Pair<String, Any?>>("eventType" to "Insulin Change"))
         }
 
-    }
-
-    data class NightscoutCarbTreatment(public override val carbs: Int,
-                                       public val rawTreatment: NightscoutTreatment) :
-            NightscoutApiCarbTreatment,
-            NightscoutApiBaseTreatment by rawTreatment
-
-    data class NightscoutBolusTreatment(public override val insulin: Double,
-                                        public val rawTreatment: NightscoutTreatment) :
-            NightscoutApiBolusTreatment,
-            NightscoutApiBaseTreatment by rawTreatment
-
-    data class NightscoutTempBasalTreatment(public override val rate: Double?,
-                                            public override val percent: Double?,
-                                            public override val absolute: Double?,
-                                            public override val duration: Long,
-                                            public val rawTreatment: NightscoutTreatment) :
-            NightscoutApiTempBasalTreatment,
-            NightscoutApiBaseTreatment by rawTreatment
-
-    data class NightscoutProfileChangeTreatment(public override val profile: String,
-                                                public val rawTreatment: NightscoutTreatment) :
-            NightscoutApiProfileChangeTreatment,
-            NightscoutApiBaseTreatment by rawTreatment
-
-    fun asCarbTreatment(): NightscoutApiCarbTreatment? {
-        return if (carbs != null)
-            NightscoutCarbTreatment(carbs!!, this)
-        else null
-    }
-
-    fun asBolusTreatment(): NightscoutApiBolusTreatment? {
-        return if (insulin != null)
-            NightscoutBolusTreatment(insulin!!, this)
-        else null
-    }
-
-    fun asTempBasalTreatment(): NightscoutApiTempBasalTreatment? {
-        return if (duration != null && (rate != null || absolute != null || percent != null))
-            NightscoutTempBasalTreatment(rate, absolute, percent, duration!!, this)
-        else null
-    }
-
-    fun asProfileChangeTreatment(): NightscoutApiProfileChangeTreatment? {
-        return if (profile != null)
-            NightscoutProfileChangeTreatment(profile!!, this)
-        else null
     }
 }
 

@@ -3,6 +3,7 @@ package com.kludgenics.alrightypump.cloud.nightscout
 import com.kludgenics.alrightypump.cloud.nightscout.records.json.Cal
 import com.kludgenics.alrightypump.cloud.nightscout.records.json.NightscoutEntry
 import com.kludgenics.alrightypump.cloud.nightscout.records.json.Sgv
+import com.kludgenics.alrightypump.cloud.nightscout.records.therapy.NightscoutGlucoseValue
 import com.kludgenics.alrightypump.device.dexcom.g4.DexcomCgmRecord
 import com.kludgenics.alrightypump.therapy.*
 import com.squareup.moshi.FromJson
@@ -15,9 +16,8 @@ import org.joda.time.Instant
 import retrofit.Call
 import retrofit.http.*
 import java.text.DecimalFormat
-import kotlin.properties.getValue
 
-interface NightscoutApiEntry : NightscoutEntry {
+interface NightscoutApiEntry : NightscoutEntry, Record {
     override val date: Instant get() = Instant.parse(dateString)
     override val dateString: String get() = date.toString()
 }
@@ -26,14 +26,14 @@ interface NightscoutApiMbgEntry : NightscoutApiEntry {
     val mbg: Int
 }
 
-interface NightscoutApiSgvEntry : NightscoutApiEntry, Sgv {
+interface NightscoutApiSgvEntry : NightscoutApiEntry, Sgv, RawCgmRecord {
 }
 
-interface NightscoutApiCalEntry : NightscoutApiEntry, Cal {
+interface NightscoutApiCalEntry : NightscoutApiEntry, Cal, CalibrationRecord {
     val decay: Double?
 }
 
-interface NightscoutApiTreatment : NightscoutApiBaseTreatment {
+interface NightscoutApiTreatment : NightscoutApiBaseTreatment, Record {
     val glucose: String?
     val glucoseType: String?
     val carbs: Int?
@@ -76,6 +76,13 @@ interface NightscoutApiProfileChangeTreatment : NightscoutApiBaseTreatment {
 }
 
 open class NightscoutTreatment(private val _map: MutableMap<String, Any?>) : NightscoutApiTreatment {
+    override val id: String?
+        get() = _id
+    override val time: Instant
+        get() = date
+    override val source: String
+        get() = enteredBy
+
     companion object {
         val bolusFormat = DecimalFormat("####.##")
         val basalFormat = DecimalFormat("###.###")
@@ -250,6 +257,15 @@ data class NightscoutSgvJson(public override val _id: String?,
                              public override val filtered: Int?,
                              public override val unfiltered: Int?,
                              public override val rssi: Int?) : NightscoutApiSgvEntry {
+    override val id: String?
+        get() = _id
+    override val time: Instant
+        get() = date
+    override val source: String
+        get() = device
+    override val value: RawGlucoseValue
+        get() = NightscoutGlucoseValue(this)
+
     companion object {
 
         fun directionString(direction: Int?): String {
@@ -288,6 +304,13 @@ data class NightscoutMbgJson(public override val _id: String?,
                              public override val date: Instant,
                              public override val device: String,
                              public override val mbg: Int) : NightscoutApiMbgEntry {
+    override val id: String?
+        get() = _id
+    override val time: Instant
+        get() = date
+    override val source: String
+        get() = device
+
     constructor (smbgRecord: SmbgRecord) : this(_id = smbgRecord.id, type = "mbg", date = smbgRecord.time,
             dateString = smbgRecord.time.toString(),
             device = smbgRecord.source,
@@ -303,6 +326,13 @@ data class NightscoutCalJson(public override val _id: String? = null,
                              public override val intercept: Double,
                              public override val scale: Double,
                              public override val decay: Double? = null) : NightscoutApiCalEntry {
+    override val id: String?
+        get() = _id
+    override val time: Instant
+        get() = date
+    override val source: String
+        get() = device
+
     constructor (calibrationRecord: CalibrationRecord) : this(type = "cal", date = calibrationRecord.time,
             dateString = calibrationRecord.time.toString(),
             device = calibrationRecord.source,

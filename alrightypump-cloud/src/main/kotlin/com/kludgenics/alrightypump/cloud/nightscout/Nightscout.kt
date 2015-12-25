@@ -1,14 +1,16 @@
 package com.kludgenics.alrightypump.cloud.nightscout
 
-import com.kludgenics.alrightypump.cloud.nightscout.records.therapy.NightscoutCgmRecord
-import com.kludgenics.alrightypump.cloud.nightscout.records.therapy.NightscoutRecord
+import com.kludgenics.alrightypump.DateTimeChangeRecord
+import com.kludgenics.alrightypump.device.ContinuousGlucoseMonitor
+import com.kludgenics.alrightypump.device.Glucometer
+import com.kludgenics.alrightypump.device.InsulinPump
 import com.kludgenics.alrightypump.device.dexcom.g4.DexcomCgmRecord
 import com.kludgenics.alrightypump.therapy.*
 import com.squareup.moshi.JsonDataException
 import com.squareup.moshi.Moshi
 import com.squareup.okhttp.*
 import okio.ByteString
-import org.joda.time.DateTime
+import org.joda.time.Chronology
 import org.joda.time.Instant
 import retrofit.MoshiConverterFactory
 import retrofit.Retrofit
@@ -21,8 +23,32 @@ import javax.inject.Named
  * Created by matthias on 11/29/15.
  */
 
-class Nightscout @Inject constructor (@Named("Nightscout") url: HttpUrl,
-                                      okHttpClient: OkHttpClient) {
+class Nightscout @Inject constructor (@Named("Nightscout") val url: HttpUrl,
+                                      okHttpClient: OkHttpClient) : InsulinPump,
+        ContinuousGlucoseMonitor,
+        Glucometer
+{
+    override val chronology: Chronology
+        get() = throw UnsupportedOperationException()
+    override val serialNumber: String
+        get() = url.toString()
+    override val bolusRecords: Sequence<BolusRecord>
+        get() = throw UnsupportedOperationException()
+        //treatments.filter { it.insulin != null }.map { null }
+    override val basalRecords: Sequence<BasalRecord>
+        get() = throw UnsupportedOperationException()
+    override val consumableRecords: Sequence<ConsumableRecord>
+        get() = throw UnsupportedOperationException()
+    override val smbgRecords: Sequence<SmbgRecord>
+        get() = throw UnsupportedOperationException()
+    override val dateTimeChangeRecords: Sequence<DateTimeChangeRecord>
+        get() = throw UnsupportedOperationException()
+    override val outOfRangeHigh: Double
+        get() = throw UnsupportedOperationException()
+    override val outOfRangeLow: Double
+        get() = throw UnsupportedOperationException()
+    override val cgmRecords: Sequence<CgmRecord>
+        get() = throw UnsupportedOperationException()
 
     companion object {
         const final val FETCH_SIZE = 50000
@@ -31,14 +57,14 @@ class Nightscout @Inject constructor (@Named("Nightscout") url: HttpUrl,
     private val retrofit: Retrofit
     private val nightscoutApi: NightscoutApi
 
-    public val entries: Sequence<NightscoutRecord> get() = entries().mapNotNull {
+    public val entries: Sequence<Record> get() = entries().mapNotNull {
         when (it.rawEntry) {
-            is NightscoutSgvJson -> NightscoutCgmRecord(it.rawEntry)
+            is Record -> it
             else -> null
         }
     }
 
-    public fun entries(range: ClosedRange<Instant> = InstantRange(Instant.parse("2008-01-01T01:00:00Z"),
+    public fun entries(range: ClosedRange<Instant> = RestCallSequence.InstantRange(Instant.parse("2008-01-01T01:00:00Z"),
             Instant.now())): Sequence<NightscoutEntryJson> {
         return (RestCallSequence(range) {
             start, end ->
@@ -50,8 +76,8 @@ class Nightscout @Inject constructor (@Named("Nightscout") url: HttpUrl,
     }
 
     public val treatments: Sequence<NightscoutTreatment> get() = treatments()
-    public fun treatments(range: ClosedRange<Instant> = InstantRange(Instant.parse("2008-01-01T01:00:00Z"),
-                          Instant.now())): Sequence<NightscoutTreatment> {
+    public fun treatments(range: ClosedRange<Instant> = RestCallSequence.InstantRange(Instant.parse("2008-01-01T01:00:00Z"),
+            Instant.now())): Sequence<NightscoutTreatment> {
         return RestCallSequence(range) {
             start, end ->
             nightscoutApi
@@ -108,6 +134,7 @@ class Nightscout @Inject constructor (@Named("Nightscout") url: HttpUrl,
 
             }
         }
+
         val t = treatmentRecords.filterIsInstance<NightscoutTreatment>().fold(arrayListOf<NightscoutTreatment>()) {
             arrayList: ArrayList<NightscoutTreatment>, nightscoutTreatment: NightscoutTreatment ->
             if (arrayList.size >= 1) {
@@ -136,64 +163,13 @@ class Nightscout @Inject constructor (@Named("Nightscout") url: HttpUrl,
         }
     }
 
-    private class RestCallSequence<T:NightscoutApiEntry>(val range: ClosedRange<Instant>,
-                                                         val call: (Instant, Instant) -> List<T>) : Sequence<T> {
-        companion object {
-            const val batchSize = 100000
-        }
-
-        override fun iterator(): Iterator<T> {
-            return object : Iterator<T> {
-
-                var current = range.endInclusive
-                var currentRange  = range.endInclusive.toRecordRange()
-                var currentRecords = call(currentRange.start, currentRange.endInclusive).filter { range.contains(it.date) }
-                var eventIterator: Iterator<T> = currentRecords.iterator()
-
-                init {
-                    updateIterator()
-                }
-
-                private fun updateIterator(): Boolean {
-                    if (range.contains(currentRange.start)) {
-                        currentRange = currentRange.start.minus(1).toRecordRange()
-                        currentRecords = call(currentRange.start, currentRange.endInclusive)
-                        if (currentRecords.isEmpty())
-                            return false
-                        current = currentRecords.last().date
-                        eventIterator = currentRecords.iterator()
-                        return true
-                    } else
-                        return false
-                }
-
-                override fun next(): T {
-                    if (eventIterator.hasNext()) {
-                        return eventIterator.next()
-                    } else {
-                        updateIterator()
-                        return eventIterator.next()
-                    }
-                }
-
-                override fun hasNext(): Boolean {
-                    if (eventIterator.hasNext() == true)
-                        return true
-                    else {
-                        return updateIterator()
-                    }
-                }
-            }
-        }
-    }
-
     private fun calculateSecretHash(secret: String): String {
         val digestBytes = MessageDigest.getInstance("SHA-1")
                 .digest(secret.toByteArray("utf8"));
         return ByteString.of(*digestBytes).hex()
     }
 
-    private class ApiSecretIntercepter(private val apiSecretHash: String) : Interceptor {
+    private class ApiSecretInterceptor(private val apiSecretHash: String) : Interceptor {
         override fun intercept(chain: Interceptor.Chain): Response {
             val request = chain.request()
             return chain.proceed(request.newBuilder().header("api-secret", apiSecretHash).build())
@@ -205,36 +181,12 @@ class Nightscout @Inject constructor (@Named("Nightscout") url: HttpUrl,
         NightscoutApi.registerTypeAdapters(moshiBuilder)
         val apiSecret = url.username()
         val baseUrl = url.newBuilder().username("").build()
-        okHttpClient.networkInterceptors().add(ApiSecretIntercepter(calculateSecretHash(apiSecret)))
+        okHttpClient.networkInterceptors().add(ApiSecretInterceptor(calculateSecretHash(apiSecret)))
         retrofit = Retrofit.Builder().addConverterFactory(MoshiConverterFactory.create(moshiBuilder.build()))
                 .baseUrl(baseUrl)
                 .client(okHttpClient)
                 .build()
         nightscoutApi = retrofit.create(NightscoutApi::class.java)
     }
-
 }
 
-data class InstantRange(override val start: Instant,
-                        override val endInclusive: Instant) : ClosedRange<Instant>
-
-
-public fun Instant.toRecordRange(): ClosedRange<Instant> {
-    val now = DateTime.now()
-    val dateStart = (this - 1).toDateTime().withTimeAtStartOfDay()
-
-    val range = if (now.weekOfWeekyear().roundFloorCopy() == dateStart.weekOfWeekyear().roundFloorCopy()) {
-        println("days")
-        InstantRange(dateStart.toInstant(), dateStart.plusDays(1).toInstant() - 1)
-    } else if (now.monthOfYear().roundFloorCopy() == dateStart.monthOfYear().roundFloorCopy()) {
-        println("weeks")
-        InstantRange(dateStart.weekOfWeekyear().roundFloorCopy().toInstant(),
-                dateStart.weekOfWeekyear().roundCeilingCopy().toInstant() - 1)
-    } else {
-        println("months")
-        InstantRange(dateStart.monthOfYear().roundFloorCopy().toInstant(),
-                dateStart.monthOfYear().roundCeilingCopy().toInstant() - 1)
-    }
-    println("Calculated range $range from $this")
-    return range
-}

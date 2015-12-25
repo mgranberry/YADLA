@@ -6,12 +6,14 @@ import com.kludgenics.alrightypump.device.dexcom.g4.DexcomG4
 import com.kludgenics.alrightypump.device.tandem.TandemPump
 import com.kludgenics.alrightypump.therapy.ConcurrentSkipListTherapyTimeline
 import com.kludgenics.alrightypump.therapy.Record
+import com.squareup.okhttp.Cache
 import com.squareup.okhttp.HttpUrl
 import com.squareup.okhttp.OkHttpClient
 import org.joda.time.DateTime
 import org.joda.time.Duration
 import org.joda.time.Instant
 import org.joda.time.Period
+import java.io.File
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.concurrent.thread
 
@@ -36,6 +38,7 @@ fun downloadRecords(threads: MutableList<Thread>, lastUploads: MutableMap<String
 
 fun main(args: Array<String>) {
     val okHttpClient = OkHttpClient()
+    okHttpClient.setCache(Cache(File("/tmp/ok"), 1024 * 1024 * 50))
     val startTime = DateTime.now() - Period.months(3)
     var lastUploads = ConcurrentHashMap<String, DateTime>().withDefault { startTime }
     val nightscout_url = System.getenv("NIGHTSCOUT_HOST") ?: args.getOrNull(0)
@@ -45,6 +48,7 @@ fun main(args: Array<String>) {
     } else {
         Nightscout(HttpUrl.parse(nightscout_url), okHttpClient)
     }
+    nightscout?.entries?.takeWhile { it.time > startTime }?.forEach { it }
     while (nightscout != null) {
         var foundDevice = false
         val start = Instant.now()

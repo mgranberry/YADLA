@@ -18,8 +18,8 @@ import retrofit.http.*
 import java.text.DecimalFormat
 
 interface NightscoutApiEntry : NightscoutEntry, Record {
-    override val date: Instant get() = Instant.parse(dateString)
-    override val dateString: String get() = date.toString()
+    override val time: Instant get() = Instant.parse(dateString)
+    override val dateString: String get() = time.toString()
 }
 
 interface NightscoutApiMbgEntry : NightscoutApiEntry {
@@ -48,7 +48,7 @@ interface NightscoutApiTreatment : NightscoutApiBaseTreatment, Record {
 
 interface NightscoutApiBaseTreatment : NightscoutApiEntry {
     // these two aren't quite accurate, but it is useful to unify entries and treatments.
-    override val date: Instant get() = Instant.parse(created_at)
+    override val time: Instant get() = Instant.parse(created_at)
     override val dateString: String get() = created_at
     val eventType: String
     val created_at: String
@@ -76,12 +76,8 @@ interface NightscoutApiProfileChangeTreatment : NightscoutApiBaseTreatment {
 }
 
 open class NightscoutTreatment(private val _map: MutableMap<String, Any?>) : NightscoutApiTreatment {
-    override val id: String?
-        get() = _id
     override val time: Instant
-        get() = date
-    override val source: String
-        get() = enteredBy
+        get() = time
 
     companion object {
         val bolusFormat = DecimalFormat("####.##")
@@ -91,10 +87,10 @@ open class NightscoutTreatment(private val _map: MutableMap<String, Any?>) : Nig
     public val map: Map<String, Any?> get() = _map
 
     // these two aren't present, but it is useful to unify treatments and entries
-    override val device: String get() = enteredBy
+    override val source: String get() = enteredBy
     override val type: String get() = eventType
 
-    override val _id: String? by map
+    override val id: String? by map
     override val eventType: String by map
     override val created_at: String by map
     override val enteredBy: String by map
@@ -181,10 +177,10 @@ class NightscoutJsonAdapter {
     @ToJson
     public fun entryToJson(entry: NightscoutEntryJson): Map<String, Any?> {
         val map = hashMapOf<String, Any?>()
-        map.putAll(arrayOf("_id" to entry._id,
-                "date" to entry.date.millis,
+        map.putAll(arrayOf("_id" to entry.id,
+                "date" to entry.time.millis,
                 "dateString" to entry.dateString,
-                "device" to entry.device,
+                "device" to entry.source,
                 "type" to entry.type))
         when (entry.rawEntry) {
             is NightscoutApiSgvEntry -> {
@@ -211,11 +207,11 @@ class NightscoutJsonAdapter {
     public fun entryFromJson(entry: MutableMap<String, String>): NightscoutEntryJson {
         return when (entry["type"] ?:  null) {
             "sgv" -> {
-                NightscoutEntryJson(NightscoutSgvJson(_id = entry["_id"] as String,
+                NightscoutEntryJson(NightscoutSgvJson(id = entry["_id"] as String,
                         type = entry["type"]!!,
-                        date = Instant(entry["date"]?.toLong()!!),
+                        time = Instant(entry["date"]?.toLong()!!),
                         dateString = entry["dateString"]!!,
-                        device = entry["device"]!!,
+                        source = entry["device"]!!,
                         sgv = entry["sgv"]?.toInt()!!,
                         filtered = entry["filtered"]?.toDouble()?.toInt(), // this works around an old xDrip bug
                         unfiltered = entry["unfiltered"]?.toDouble()?.toInt(), // this works around an old xDrip bug
@@ -224,17 +220,17 @@ class NightscoutJsonAdapter {
                         rssi = entry["rssi"]?.toInt()))
 
             }
-            "mbg" -> NightscoutEntryJson(NightscoutMbgJson(_id = entry["_id"] as String,
+            "mbg" -> NightscoutEntryJson(NightscoutMbgJson(id = entry["_id"] as String,
                     type = entry["type"] as String,
-                    date = Instant(entry["date"]?.toLong()!!),
+                    time = Instant(entry["date"]?.toLong()!!),
                     dateString = entry["dateString"] as String,
-                    device = entry["device"] as String,
+                    source = entry["device"] as String,
                     mbg = entry["mbg"]?.toInt()!!))
-            "cal" -> NightscoutEntryJson(NightscoutCalJson(_id = entry["_id"] as String,
+            "cal" -> NightscoutEntryJson(NightscoutCalJson(id = entry["_id"] as String,
                     type = entry["type"] as String,
-                    date = Instant(entry["date"]?.toLong()!!),
+                    time = Instant(entry["date"]?.toLong()!!),
                     dateString = entry["dateString"] as String,
-                    device = entry["device"] as String,
+                    source = entry["device"] as String,
                     slope = entry["slope"]?.toDouble()!!,
                     intercept = entry["intercept"]?.toDouble()!!,
                     scale = entry["scale"]?.toDouble()!!,
@@ -246,23 +242,17 @@ class NightscoutJsonAdapter {
 
 data class NightscoutEntryJson(public val rawEntry: NightscoutApiEntry) : NightscoutApiEntry by rawEntry
 
-data class NightscoutSgvJson(public override val _id: String?,
+data class NightscoutSgvJson(public override val id: String?,
                              public override val type: String,
                              public override val dateString: String,
-                             public override val date: Instant,
-                             public override val device: String,
+                             public override val time: Instant,
+                             public override val source: String,
                              public override val sgv: Int,
                              public override val direction: String?,
                              public override val noise: Int?,
                              public override val filtered: Int?,
                              public override val unfiltered: Int?,
                              public override val rssi: Int?) : NightscoutApiSgvEntry {
-    override val id: String?
-        get() = _id
-    override val time: Instant
-        get() = date
-    override val source: String
-        get() = device
     override val value: RawGlucoseValue
         get() = NightscoutGlucoseValue(this)
 
@@ -282,60 +272,46 @@ data class NightscoutSgvJson(public override val _id: String?,
         }
     }
 
-    constructor(record: DexcomCgmRecord) : this(_id = null, type = "sgv", date = record.time, dateString = record.time.toString(),
-            device = record.source, sgv = record.value.mgdl!!.toInt(), direction = directionString(record.egvRecord.trendArrow), rssi = record.sgvRecord?.rssi,
+    constructor(record: DexcomCgmRecord) : this(id = null, type = "sgv", time = record.time, dateString = record.time.toString(),
+            source = record.source, sgv = record.value.mgdl!!.toInt(), direction = directionString(record.egvRecord.trendArrow), rssi = record.sgvRecord?.rssi,
             unfiltered = record.sgvRecord?.unfiltered,
             filtered = record.sgvRecord?.filtered, noise = record.egvRecord.noise)
 
-    constructor(record: RawCgmRecord) : this(_id = null, type = "sgv", date = record.time, dateString = record.time.toString(),
-            device = record.source, sgv = record.value.mgdl!!.toInt(), direction = null, rssi = null,
+    constructor(record: RawCgmRecord) : this(id = null, type = "sgv", time = record.time, dateString = record.time.toString(),
+            source = record.source, sgv = record.value.mgdl!!.toInt(), direction = null, rssi = null,
             unfiltered = record.value.unfiltered,
             filtered = record.value.filtered, noise = null)
 
-    constructor(record: CgmRecord) : this(_id = null, type = "sgv", date = record.time, dateString = record.time.toString(),
-            device = record.source, sgv = record.value.mgdl!!.toInt(), direction = null, rssi = null, unfiltered = null,
+    constructor(record: CgmRecord) : this(id = null, type = "sgv", time = record.time, dateString = record.time.toString(),
+            source = record.source, sgv = record.value.mgdl!!.toInt(), direction = null, rssi = null, unfiltered = null,
             filtered = null, noise = null)
 
 }
 
-data class NightscoutMbgJson(public override val _id: String?,
+data class NightscoutMbgJson(public override val id: String?,
                              public override val type: String,
                              public override val dateString: String,
-                             public override val date: Instant,
-                             public override val device: String,
+                             public override val time: Instant,
+                             public override val source: String,
                              public override val mbg: Int) : NightscoutApiMbgEntry {
-    override val id: String?
-        get() = _id
-    override val time: Instant
-        get() = date
-    override val source: String
-        get() = device
-
-    constructor (smbgRecord: SmbgRecord) : this(_id = smbgRecord.id, type = "mbg", date = smbgRecord.time,
+    constructor (smbgRecord: SmbgRecord) : this(id = smbgRecord.id, type = "mbg", time = smbgRecord.time,
             dateString = smbgRecord.time.toString(),
-            device = smbgRecord.source,
+            source = smbgRecord.source,
             mbg = smbgRecord.value.mgdl!!.toInt())
 }
 
-data class NightscoutCalJson(public override val _id: String? = null,
+data class NightscoutCalJson(public override val id: String? = null,
                              public override val type: String,
                              public override val dateString: String,
-                             public override val date: Instant,
-                             public override val device: String,
+                             public override val time: Instant,
+                             public override val source: String,
                              public override val slope: Double,
                              public override val intercept: Double,
                              public override val scale: Double,
                              public override val decay: Double? = null) : NightscoutApiCalEntry {
-    override val id: String?
-        get() = _id
-    override val time: Instant
-        get() = date
-    override val source: String
-        get() = device
-
-    constructor (calibrationRecord: CalibrationRecord) : this(type = "cal", date = calibrationRecord.time,
+    constructor (calibrationRecord: CalibrationRecord) : this(type = "cal", time = calibrationRecord.time,
             dateString = calibrationRecord.time.toString(),
-            device = calibrationRecord.source,
+            source = calibrationRecord.source,
             slope = calibrationRecord.slope,
             intercept = calibrationRecord.intercept,
             scale = calibrationRecord.scale)
@@ -403,64 +379,4 @@ interface NightscoutApi {
 
     @POST("/api/v1/profile")
     fun postProfiles(@Header("api-secret") apiSecret: String, @Body profile: RequestBody): Call<ResponseBody>
-    /*
- startDate:2015-11-23T02:38:00.000Z
-defaultProfile:New profile
-store[Default][dia]:3
-store[Default][carbratio][0][time]:00:00
-store[Default][carbratio][0][value]:30
-store[Default][carbs_hr]:20
-store[Default][delay]:20
-store[Default][sens][0][time]:00:00
-store[Default][sens][0][value]:100
-store[Default][timezone]:UTC
-store[Default][basal][0][time]:00:00
-store[Default][basal][0][value]:0.1
-store[Default][target_low][0][time]:00:00
-store[Default][target_low][0][value]:0
-store[Default][target_high][0][time]:00:00
-store[Default][target_high][0][value]:0
-store[Default][units]:mg/dl
-store[New profile][dia]:3
-store[New profile][carbratio][0][time]:00:00
-store[New profile][carbratio][0][value]:30
-store[New profile][carbs_hr]:20
-store[New profile][delay]:20
-store[New profile][sens][0][time]:00:00
-store[New profile][sens][0][value]:100
-store[New profile][timezone]:UTC
-store[New profile][basal][0][time]:00:00
-store[New profile][basal][0][value]:0.1
-store[New profile][target_low][0][time]:00:00
-store[New profile][target_low][0][value]:0
-store[New profile][target_high][0][time]:00:00
-store[New profile][target_high][0][value]:0
-store[New profile][units]:mg/dl
-
- {"startDate":"2015-11-23T02:38:00.000Z",
-    "defaultProfile":"New profile",
-    "store":
-        {"Default":
-            {"dia":"3",
-            "carbratio":[{"time":"00:00","value":"30"}],
-            "carbs_hr":"20",
-            "delay":"20",
-            "sens":[{"time":"00:00","value":"100"}],
-            "timezone":"UTC",
-            "basal":[{"time":"00:00","value":"0.1"}],
-            "target_low":[{"time":"00:00","value":"0"}],
-            "target_high":[{"time":"00:00","value":"0"}],
-            "units":"mg/dl"
-            },
-        "New profile":{
-          "dia":"3",
-          "carbratio":[{"time":"00:00","value":"30"}],
-          "carbs_hr":"20",
-          "delay":"20",
-          "sens":[{"time":"00:00","value":"100"}],
-          "timezone":"UTC",
-          "basal":[{"time":"00:00","value":"0.1"}],
-          "target_low":[{"time":"00:00","value":"0"}],
-          "target_high":[{"time":"00:00","value":"0"}],
-          "units":"mg/dl"}},"_id":"56527c4a13170c0f0fd217b3","created_at":"2015-11-23T02:40:39.040Z"} */
 }

@@ -14,7 +14,7 @@ class RestCallSequence<T:NightscoutApiEntry>(val range: ClosedRange<Instant>,
 
             var current = range.endInclusive
             var currentRange  = range.endInclusive.toRecordRange()
-            var currentRecords = call(currentRange.start, currentRange.endInclusive).filter { range.contains(it.date) }
+            var currentRecords = call(currentRange.start, currentRange.endInclusive).filter { range.contains(it.time) }
             var eventIterator: Iterator<T> = currentRecords.iterator()
 
             init {
@@ -27,7 +27,7 @@ class RestCallSequence<T:NightscoutApiEntry>(val range: ClosedRange<Instant>,
                     currentRecords = call(currentRange.start, currentRange.endInclusive)
                     if (currentRecords.isEmpty())
                         return false
-                    current = currentRecords.last().date
+                    current = currentRecords.last().time
                     eventIterator = currentRecords.iterator()
                     return true
                 } else

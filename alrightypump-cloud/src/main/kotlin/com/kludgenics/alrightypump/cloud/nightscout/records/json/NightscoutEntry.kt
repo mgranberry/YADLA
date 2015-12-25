@@ -8,9 +8,9 @@ import org.joda.time.format.ISODateTimeFormat
  */
 
 public interface NightscoutEntry {
-    val _id: String?
-    val device: String
+    val id: String?
+    val source: String
     val type: String
-    val date: Instant
-    val dateString: String get() = ISODateTimeFormat.dateTime().print(date)
+    val time: Instant
+    val dateString: String get() = ISODateTimeFormat.dateTime().print(time)
 }

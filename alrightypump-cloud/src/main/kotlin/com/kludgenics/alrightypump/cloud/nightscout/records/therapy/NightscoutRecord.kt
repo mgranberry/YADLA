@@ -9,7 +9,7 @@ import org.joda.time.Instant
  */
 interface NightscoutRecord : Record {
     val rawEntry: NightscoutEntry
-    override val id: String? get() = rawEntry._id
-    override val time: Instant get() = rawEntry.date
-    override val source: String get() = rawEntry.device
+    override val id: String? get() = rawEntry.id
+    override val time: Instant get() = rawEntry.time
+    override val source: String get() = rawEntry.source
 }

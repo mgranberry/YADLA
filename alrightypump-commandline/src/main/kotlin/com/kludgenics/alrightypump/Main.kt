@@ -48,7 +48,7 @@ fun main(args: Array<String>) {
     } else {
         Nightscout(HttpUrl.parse(nightscout_url), okHttpClient)
     }
-    nightscout?.entries?.takeWhile { it.time > startTime }?.forEach { it }
+    println("Found ${nightscout?.entries?.takeWhile { it.time > startTime }?.count()} records")
     while (nightscout != null) {
         var foundDevice = false
         val start = Instant.now()

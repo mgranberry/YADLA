@@ -344,7 +344,7 @@ data class DateChanged(
 data class TempRateCompleted(
         public override val tempRateId: Int,
         public val timeLeft: Duration,
-        public val rawRecord: LogEvent) : LogEvent by rawRecord, TempBasalEventRecord, TermoraryBasalEndRecord {
+        public val rawRecord: LogEvent) : LogEvent by rawRecord, TempBasalEventRecord, TemporaryBasalEndRecord {
     override val percent: Double?
         get() = 100.0
     override val duration: Duration

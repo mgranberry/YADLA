@@ -22,7 +22,7 @@ interface NightscoutApiEntry : NightscoutEntry, Record {
     override val dateString: String get() = time.toString()
 }
 
-interface NightscoutApiMbgEntry : NightscoutApiEntry {
+interface NightscoutApiMbgEntry : NightscoutApiEntry, SmbgRecord {
     val mbg: Int
 }
 
@@ -294,6 +294,11 @@ data class NightscoutMbgJson(public override val id: String?,
                              public override val time: Instant,
                              public override val source: String,
                              public override val mbg: Int) : NightscoutApiMbgEntry {
+    override val value: GlucoseValue
+        get() = BaseGlucoseValue(mbg.toDouble(), GlucoseUnit.MGDL)
+    override val manual: Boolean
+        get() = true
+
     constructor (smbgRecord: SmbgRecord) : this(id = smbgRecord.id, type = "mbg", time = smbgRecord.time,
             dateString = smbgRecord.time.toString(),
             source = smbgRecord.source,

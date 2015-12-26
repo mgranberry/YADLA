@@ -39,16 +39,16 @@ class Nightscout @Inject constructor (@Named("Nightscout") val url: HttpUrl,
         get() = throw UnsupportedOperationException()
     override val consumableRecords: Sequence<ConsumableRecord>
         get() = throw UnsupportedOperationException()
-    override val smbgRecords: Sequence<SmbgRecord>
-        get() = throw UnsupportedOperationException()
+    override val smbgRecords: Sequence<NightscoutApiMbgEntry>
+        get() = entries.filterIsInstance<NightscoutApiMbgEntry>()
     override val dateTimeChangeRecords: Sequence<DateTimeChangeRecord>
         get() = throw UnsupportedOperationException()
     override val outOfRangeHigh: Double
         get() = throw UnsupportedOperationException()
     override val outOfRangeLow: Double
         get() = throw UnsupportedOperationException()
-    override val cgmRecords: Sequence<CgmRecord>
-        get() = throw UnsupportedOperationException()
+    override val cgmRecords: Sequence<NightscoutApiSgvEntry>
+        get() = entries.filterIsInstance<NightscoutApiSgvEntry>()
 
     companion object {
         const final val FETCH_SIZE = 50000
@@ -98,7 +98,7 @@ class Nightscout @Inject constructor (@Named("Nightscout") val url: HttpUrl,
                 is FoodRecord,
                 is CgmInsertionRecord,
                 is TemporaryBasalStartRecord,
-                is TermoraryBasalEndRecord,
+                is TemporaryBasalEndRecord,
                 is CannulaChangedRecord,
                 is CartridgeChangeRecord,
                 is CannulaChangedRecord,

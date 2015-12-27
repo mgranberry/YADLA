@@ -21,6 +21,9 @@ class TandemPump(private val source: BufferedSource, private val sink: BufferedS
     companion object {
         @JvmField final val EPOCH = Instant.parse("2008-01-01T00:00:00")
         const val ITERATION_STEP = 200
+        public val source: String get() = "alrightypump-tandem-$serial"
+        private var _serial = ""
+        public val serial: String get() = _serial
     }
 
     val recordCache = TreeMap<Int, LogEvent>()
@@ -29,8 +32,8 @@ class TandemPump(private val source: BufferedSource, private val sink: BufferedS
 
     override val chronology: Chronology
         get() = ISOChronology.getInstance()
-    override val serialNumber: String
-        get() = throw UnsupportedOperationException()
+    val versionResponse: VersionResp by lazy {VersionResp(commandResponse(VersionReq()).payload)}
+    override val serialNumber: String = { _serial = readSerialNumber(); _serial }()
     override val outOfRangeLow: Double
         get() = 19.0
     override val outOfRangeHigh: Double
@@ -59,6 +62,10 @@ class TandemPump(private val source: BufferedSource, private val sink: BufferedS
         return TandemResponse(source)
     }
 
+    public fun readSerialNumber() : String {
+        return versionResponse.pumpSN.toString()
+    }
+
     public fun readLogRecords(start: Int, end: Int): Collection<LogEvent> {
         var nRead = 0
         var nRequested = 0
@@ -69,7 +76,7 @@ class TandemPump(private val source: BufferedSource, private val sink: BufferedS
                 sink.emit()
                 nRequested += 1
                 // let the pipeline fill a little and then start reading as well as writing
-                if (nRequested > nRead + 5 && source.request(1)) {
+                if (nRequested > nRead + 2 && source.request(1)) {
                     val response = readResponse()
                     if (response.parsedPayload is LogEvent) {
                         nRead += 1
@@ -296,8 +303,6 @@ class TandemPump(private val source: BufferedSource, private val sink: BufferedS
             }
 
             override fun next(): TandemBolus {
-                if (bolusRecordMap.size > 2)
-                    println(bolusRecordMap.size)
                 return recordIterator.next()
             }
 

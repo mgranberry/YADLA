@@ -117,11 +117,11 @@ open class NightscoutTreatment(private val _map: MutableMap<String, Any?>) : Nig
         if (record is BolusRecord) {
             if (record.bolusWizard != null) {
                 _map.putAll(arrayOf("glucose" to if (record.bolusWizard?.bg?.glucose != 0.0) record.bolusWizard?.bg?.glucose else null,
-                        "units" to if (record.bolusWizard?.bg != null)
+                        "units" to if (record.bolusWizard?.bg != null && record.bolusWizard?.bg?.glucose != 0.0) {
                             if (record.bolusWizard?.bg?.unit == GlucoseUnit.MGDL)
                                 "mg/dl"
                             else "mmol"
-                        else null,
+                        } else null,
                         "carbs" to if (record.bolusWizard?.carbs != 1) record.bolusWizard?.carbs else null,
                         "eventType" to
                                 if ((record.bolusWizard?.recommendation?.carbBolus ?: 0.0) >=
@@ -177,7 +177,7 @@ class NightscoutJsonAdapter {
     @ToJson
     public fun entryToJson(entry: NightscoutEntryJson): Map<String, Any?> {
         val map = hashMapOf<String, Any?>()
-        map.putAll(arrayOf("_id" to entry.id,
+        map.putAll(arrayOf("_id" to "${entry.source}-${entry.id}",
                 "date" to entry.time.millis,
                 "dateString" to entry.dateString,
                 "device" to entry.source,
@@ -272,17 +272,17 @@ data class NightscoutSgvJson(public override val id: String?,
         }
     }
 
-    constructor(record: DexcomCgmRecord) : this(id = null, type = "sgv", time = record.time, dateString = record.time.toString(),
+    constructor(record: DexcomCgmRecord) : this(id = record.id, type = "sgv", time = record.time, dateString = record.time.toString(),
             source = record.source, sgv = record.value.mgdl!!.toInt(), direction = directionString(record.egvRecord.trendArrow), rssi = record.sgvRecord?.rssi,
             unfiltered = record.sgvRecord?.unfiltered,
             filtered = record.sgvRecord?.filtered, noise = record.egvRecord.noise)
 
-    constructor(record: RawCgmRecord) : this(id = null, type = "sgv", time = record.time, dateString = record.time.toString(),
+    constructor(record: RawCgmRecord) : this(id = record.id, type = "sgv", time = record.time, dateString = record.time.toString(),
             source = record.source, sgv = record.value.mgdl!!.toInt(), direction = null, rssi = null,
             unfiltered = record.value.unfiltered,
             filtered = record.value.filtered, noise = null)
 
-    constructor(record: CgmRecord) : this(id = null, type = "sgv", time = record.time, dateString = record.time.toString(),
+    constructor(record: CgmRecord) : this(id = record.id, type = "sgv", time = record.time, dateString = record.time.toString(),
             source = record.source, sgv = record.value.mgdl!!.toInt(), direction = null, rssi = null, unfiltered = null,
             filtered = null, noise = null)
 

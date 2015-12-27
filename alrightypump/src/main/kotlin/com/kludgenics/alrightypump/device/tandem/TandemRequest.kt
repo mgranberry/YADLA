@@ -43,6 +43,31 @@ class VersionReq : TandemPayload {
     override public val id: Int get() = COMMAND
 }
 
+data class VersionResp(val armSwVer: String,
+                       val mspSwVer: String,
+                       val pumpSN: Int,
+                       val pumpPartNo: Int,
+                       val pumpRev: String,
+                       val pcbaSN: Int,
+                       val pcbaRev: String,
+                       val modelNumber: Int) : TandemPayload {
+    constructor(buffer: Buffer) : this(armSwVer = buffer.readUtf8(16).trim(0.toChar()),
+            mspSwVer = buffer.readUtf8(16).trim(0.toChar()),
+            pumpSN = {buffer.skip(20); buffer.readIntLe()}(),
+            pumpPartNo = buffer.readIntLe(),
+            pumpRev = buffer.readUtf8(8).trim(0.toChar()),
+            pcbaSN = buffer.readIntLe(),
+            pcbaRev = {buffer.skip(4); buffer.readUtf8(8).trim(0.toChar())}(),
+            modelNumber = {buffer.skip(50); buffer.readIntLe()}())
+
+    companion object {
+        const public val COMMAND: Int = 81
+    }
+
+    override val id: Int
+        get() = COMMAND
+}
+
 data class LogEntrySeqReq(public val seqNum: Long) : TandemPayload {
     companion object {
         const public val COMMAND: Int = 151

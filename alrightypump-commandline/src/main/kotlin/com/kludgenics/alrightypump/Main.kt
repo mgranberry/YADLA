@@ -39,7 +39,7 @@ fun downloadRecords(threads: MutableList<Thread>, lastUploads: MutableMap<String
 fun main(args: Array<String>) {
     val okHttpClient = OkHttpClient()
     okHttpClient.setCache(Cache(File("/tmp/ok"), 1024 * 1024 * 50))
-    val startTime = DateTime.now() - Period.months(3)
+    val startTime = DateTime.now() - Period.months(36)
     var lastUploads = ConcurrentHashMap<String, DateTime>().withDefault { startTime }
     val nightscout_url = System.getenv("NIGHTSCOUT_HOST") ?: args.getOrNull(0)
     val nightscout = if (nightscout_url == null) {
@@ -48,7 +48,7 @@ fun main(args: Array<String>) {
     } else {
         Nightscout(HttpUrl.parse(nightscout_url), okHttpClient)
     }
-    println("Found ${nightscout?.entries?.takeWhile { it.time > startTime }?.count()} records")
+
     while (nightscout != null) {
         var foundDevice = false
         val start = Instant.now()

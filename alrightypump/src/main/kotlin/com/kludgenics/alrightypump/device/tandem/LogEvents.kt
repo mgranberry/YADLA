@@ -41,7 +41,7 @@ interface TandemTherapyRecord : Record, LogEvent {
     override val time: Instant
         get() = timestamp
     override val source: String
-        get() = "alrightypump-tandem"
+        get() = TandemPump.source
     override val id: String? get() = seqNo.toString()
 }
 

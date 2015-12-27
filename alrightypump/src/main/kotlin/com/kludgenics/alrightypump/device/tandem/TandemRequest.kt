@@ -1,6 +1,11 @@
 package com.kludgenics.alrightypump.device.tandem
 
+import com.kludgenics.alrightypump.therapy.BaseGlucoseValue
+import com.kludgenics.alrightypump.therapy.GlucoseUnit
 import okio.Buffer
+import org.joda.time.Duration
+import org.joda.time.LocalTime
+import java.util.*
 
 /**
  * Created by matthias on 11/20/15.
@@ -132,6 +137,20 @@ class IdpListReq : TandemPayload {
     override public val id: Int get() = COMMAND
 }
 
+data class IdpListResp(val idps: IntArray) : TandemPayload {
+    constructor(buffer: Buffer) : this(idps = {
+        val count = buffer.readByte()
+        val idps = IntArray(count.toInt(), { buffer.readByte().toInt() and 0xFF })
+        buffer.skip((6 - count).toLong())
+        idps
+    }())
+    companion object {
+        const public val COMMAND: Int = 173
+    }
+
+    override public val id: Int get() = COMMAND
+}
+
 data class IdpReq(public val idp: Int) : TandemPayload {
     companion object {
         const public val COMMAND: Int = 175
@@ -140,6 +159,49 @@ data class IdpReq(public val idp: Int) : TandemPayload {
     override val payload: Buffer
         get() = Buffer().writeByte(idp)
     override val payloadLength = 1
+    override public val id: Int get() = COMMAND
+}
+
+data class IdpResp(val idp: Int,
+                   val name: String,
+                   val timeDependentSettings: List<TimeDependentSettings>,
+                   val bolusSettings: BolusSettings) : TandemPayload {
+    constructor(buffer: Buffer) : this(idp = buffer.readByte().toInt() and 0xFF,
+            name = buffer.readUtf8(17).trim(0.toChar()),
+            timeDependentSettings = {
+                val segmentCount = buffer.readByte().toInt() and 0xFF
+                val settings = ArrayList<TimeDependentSettings>(segmentCount)
+                for (segment in 1..segmentCount) {
+                    var minutesFromMidnight = buffer.readShortLe().toInt() and 0xFFFF
+                    var basalRate: Double? = (buffer.readShortLe().toInt() and 0xFFFF) / 1000.0
+                    var carbRatio: Double? = (buffer.readIntLe()) / 1000.0
+                    var targetBg: Int? = buffer.readShortLe().toInt()
+                    var isf: Int? = buffer.readShortLe().toInt()
+                    val status = buffer.readByte().toInt() and 0xFF
+                    val localTime = LocalTime(minutesFromMidnight / 60, minutesFromMidnight % 60)
+                    basalRate = if (status and 0x01 != 0) basalRate else null
+                    carbRatio = if (status and 0x02 != 0) carbRatio else null
+                    targetBg = if (status and 0x04 != 0) targetBg else null
+                    isf = if (status and 0x08 != 0) isf else null
+
+                    settings.add(TimeDependentSettings(startTime = localTime,
+                            basalRate = basalRate,
+                            carbRatio = carbRatio,
+                            targetBg = if (targetBg != null)
+                                BaseGlucoseValue(targetBg.toDouble(), GlucoseUnit.MGDL)
+                            else
+                                null,
+                            isf = isf))
+                }
+                buffer.skip((13 * (16 - segmentCount)).toLong())
+                settings
+            }(),
+            bolusSettings = BolusSettings(insulinDuration = Duration(buffer.readShortLe().toLong() * 60 * 1000),
+                        maxBolus = buffer.readShortLe() / 1000.0,
+                        carbEntry = buffer.readByte() == 1.toByte()))
+    companion object {
+        const public val COMMAND: Int = 176
+    }
     override public val id: Int get() = COMMAND
 }
 

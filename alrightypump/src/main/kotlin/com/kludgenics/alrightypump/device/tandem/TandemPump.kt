@@ -48,6 +48,13 @@ class TandemPump(private val source: BufferedSource, private val sink: BufferedS
         get() = records.filterIsInstance<ConsumableRecord>()
 
     val logRange: IntRange = LogSizeResp(commandResponse(LogSizeReq()).payload).range
+    val profiles: List<IdpResp> = readProfiles()
+
+    private fun readProfiles() : List<IdpResp> {
+        return IdpListResp(commandResponse(IdpListReq()).payload).idps.map { readProfile(it) }
+    }
+
+    public fun readProfile(idp: Int) : IdpResp = IdpResp(commandResponse(IdpReq(idp)).payload)
 
     public fun commandResponse(payload: TandemPayload): TandemResponse {
         val packet = TandemRequest(payload).frame

@@ -39,7 +39,7 @@ fun downloadRecords(threads: MutableList<Thread>, lastUploads: MutableMap<String
 fun main(args: Array<String>) {
     val okHttpClient = OkHttpClient()
     okHttpClient.setCache(Cache(File("/tmp/ok"), 1024 * 1024 * 50))
-    val startTime = DateTime.now() - Period.months(36)
+    val startTime = DateTime.now() - Period.months(3)
     var lastUploads = ConcurrentHashMap<String, DateTime>().withDefault { startTime }
     val nightscout_url = System.getenv("NIGHTSCOUT_HOST") ?: args.getOrNull(0)
     val nightscout = if (nightscout_url == null) {
@@ -66,6 +66,7 @@ fun main(args: Array<String>) {
                                 downloadRecords(threads, lastUploads, it) {
                                     connection, predicate ->
                                     val tslim = TandemPump(connection.source(), connection.sink())
+                                    println("${tslim.profiles}")
                                     timeline.merge(predicate, tslim.basalRecords, tslim.bolusRecords,
                                             tslim.smbgRecords, tslim.consumableRecords)
                                     timeline.events.lastOrNull()?.time?.toDateTime()

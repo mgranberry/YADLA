@@ -66,13 +66,13 @@ class TandemResponse(source: BufferedSource) : TandemFrame() {
 }
 
 data class TimeDependentSettings(public val startTime: LocalTime,
-                                 public val basalRate: Float?,
-                                 public val carbRatio: Float?,
+                                 public val basalRate: Double?,
+                                 public val carbRatio: Double?,
                                  public val targetBg: GlucoseValue?,
-                                 public val isf: Float?) // mask: basal/carb/target
+                                 public val isf: Int?) // mask: basal/carb/target
 
 data class BolusSettings(public val insulinDuration: Duration?, // minutes
-                         public val maxBolus: Float?,
+                         public val maxBolus: Double,
                          public val carbEntry: Boolean?) // mask: dur/max/carb
 
 data class QuickBolusSettings(public val useQuickBolus: Boolean?,

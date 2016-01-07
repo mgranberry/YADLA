@@ -370,7 +370,7 @@ public data class FoodEventRecord(public override val id: String,
 public data class InsulinEventRecord(public override val id: String,
                                      public override val time: Instant,
                                      public override val deliveredNormal: Double,
-                                     public override val rawRecord: UserEventRecord) : BolusRecord, EventRecord,
+                                     public override val rawRecord: UserEventRecord) : NormalBolusRecord, EventRecord,
         DexcomRecord by rawRecord {
     override val bolusWizard: BolusWizardRecord?
         get() = null

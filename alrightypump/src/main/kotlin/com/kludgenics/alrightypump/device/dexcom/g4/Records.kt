@@ -392,8 +392,6 @@ public data class InsulinEventRecord(public override val id: String,
         get() = null
     override val deliveredExtended: Double?
         get() = null
-
-
 }
 
 public data class UserEventRecord(public override val id: String,

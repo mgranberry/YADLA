@@ -107,7 +107,7 @@ open class NightscoutTreatment(private val _map: MutableMap<String, Any?>) : Nig
     override val profile: String? by map
 
     public fun applyRecord(record: Record) {
-        _map.putAll(arrayOf<Pair<String, Any?>>("_id" to "${record.source}-${record.id}",
+        _map.putAll(arrayOf<Pair<String, Any?>>(
                 "enteredBy" to record.source,
                 "created_at" to record.time.toString(),
                 //"notes" to record.toString(),

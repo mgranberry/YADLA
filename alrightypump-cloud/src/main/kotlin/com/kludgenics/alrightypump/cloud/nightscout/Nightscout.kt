@@ -138,7 +138,7 @@ class Nightscout @Inject constructor (@Named("Nightscout") val url: HttpUrl,
 
         val t = treatmentRecords.filterIsInstance<NightscoutTreatment>().fold(arrayListOf<NightscoutTreatment>()) {
             arrayList: ArrayList<NightscoutTreatment>, nightscoutTreatment: NightscoutTreatment ->
-            if (arrayList.size >= 1) {
+            if (arrayList.size >= 1000) {
                 nightscoutApi.postTreatments(arrayList).enqueue(object : retrofit.Callback<ResponseBody> {
                     override fun onResponse(response: retrofit.Response<ResponseBody>?, retrofit: Retrofit?) {
                     }

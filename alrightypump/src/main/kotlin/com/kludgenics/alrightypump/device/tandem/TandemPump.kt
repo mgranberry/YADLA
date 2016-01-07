@@ -5,6 +5,7 @@ import com.kludgenics.alrightypump.device.Glucometer
 import com.kludgenics.alrightypump.device.InsulinPump
 import com.kludgenics.alrightypump.therapy.BasalRecord
 import com.kludgenics.alrightypump.therapy.ConsumableRecord
+import com.kludgenics.alrightypump.therapy.ProfileRecord
 import com.kludgenics.alrightypump.therapy.SmbgRecord
 import okio.BufferedSink
 import okio.BufferedSource
@@ -177,6 +178,34 @@ class TandemPump(private val source: BufferedSource, private val sink: BufferedS
 
     }
 
+    private data class ProfileRecordHolder (val foo: String)
+
+    private inner class ProfileAssemblingSequence : Sequence<ProfileRecord> {
+        override fun iterator(): Iterator<ProfileRecord> = object: Iterator<ProfileRecord> {
+            override fun hasNext(): Boolean {
+                throw UnsupportedOperationException()
+            }
+
+            override fun next(): ProfileRecord {
+                throw UnsupportedOperationException()
+            }
+
+            var profileRecordHolder = ProfileRecordHolder("changeme")
+            val recordSequence: Sequence<LogEvent>
+            val profiles = readProfiles().toMapBy { it.name }.toLinkedMap()
+            init {
+                val seq = records.filter {
+                    it is Idp || it is IdpBolus || it is IdpList || it is IdpMessage2 || it is IdpTdSeg
+                }.fold(ProfileRecordHolder((("")))) { profileRecordHolder, event ->
+
+                    profileRecordHolder
+                }
+
+                recordSequence = emptySequence()
+            }
+        }
+    }
+
     private inner class BasalRateAssemblingSequence : Sequence<BasalRecord> {
 
         override fun iterator() = object: Iterator<BasalRecord> {
@@ -207,7 +236,7 @@ class TandemPump(private val source: BufferedSource, private val sink: BufferedS
                                 }
                                 is PumpingResumed -> {
                                     basalRecordHolder = BasalRecordHolder(pumpingResumed = it)
-                                    emptySequence<BasalRecord>()
+                                    sequenceOf(it)
                                 }
                                 is TempRateStart -> {
                                     val v = basalRecordHolder.copy(tempBasalStart = it).temp()
@@ -221,7 +250,7 @@ class TandemPump(private val source: BufferedSource, private val sink: BufferedS
                                     val v = basalRecordHolder.copy(pumpingSuspended = it).temp()
                                     basalRecordHolder = BasalRecordHolder()
                                     if (v != null)
-                                        sequenceOf(v)
+                                        sequenceOf<BasalRecord>(v, it)
                                     else
                                         emptySequence()
                                 }

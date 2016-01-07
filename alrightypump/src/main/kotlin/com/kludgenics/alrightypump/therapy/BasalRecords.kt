@@ -25,5 +25,5 @@ interface TemporaryBasalEndRecord : TemporaryBasalRecord {
     override val duration: Duration get() = Duration.ZERO
 }
 
-interface SuspendedBasalRecord: BasalRecord
+interface SuspendedBasalRecord: TemporaryBasalRecord
 interface BasalSchedule

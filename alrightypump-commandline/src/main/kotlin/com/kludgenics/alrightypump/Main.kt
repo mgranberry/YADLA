@@ -17,7 +17,7 @@ import java.io.File
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.concurrent.thread
 
-fun downloadRecords(threads: MutableList<Thread>, lastUploads: MutableMap<String, DateTime>, port: SerialPort,
+private fun downloadRecords(threads: MutableList<Thread>, lastUploads: MutableMap<String, DateTime>, port: SerialPort,
                     block: (connection: SerialConnection, (Record) -> Boolean) -> DateTime?) {
     println("Found ${port.descriptivePortName}. Fetching data.")
     threads.add (thread {
@@ -36,10 +36,19 @@ fun downloadRecords(threads: MutableList<Thread>, lastUploads: MutableMap<String
     })
 }
 
+private fun uploadRecords(nightscout: Nightscout?, nightscout_url: String?, okHttpClient: OkHttpClient, timeline: ConcurrentSkipListTherapyTimeline) {
+    println("Uploading ${timeline.events.count()} records to $nightscout_url")
+    nightscout?.postRecords(timeline.events)
+    while (okHttpClient.dispatcher.queuedCallCount > 0) {
+        println("Waiting on ${okHttpClient.dispatcher.queuedCallCount} records to finish uploading.")
+        Thread.sleep(1000)
+    }
+}
+
 fun main(args: Array<String>) {
     val okHttpClient = OkHttpClient()
     okHttpClient.setCache(Cache(File("/tmp/ok"), 1024 * 1024 * 50))
-    val startTime = DateTime.now() - Period.months(3)
+    val startTime = DateTime.now() - Period.days(1)
     var lastUploads = ConcurrentHashMap<String, DateTime>().withDefault { startTime }
     val nightscout_url = System.getenv("NIGHTSCOUT_HOST") ?: args.getOrNull(0)
     val nightscout = if (nightscout_url == null) {
@@ -96,13 +105,7 @@ fun main(args: Array<String>) {
         threads.forEach { it.join() }
         threads.clear()
         println("Time to read from devices: ${Duration(start, mid)}")
-        println("Uploading ${timeline.events.count()} records to $nightscout_url")
-        nightscout?.postRecords(timeline.events)
-        while (okHttpClient.dispatcher.queuedCallCount > 0) {
-            println("Waiting on ${okHttpClient.dispatcher.queuedCallCount} records to finish uploading.")
-            Thread.sleep(1000)
-        }
-
+        uploadRecords(nightscout, nightscout_url, okHttpClient, timeline)
         val end = Instant.now()
         println("Time to upload: ${Duration(mid, end)}")
 

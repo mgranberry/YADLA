@@ -177,8 +177,7 @@ class NightscoutJsonAdapter {
     @ToJson
     public fun entryToJson(entry: NightscoutEntryJson): Map<String, Any?> {
         val map = hashMapOf<String, Any?>()
-        map.putAll(arrayOf("_id" to "${entry.source}-${entry.id}",
-                "date" to entry.time.millis,
+        map.putAll(arrayOf("date" to entry.time.millis,
                 "dateString" to entry.dateString,
                 "device" to entry.source,
                 "type" to entry.type))

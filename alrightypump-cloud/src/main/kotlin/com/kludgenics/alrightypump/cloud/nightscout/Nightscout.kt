@@ -109,7 +109,7 @@ class Nightscout @Inject constructor (@Named("Nightscout") val url: HttpUrl,
                     treatment.applyRecord(it)
                     sequenceOf(treatment)
                 }
-                else -> emptyList<Record>().asSequence()
+                else -> emptySequence<Record>()
             }
         }.partition { it is NightscoutApiTreatment }
         while (!entryRecords.isEmpty()) {

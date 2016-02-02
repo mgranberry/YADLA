@@ -3,7 +3,7 @@ package com.kludgenics.alrightypump
 import com.fazecast.jSerialComm.SerialPort
 import com.kludgenics.alrightypump.cloud.nightscout.Nightscout
 import com.kludgenics.alrightypump.device.dexcom.g4.DexcomG4
-import com.kludgenics.alrightypump.device.tandem.TandemPump
+import com.kludgenics.alrightypump.device.tandem.*
 import com.kludgenics.alrightypump.therapy.ConcurrentSkipListTherapyTimeline
 import com.kludgenics.alrightypump.therapy.Record
 import com.squareup.okhttp.Cache
@@ -48,7 +48,7 @@ private fun uploadRecords(nightscout: Nightscout?, nightscout_url: String?, okHt
 fun main(args: Array<String>) {
     val okHttpClient = OkHttpClient()
     okHttpClient.setCache(Cache(File("/tmp/ok"), 1024 * 1024 * 50))
-    val startTime = DateTime.now() - Period.days(1)
+    val startTime = DateTime.now() - Period.months(3)
     var lastUploads = ConcurrentHashMap<String, DateTime>().withDefault { startTime }
     val nightscout_url = System.getenv("NIGHTSCOUT_HOST") ?: args.getOrNull(0)
     val nightscout = if (nightscout_url == null) {
@@ -75,9 +75,8 @@ fun main(args: Array<String>) {
                                 downloadRecords(threads, lastUploads, it) {
                                     connection, predicate ->
                                     val tslim = TandemPump(connection.source(), connection.sink())
-                                    println("${tslim.profiles}")
                                     timeline.merge(predicate, tslim.basalRecords, tslim.bolusRecords,
-                                            tslim.smbgRecords, tslim.consumableRecords)
+                                            tslim.smbgRecords, tslim.consumableRecords, tslim.profileRecords)
                                     timeline.events.lastOrNull()?.time?.toDateTime()
                                 }
                                 true
@@ -87,7 +86,6 @@ fun main(args: Array<String>) {
                                     connection, predicate ->
                                     val g4 = DexcomG4(connection.source(), connection.sink())
                                     g4.rawEnabled = true
-                                    val cgms = g4.cgmRecords
                                     timeline.merge(predicate, g4.cgmRecords, g4.smbgRecords, g4.calibrationRecords,
                                             g4.eventRecords, g4.consumableRecords)
                                     timeline.events.lastOrNull()?.time?.toDateTime()

@@ -29,7 +29,7 @@ interface AlarmRecord : LogEvent {
     val alarmId: Int
 }
 
-interface IdpRecord : LogEvent {
+interface IdpRecord : LogEvent, TandemTherapyRecord {
     val idp: Int
 }
 
@@ -185,7 +185,7 @@ private fun Int.asLocalDate(): LocalDate = (TandemPump.EPOCH.toDateTime() + Peri
 private fun Int.asString(): String {
     val buff = Buffer()
     buff.writeIntLe(this)
-    return buff.snapshot().utf8()
+    return buff.snapshot().utf8().trimEnd(0.toChar())
 }
 
 private fun Int.asBytes(): List<Int> {
@@ -602,6 +602,23 @@ data class Idp(
         public val sourceIdp: Int,
         public val name: String,
         public val rawRecord: LogEvent) : LogEvent by rawRecord, IdpRecord {
+
+    companion object {
+        public const final val OP_NEW = 0
+        public const final val OP_COPY = 1
+        public const final val OP_DELETE = 2
+        public const final val OP_SELECT = 3
+        public const final val OP_RENAME = 4
+        public fun opToString(value: Int) = when(value) {
+            OP_NEW -> "new"
+            OP_COPY -> "copy"
+            OP_DELETE -> "delete"
+            OP_SELECT -> "select"
+            OP_RENAME -> "rename"
+            else -> "unknown"
+        }
+    }
+
     constructor (rawRecord: LogEvent) : this(
             idp = rawRecord.data1.asBytes().component1(),
             op = rawRecord.data1.asBytes().component2(),
@@ -633,7 +650,7 @@ data class IdpBolus(
 data class IdpList(
         public val numProfiles: Int,
         public val slots: List<Int>,
-        public val rawRecord: LogEvent) : LogEvent by rawRecord {
+        public val rawRecord: LogEvent) : LogEvent by rawRecord, TandemTherapyRecord {
     constructor (rawRecord: LogEvent) : this(
             numProfiles = rawRecord.data1.asBytes().component1(),
             slots = listOf(*(rawRecord.data2.asBytes().toTypedArray()), *(rawRecord.data3.asBytes().toTypedArray())),

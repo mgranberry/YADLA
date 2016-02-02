@@ -28,6 +28,8 @@ class Nightscout @Inject constructor (@Named("Nightscout") val url: HttpUrl,
         ContinuousGlucoseMonitor,
         Glucometer
 {
+    override val profileRecords: Sequence<ProfileRecord>
+        get() = throw UnsupportedOperationException()
     override val chronology: Chronology
         get() = throw UnsupportedOperationException()
     override val serialNumber: String

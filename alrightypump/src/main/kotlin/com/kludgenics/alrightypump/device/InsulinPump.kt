@@ -3,6 +3,7 @@ package com.kludgenics.alrightypump.device
 import com.kludgenics.alrightypump.therapy.BasalRecord
 import com.kludgenics.alrightypump.therapy.BolusRecord
 import com.kludgenics.alrightypump.therapy.ConsumableRecord
+import com.kludgenics.alrightypump.therapy.ProfileRecord
 import org.joda.time.Chronology
 
 
@@ -28,4 +29,6 @@ interface InsulinPump : Device {
     val basalRecords: Sequence<BasalRecord>
 
     val consumableRecords: Sequence<ConsumableRecord>
+
+    val profileRecords: Sequence<ProfileRecord>
 }

@@ -48,11 +48,17 @@ class TandemPump(private val source: BufferedSource, private val sink: BufferedS
     override val consumableRecords: Sequence<ConsumableRecord>
         get() = records.filterIsInstance<ConsumableRecord>()
 
-    val logRange: IntRange = LogSizeResp(commandResponse(LogSizeReq()).payload).range
-    val profiles: List<IdpResp> = readProfiles()
+    /**
+     * Only returns most-recent profile
+     */
+    override val profileRecords: Sequence<ProfileRecord>
+        get() = ProfileAssemblingSequence()
 
-    private fun readProfiles() : List<IdpResp> {
-        return IdpListResp(commandResponse(IdpListReq()).payload).idps.map { readProfile(it) }
+    val logRange: IntRange = LogSizeResp(commandResponse(LogSizeReq()).payload).range
+    val profiles: List<TandemProfile> = readProfiles()
+
+    private fun readProfiles() : List<TandemProfile> {
+        return IdpListResp(commandResponse(IdpListReq()).payload).idps.map { TandemProfile(readProfile(it)) }
     }
 
     public fun readProfile(idp: Int) : IdpResp = IdpResp(commandResponse(IdpReq(idp)).payload)
@@ -178,30 +184,31 @@ class TandemPump(private val source: BufferedSource, private val sink: BufferedS
 
     }
 
-    private data class ProfileRecordHolder (val foo: String)
-
     private inner class ProfileAssemblingSequence : Sequence<ProfileRecord> {
         override fun iterator(): Iterator<ProfileRecord> = object: Iterator<ProfileRecord> {
+            var recordRetrieved = false
+            val recordIterator: Iterator<TandemTherapyRecord>
+
             override fun hasNext(): Boolean {
-                throw UnsupportedOperationException()
+                return !recordRetrieved && recordIterator.hasNext()
             }
 
             override fun next(): ProfileRecord {
-                throw UnsupportedOperationException()
+                recordRetrieved = true
+                val profileMap = profiles.map { entry -> entry.name to entry }.toMap()
+                val profileList = recordIterator.next()
+                return TandemProfileRecord(profiles[0].name, profileMap, profileList)
             }
 
-            var profileRecordHolder = ProfileRecordHolder("changeme")
-            val recordSequence: Sequence<LogEvent>
-            val profiles = readProfiles().toMapBy { it.name }.toLinkedMap()
             init {
                 val seq = records.filter {
-                    it is Idp || it is IdpBolus || it is IdpList || it is IdpMessage2 || it is IdpTdSeg
-                }.fold(ProfileRecordHolder((("")))) { profileRecordHolder, event ->
-
-                    profileRecordHolder
-                }
-
-                recordSequence = emptySequence()
+                    when (it) {
+                        is IdpRecord -> true
+                        is IdpList -> true
+                        else -> false
+                    }
+                }.map { it as TandemTherapyRecord }
+                recordIterator = seq.iterator()
             }
         }
     }
@@ -348,3 +355,60 @@ class TandemPump(private val source: BufferedSource, private val sink: BufferedS
         }
     }
 }
+
+operator fun MutableMap<Int,TandemProfile>.invoke(idpBolus: IdpBolus) {
+    println("idpbolus: $idpBolus")
+    println("profiles: $this")
+
+    val profile = this[idpBolus.idp]!!
+    this += idpBolus.idp to profile.copy(dia = idpBolus.insulinDuration ?: profile.dia)
+}
+
+operator fun MutableMap<Int,TandemProfile>.invoke(idp: Idp) {
+    println("idp: $idp")
+    println("profiles: $this")
+    when (idp.op) {
+        Idp.OP_COPY -> {
+            this += idp.idp to this[idp.sourceIdp]!!.copy(idp = idp.idp,
+                    name = idp.name.trim(0.toChar()))
+        }
+        Idp.OP_DELETE -> {
+            this -= idp.idp
+        }
+        Idp.OP_NEW -> {
+            this += idp.idp to TandemProfile(idp = idp.idp, name = idp.name)
+        }
+        Idp.OP_RENAME -> {
+            this += idp.idp to this[idp.idp]!!.copy(name = idp.name)
+        }
+        Idp.OP_SELECT -> {
+            // handle profile activation
+        }
+    }
+}
+
+operator fun MutableMap<Int, TandemProfile>.invoke(idpList: IdpList) {
+    println("idplist: $idpList")
+    println("profiles: $this")
+    val profiles = idpList.slots.take(idpList.numProfiles)
+    val iterator = this.iterator()
+    for (profile in iterator) {
+        if (profile.key !in profiles)
+            iterator.remove()
+    }
+}
+
+operator fun MutableMap<Int, TandemProfile>.invoke(idpMessage2: IdpMessage2) {
+    println("idpMessage2: $idpMessage2")
+    println("profiles: $this")
+    val profile = this[idpMessage2.idp]!!
+    this += idpMessage2.idp to profile.copy(name = "${profile.name}${idpMessage2.nameCont}")
+}
+
+operator fun MutableMap<Int, TandemProfile>.invoke(idpTdSegment: IdpTdSeg) {
+    println("idpTdSegment: $idpTdSegment")
+    println("profiles: $this")
+    val profile = this[idpTdSegment.idp]!!
+    //this += idpTdSegment.idp to profile.copy(name = "${profile.name}${idpTdSegment.nameCont}")
+}
+

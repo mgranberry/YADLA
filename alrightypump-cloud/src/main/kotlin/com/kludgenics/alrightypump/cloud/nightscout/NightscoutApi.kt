@@ -13,9 +13,11 @@ import com.squareup.moshi.ToJson
 import com.squareup.okhttp.RequestBody
 import com.squareup.okhttp.ResponseBody
 import org.joda.time.Instant
+import org.joda.time.LocalTime
 import retrofit.Call
 import retrofit.http.*
 import java.text.DecimalFormat
+import java.util.*
 
 interface NightscoutApiEntry : NightscoutEntry, Record {
     override val time: Instant get() = Instant.parse(dateString)
@@ -73,6 +75,32 @@ interface NightscoutApiTempBasalTreatment : NightscoutApiBaseTreatment {
 
 interface NightscoutApiProfileChangeTreatment : NightscoutApiBaseTreatment {
     val profile: String
+}
+
+interface NightscoutProfile {
+    val startDate: Instant
+    val defaultProfile: String
+    val store: Map<String, NightscoutProfileEntry>
+    val created_at: Instant
+}
+
+interface NightscoutProfileEntry {
+    val dia: String
+    val carbRatio: ArrayList<NightscoutProfileItem>
+    val carbs_hr: String
+    val delay: String
+    val sens: ArrayList<NightscoutProfileItem>
+    val timezone: String
+    val basal: ArrayList<NightscoutProfileItem>
+    val target_low: ArrayList<NightscoutProfileItem>
+    val target_high: ArrayList<NightscoutProfileItem>
+    val units: String
+}
+
+interface NightscoutProfileItem {
+    val time: LocalTime
+    val value: String
+    val timeAsSeconds: String
 }
 
 open class NightscoutTreatment(private val _map: MutableMap<String, Any?>) : NightscoutApiTreatment {

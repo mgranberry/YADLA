@@ -14,13 +14,13 @@ interface ProfileRecord : Record {
 }
 
 interface Profile {
-    val name: String
-    val dia: Duration
+    val name: String?
+    val dia: Duration?
     val carbsPerHour: Double?
-    val carbAbsorptionDelay: Double?
-    val carbFactors: SortedMap<LocalTime, Double>
-    val correctionFactors: SortedMap<LocalTime, Double>
-    val basalRates: SortedMap<LocalTime, Double>
-    val targets: SortedMap<LocalTime, BloodGlucoseTarget>
-    val units: Int
+    val carbAbsorptionDelay: Duration?
+    val carbFactors: SortedMap<LocalTime, Double>?
+    val correctionFactors: SortedMap<LocalTime, Double>?
+    val basalRates: SortedMap<LocalTime, Double>?
+    val targets: SortedMap<LocalTime, BloodGlucoseTarget>?
+    val units: Int?
 }

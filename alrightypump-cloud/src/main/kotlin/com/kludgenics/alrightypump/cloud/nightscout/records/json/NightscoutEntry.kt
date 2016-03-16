@@ -1,6 +1,6 @@
 package com.kludgenics.alrightypump.cloud.nightscout.records.json
 
-import org.joda.time.Instant
+import org.joda.time.LocalDateTime
 import org.joda.time.format.ISODateTimeFormat
 
 /**
@@ -11,6 +11,6 @@ public interface NightscoutEntry {
     val id: String?
     val source: String
     val type: String
-    val time: Instant
+    val time: LocalDateTime
     val dateString: String get() = ISODateTimeFormat.dateTime().print(time)
 }

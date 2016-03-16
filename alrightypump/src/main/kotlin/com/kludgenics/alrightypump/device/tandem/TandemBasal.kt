@@ -4,6 +4,7 @@ import com.kludgenics.alrightypump.therapy.BasalRecord
 import com.kludgenics.alrightypump.therapy.BasalSchedule
 import com.kludgenics.alrightypump.therapy.ScheduledBasalRecord
 import com.kludgenics.alrightypump.therapy.TemporaryBasalRecord
+import org.joda.time.DateTimeZone
 import org.joda.time.Duration
 
 /**
@@ -46,13 +47,14 @@ data class TandemTemporaryBasalRecord(val tempRateStart: TempRateStart?,
     override val percent: Double?
         get() = if (suspended != null) 0.0 else tempRateStart?.percent
     override val duration: Duration
-        get() = if (suspended != null && resumed != null)
-                Duration(suspended.time, resumed.time)
+        get() =
+            if (suspended != null && resumed != null)
+                Duration(suspended.time.toDateTime(DateTimeZone.UTC), resumed.time.toDateTime(DateTimeZone.UTC))
             else if (tempRateStart != null && tempRateEnd != null)
-                Duration(tempRateStart.time, tempRateEnd.time)
+                Duration(tempRateStart.time.toDateTime(DateTimeZone.UTC), tempRateEnd.time.toDateTime())
             else if (tempRateStart != null && tempRateEnd == null)
                 tempRateStart.duration
             else if (tempRateStart != null && tempRateEnd != null)
-                Duration(tempRateStart.time, tempRateEnd.time)
+                Duration(tempRateStart.time.toDateTime(DateTimeZone.UTC), tempRateEnd.time.toDateTime(DateTimeZone.UTC))
             else Duration.ZERO
 }

@@ -1,6 +1,7 @@
 package com.kludgenics.alrightypump.device.tandem
 
 import com.kludgenics.alrightypump.therapy.*
+import org.joda.time.DateTimeZone
 import org.joda.time.Duration
 
 /**
@@ -92,7 +93,7 @@ data class TandemExtendedBolus(public val extendedActivated: BolexActivated,
 
     override val extendedDuration: Duration?
         get() = if (bolexCompleted != null)
-            Duration(extendedActivated.timestamp, bolexCompleted.timestamp)
+            Duration(extendedActivated.timestamp.toDateTime(DateTimeZone.UTC), bolexCompleted.timestamp.toDateTime(DateTimeZone.UTC))
         else
             null
 
@@ -123,7 +124,7 @@ data class TandemComboBolus(public val bolusActivated: BolusActivated,
 
     override val extendedDuration: Duration?
         get() = if (bolexCompleted != null)
-            Duration(extendedActivated.timestamp, bolexCompleted.timestamp)
+            Duration(extendedActivated.timestamp.toDateTime(DateTimeZone.UTC), bolexCompleted.timestamp.toDateTime(DateTimeZone.UTC))
         else
             null
 

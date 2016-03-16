@@ -2,7 +2,7 @@ package com.kludgenics.alrightypump.cloud.nightscout.records.therapy
 
 import com.kludgenics.alrightypump.cloud.nightscout.records.json.NightscoutEntry
 import com.kludgenics.alrightypump.therapy.Record
-import org.joda.time.Instant
+import org.joda.time.LocalDateTime
 
 /**
  * Created by matthias on 12/1/15.
@@ -10,6 +10,6 @@ import org.joda.time.Instant
 interface NightscoutRecord : Record {
     val rawEntry: NightscoutEntry
     override val id: String? get() = rawEntry.id
-    override val time: Instant get() = rawEntry.time
+    override val time: LocalDateTime get() = rawEntry.time
     override val source: String get() = rawEntry.source
 }

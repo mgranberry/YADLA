@@ -4,7 +4,7 @@ import com.kludgenics.alrightypump.therapy.GlucoseValue
 import okio.Buffer
 import okio.BufferedSource
 import org.joda.time.Duration
-import org.joda.time.Instant
+import org.joda.time.LocalDateTime
 import org.joda.time.LocalTime
 
 /**
@@ -35,7 +35,7 @@ class TandemResponse(source: BufferedSource) : TandemFrame() {
     override val expectedChecksum: Int
     override val frame: Buffer
     override val payloadLength: Long
-    public val timestamp: Instant
+    public val timestamp: LocalDateTime
     public val command: Int
     override public val valid: Boolean
         get() = (expectedChecksum == calculatedChecksum)
@@ -55,7 +55,7 @@ class TandemResponse(source: BufferedSource) : TandemFrame() {
         payloadLength = length.toLong()
         frame.write(payload.snapshot())
         val rawTimestamp = source.readInt().toLong() and 0xFFFFFFFF
-        timestamp = TandemPump.EPOCH + rawTimestamp * 1000
+        timestamp = TandemPump.EPOCH.plusSeconds(rawTimestamp.toInt())
         footer = Buffer()
         footer.writeInt(rawTimestamp.toInt())
         expectedChecksum = source.readShort().toInt() and 0xFFFF

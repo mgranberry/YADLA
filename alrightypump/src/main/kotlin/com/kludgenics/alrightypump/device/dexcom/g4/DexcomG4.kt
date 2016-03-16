@@ -6,7 +6,7 @@ import com.kludgenics.alrightypump.therapy.SmbgRecord
 import okio.BufferedSink
 import okio.BufferedSource
 import org.joda.time.Chronology
-import org.joda.time.Instant
+import org.joda.time.LocalDateTime
 import org.joda.time.chrono.ISOChronology
 
 /**
@@ -73,7 +73,7 @@ open class DexcomG4(private val source: BufferedSource,
             init {
                 val bgs: Sequence<Pair<EgvRecord, SgvRecord?>>
                 if (sgvs != null && calIterator != null) {
-                    val currentTime = Instant()
+                    val currentTime = LocalDateTime()
                     currentCal = calIterator.next()
                     while (currentCal!!.displayTime > currentTime && calIterator.hasNext())
                         currentCal = calIterator.next()

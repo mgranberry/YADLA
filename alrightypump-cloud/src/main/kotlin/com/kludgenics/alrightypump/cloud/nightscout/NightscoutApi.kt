@@ -12,15 +12,14 @@ import com.squareup.moshi.Moshi
 import com.squareup.moshi.ToJson
 import com.squareup.okhttp.RequestBody
 import com.squareup.okhttp.ResponseBody
-import org.joda.time.Instant
-import org.joda.time.LocalTime
+import org.joda.time.*
 import retrofit.Call
 import retrofit.http.*
 import java.text.DecimalFormat
 import java.util.*
 
 interface NightscoutApiEntry : NightscoutEntry, Record {
-    override val time: Instant get() = Instant.parse(dateString)
+    override val time: LocalDateTime get() = LocalDateTime.parse(dateString)
     override val dateString: String get() = time.toString()
 }
 
@@ -50,7 +49,7 @@ interface NightscoutApiTreatment : NightscoutApiBaseTreatment, Record {
 
 interface NightscoutApiBaseTreatment : NightscoutApiEntry {
     // these two aren't quite accurate, but it is useful to unify entries and treatments.
-    override val time: Instant get() = Instant.parse(created_at)
+    override val time: LocalDateTime get() = LocalDateTime.parse(created_at)
     override val dateString: String get() = created_at
     val eventType: String
     val created_at: String
@@ -78,10 +77,10 @@ interface NightscoutApiProfileChangeTreatment : NightscoutApiBaseTreatment {
 }
 
 interface NightscoutProfile {
-    val startDate: Instant
+    val startDate: LocalDateTime
     val defaultProfile: String
     val store: Map<String, NightscoutProfileEntry>
-    val created_at: Instant
+    val created_at: LocalDateTime
 }
 
 interface NightscoutProfileEntry {
@@ -104,7 +103,7 @@ interface NightscoutProfileItem {
 }
 
 open class NightscoutTreatment(private val _map: MutableMap<String, Any?>) : NightscoutApiTreatment {
-    override val time: Instant
+    override val time: LocalDateTime
         get() = time
 
     companion object {
@@ -137,7 +136,7 @@ open class NightscoutTreatment(private val _map: MutableMap<String, Any?>) : Nig
     public fun applyRecord(record: Record) {
         _map.putAll(arrayOf<Pair<String, Any?>>(
                 "enteredBy" to record.source,
-                "created_at" to record.time.toString(),
+                "created_at" to record.time.safeDateTime().toString(),
                 //"notes" to record.toString(),
                 "eventType" to "<none>"))
         if (record is NormalBolusRecord)
@@ -205,7 +204,7 @@ class NightscoutJsonAdapter {
     @ToJson
     public fun entryToJson(entry: NightscoutEntryJson): Map<String, Any?> {
         val map = hashMapOf<String, Any?>()
-        map.putAll(arrayOf("date" to entry.time.millis,
+        map.putAll(arrayOf("date" to entry.time.safeDateTime().millis,
                 "dateString" to entry.dateString,
                 "device" to entry.source,
                 "type" to entry.type))
@@ -236,7 +235,7 @@ class NightscoutJsonAdapter {
             "sgv" -> {
                 NightscoutEntryJson(NightscoutSgvJson(id = entry["_id"] as String,
                         type = entry["type"]!!,
-                        time = Instant(entry["date"]?.toLong()!!),
+                        time = LocalDateTime(entry["date"]?.toLong()!!),
                         dateString = entry["dateString"]!!,
                         source = entry["device"]!!,
                         sgv = entry["sgv"]?.toInt()!!,
@@ -249,13 +248,13 @@ class NightscoutJsonAdapter {
             }
             "mbg" -> NightscoutEntryJson(NightscoutMbgJson(id = entry["_id"] as String,
                     type = entry["type"] as String,
-                    time = Instant(entry["date"]?.toLong()!!),
+                    time = LocalDateTime(entry["date"]?.toLong()!!),
                     dateString = entry["dateString"] as String,
                     source = entry["device"] as String,
                     mbg = entry["mbg"]?.toInt()!!))
             "cal" -> NightscoutEntryJson(NightscoutCalJson(id = entry["_id"] as String,
                     type = entry["type"] as String,
-                    time = Instant(entry["date"]?.toLong()!!),
+                    time = LocalDateTime(entry["date"]?.toLong()!!),
                     dateString = entry["dateString"] as String,
                     source = entry["device"] as String,
                     slope = entry["slope"]?.toDouble()!!,
@@ -272,7 +271,7 @@ data class NightscoutEntryJson(public val rawEntry: NightscoutApiEntry) : Nights
 data class NightscoutSgvJson(public override val id: String?,
                              public override val type: String,
                              public override val dateString: String,
-                             public override val time: Instant,
+                             public override val time: LocalDateTime,
                              public override val source: String,
                              public override val sgv: Int,
                              public override val direction: String?,
@@ -299,17 +298,17 @@ data class NightscoutSgvJson(public override val id: String?,
         }
     }
 
-    constructor(record: DexcomCgmRecord) : this(id = record.id, type = "sgv", time = record.time, dateString = record.time.toString(),
+    constructor(record: DexcomCgmRecord) : this(id = record.id, type = "sgv", time = record.time, dateString = record.time.safeDateTime().toString(),
             source = record.source, sgv = record.value.mgdl!!.toInt(), direction = directionString(record.egvRecord.trendArrow), rssi = record.sgvRecord?.rssi,
             unfiltered = record.sgvRecord?.unfiltered,
             filtered = record.sgvRecord?.filtered, noise = record.egvRecord.noise)
 
-    constructor(record: RawCgmRecord) : this(id = record.id, type = "sgv", time = record.time, dateString = record.time.toString(),
+    constructor(record: RawCgmRecord) : this(id = record.id, type = "sgv", time = record.time, dateString = record.time.safeDateTime().toString(),
             source = record.source, sgv = record.value.mgdl!!.toInt(), direction = null, rssi = null,
             unfiltered = record.value.unfiltered,
             filtered = record.value.filtered, noise = null)
 
-    constructor(record: CgmRecord) : this(id = record.id, type = "sgv", time = record.time, dateString = record.time.toString(),
+    constructor(record: CgmRecord) : this(id = record.id, type = "sgv", time = record.time, dateString = record.time.safeDateTime().toString(),
             source = record.source, sgv = record.value.mgdl!!.toInt(), direction = null, rssi = null, unfiltered = null,
             filtered = null, noise = null)
 
@@ -318,7 +317,7 @@ data class NightscoutSgvJson(public override val id: String?,
 data class NightscoutMbgJson(public override val id: String?,
                              public override val type: String,
                              public override val dateString: String,
-                             public override val time: Instant,
+                             public override val time: LocalDateTime,
                              public override val source: String,
                              public override val mbg: Int) : NightscoutApiMbgEntry {
     override val value: GlucoseValue
@@ -335,7 +334,7 @@ data class NightscoutMbgJson(public override val id: String?,
 data class NightscoutCalJson(public override val id: String? = null,
                              public override val type: String,
                              public override val dateString: String,
-                             public override val time: Instant,
+                             public override val time: LocalDateTime,
                              public override val source: String,
                              public override val slope: Double,
                              public override val intercept: Double,
@@ -411,4 +410,12 @@ interface NightscoutApi {
 
     @POST("/api/v1/profile")
     fun postProfiles(@Header("api-secret") apiSecret: String, @Body profile: RequestBody): Call<ResponseBody>
+}
+
+fun LocalDateTime.safeDateTime(): DateTime = try {
+    this.toDateTime()
+} catch (e: org.joda.time.IllegalInstantException) {
+    val localTime = toLocalTime()
+    val localDate = this.toLocalDate().toDateTimeAtStartOfDay().plus(localTime.millisOfDay.toLong())
+    this.plus(Duration(DateTimeZone.getDefault().getOffsetFromLocal(localDate.millis).toLong())).toDateTime()
 }

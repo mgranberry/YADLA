@@ -1,6 +1,7 @@
 package com.kludgenics.alrightypump.cloud.nightscout
 
 import org.joda.time.DateTime
+import org.joda.time.DateTimeZone
 import org.joda.time.Instant
 
 /**
@@ -14,7 +15,7 @@ class RestCallSequence<T:NightscoutApiEntry>(val range: ClosedRange<Instant>,
 
             var current = range.endInclusive
             var currentRange  = range.endInclusive.toRecordRange()
-            var currentRecords = call(currentRange.start, currentRange.endInclusive).filter { range.contains(it.time) }
+            var currentRecords = call(currentRange.start, currentRange.endInclusive).filter { range.contains(it.time.toDateTime(DateTimeZone.UTC).toInstant()) }
             var eventIterator: Iterator<T> = currentRecords.iterator()
 
             init {
@@ -27,7 +28,7 @@ class RestCallSequence<T:NightscoutApiEntry>(val range: ClosedRange<Instant>,
                     currentRecords = call(currentRange.start, currentRange.endInclusive)
                     if (currentRecords.isEmpty())
                         return false
-                    current = currentRecords.last().time
+                    current = currentRecords.last().time.toDateTime(DateTimeZone.UTC).toInstant()
                     eventIterator = currentRecords.iterator()
                     return true
                 } else

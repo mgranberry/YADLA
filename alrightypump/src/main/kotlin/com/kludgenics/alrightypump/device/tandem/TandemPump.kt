@@ -10,7 +10,7 @@ import com.kludgenics.alrightypump.therapy.SmbgRecord
 import okio.BufferedSink
 import okio.BufferedSource
 import org.joda.time.Chronology
-import org.joda.time.Instant
+import org.joda.time.LocalDateTime
 import org.joda.time.chrono.ISOChronology
 import java.util.*
 
@@ -20,7 +20,7 @@ import java.util.*
 class TandemPump(private val source: BufferedSource, private val sink: BufferedSink) : InsulinPump, Glucometer {
 
     companion object {
-        @JvmField final val EPOCH = Instant.parse("2008-01-01T00:00:00Z")
+        @JvmField final val EPOCH = LocalDateTime.parse("2008-01-01T00:00:00")
         const val ITERATION_STEP = 200
         public val source: String get() = "alrightypump-tandem-$serial"
         private var _serial = ""

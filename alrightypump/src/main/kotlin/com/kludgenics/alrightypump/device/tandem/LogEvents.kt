@@ -38,7 +38,7 @@ interface SuspensionRecord : LogEvent, SuspendedBasalRecord, TandemTherapyRecord
 interface TimeChangeEventRecord : LogEvent
 
 interface TandemTherapyRecord : Record, LogEvent {
-    override val time: Instant
+    override val time: LocalDateTime
         get() = timestamp
     override val source: String
         get() = TandemPump.source
@@ -97,7 +97,7 @@ interface LogEvent : Payload {
             val index = source.readIntLe()
             val res = source.readShortLe().toInt() and 0xFFFF
             val logId = source.readShortLe().toInt() and 0xFFFF
-            val timestamp = source.readIntLe().asInstant()
+            val timestamp = source.readIntLe().asLocalDateTime()
             val seqNo = source.readIntLe()
             val bogus = source.readIntLe()
             val data1 = source.readIntLe()
@@ -164,7 +164,7 @@ interface LogEvent : Payload {
     public val hours: Int // ushort
     public val logId: Int // ushort
 
-    public val timestamp: Instant
+    public val timestamp: LocalDateTime
     public val seqNo: Int
     public val bogus: Int
 
@@ -178,7 +178,7 @@ private fun LogEvent.fieldToString(field: Int): String {
     return "(int=$field, uint=${field.toLong() and 0xFFFFFFFF}, bytes=${field.asBytes()}, shorts=${field.asShorts()}, ushorts=(${field.asUnsignedShorts()}), float=${field.asFloat()}"
 }
 
-private fun Int.asInstant(): Instant = TandemPump.EPOCH + this.toLong() * 1000
+private fun Int.asLocalDateTime(): LocalDateTime = TandemPump.EPOCH.plusSeconds(this)
 private fun Int.asLocalTime(): LocalTime = LocalTime(this.toLong() * 1000)
 private fun Int.asLocalDate(): LocalDate = (TandemPump.EPOCH.toDateTime() + Period.days(this)).toLocalDate()
 
@@ -227,7 +227,7 @@ data class BaseLogEvent(
         public override val index: Int,
         public override val hours: Int,
         public override val logId: Int,
-        public override val timestamp: Instant,
+        public override val timestamp: LocalDateTime,
         public override val seqNo: Int,
         public override val bogus: Int,
         public override val data1: Int,

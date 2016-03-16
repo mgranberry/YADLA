@@ -1,6 +1,5 @@
 package com.kludgenics.alrightypump.device.dexcom.g4
 
-import com.kludgenics.alrightypump.*
 import com.kludgenics.alrightypump.therapy.*
 import okio.Buffer
 import org.joda.time.*
@@ -31,7 +30,7 @@ interface RecordPage {
         const final val METER_DATA = 10
         const final val USER_EVENT_DATA = 11
         const final val USER_SETTING_DATA = 12
-        final val EPOCH = Instant.parse("2009-01-01T00:00:00Z")
+        final val EPOCH = LocalDateTime.parse("2009-01-01T00:00:00")
 
         public fun parse(buffer: Buffer): RecordPage? {
             buffer.require(9)
@@ -56,7 +55,7 @@ interface RecordPage {
 
 interface DexcomRecord {
     companion object {
-        fun toInstant(dexcomTimestamp: Long): Instant {
+        fun toLocalDateTime(dexcomTimestamp: Long): LocalDateTime {
             return RecordPage.EPOCH + Duration(dexcomTimestamp * 1000)
         }
 
@@ -64,8 +63,8 @@ interface DexcomRecord {
 
     val systemSeconds: Long
     val displaySeconds: Long
-    val systemTime: Instant get() = toInstant(systemSeconds)
-    val displayTime: Instant get() = toInstant(displaySeconds)
+    val systemTime: LocalDateTime get() = toLocalDateTime(systemSeconds)
+    val displayTime: LocalDateTime get() = toLocalDateTime(displaySeconds)
 }
 
 public data class PageHeader(public val index: Long,
@@ -171,7 +170,7 @@ public data class CalSetRecord(public override val id: String,
                                override public val decay: Double,
                                public val nRecs: Int,
                                public val subRecords: List<CalSetRecord.CalSubRecord>) : DexcomRecord, Calibration, CalibrationRecord {
-    override val time: Instant
+    override val time: LocalDateTime
         get() = displayTime
     override val source: String
         get() = DexcomG4.source
@@ -233,13 +232,13 @@ public data class InsertionRecord(public override val id: String,
                                   public override val displaySeconds: Long,
                                   public val insertionSeconds: Int, public val insertionState: Int,
                                   public val crc: Int) : DexcomRecord, CgmInsertionRecord {
-    override val time: Instant
+    override val time: LocalDateTime
         get() = displayTime
     override val source: String
         get() = DexcomG4.source
     override val removed: Boolean
         get() = insertionSeconds == -1
-    val insertionTime: Instant get() = DexcomRecord.toInstant(insertionSeconds.toLong())
+    val insertionTime: LocalDateTime get() = DexcomRecord.toLocalDateTime(insertionSeconds.toLong())
 
     companion object {
         const final val REMOVED = 1
@@ -313,7 +312,7 @@ public data class MeterRecord(public override val id: String,
                               public override val displaySeconds: Long,
                               public val meterValue: Int, public val meterSeconds: Long,
                               public val crc: Int) : SmbgRecord, DexcomRecord {
-    override val time: Instant
+    override val time: LocalDateTime
         get() = displayTime
     override val value: GlucoseValue
         get() = BaseGlucoseValue(meterValue.toDouble(), GlucoseUnit.MGDL)
@@ -322,7 +321,7 @@ public data class MeterRecord(public override val id: String,
     override val source: String
         get() = DexcomG4.source
 
-    val meterTime: Instant get() = DexcomRecord.toInstant(meterSeconds)
+    val meterTime: LocalDateTime get() = DexcomRecord.toLocalDateTime(meterSeconds)
 
     companion object {
         public fun parse(id: String, buffer: Buffer): MeterRecord {
@@ -357,17 +356,17 @@ interface EventRecord : Record, DexcomRecord {
 }
 
 public data class FoodEventRecord(public override val id: String,
-                                  public override val time: Instant,
+                                  public override val time: LocalDateTime,
                                   public override val carbohydrateGrams: Int,
                                   override val rawRecord: UserEventRecord) : EventRecord, FoodRecord, DexcomRecord by rawRecord {
     constructor(rawRecord: UserEventRecord) : this(rawRecord.id,
-            DexcomRecord.toInstant(rawRecord.eventSeconds),
+            DexcomRecord.toLocalDateTime(rawRecord.eventSeconds),
             rawRecord.eventValue,
             rawRecord)
 }
 
 public data class InsulinEventRecord(public override val id: String,
-                                     public override val time: Instant,
+                                     public override val time: LocalDateTime,
                                      public override val deliveredNormal: Double,
                                      public override val rawRecord: UserEventRecord) : NormalBolusRecord, EventRecord,
         DexcomRecord by rawRecord {
@@ -375,7 +374,7 @@ public data class InsulinEventRecord(public override val id: String,
         get() = null
 
     constructor(rawRecord: UserEventRecord) : this(rawRecord.id,
-            DexcomRecord.toInstant(rawRecord.eventSeconds),
+            DexcomRecord.toLocalDateTime(rawRecord.eventSeconds),
             rawRecord.eventValue / 100.0,
             rawRecord)
 
@@ -435,7 +434,7 @@ public data class UserEventRecord(public override val id: String,
         }
     }
 
-    override val time: Instant get() = DexcomRecord.toInstant(eventSeconds)
+    override val time: LocalDateTime get() = DexcomRecord.toLocalDateTime(eventSeconds)
     override val rawRecord: UserEventRecord
         get() = this
 }

@@ -29,7 +29,7 @@ interface ChartXAxis {
                 val xValue = getXValue(x)
                 if (idx % xLabelPeriod == 0) {
                     canvas.drawLine(xValue, xAxisOffset - xAxisTickHeight, xValue, xAxisOffset + xAxisTickHeight, xAxisPaint)
-                    if (x != xProgression.end)
+                    if (x != xProgression.last)
                         canvas.drawText(getXLabel(x), xValue + xAxisPaint.strokeWidth, xAxisOffset + xAxisTickHeight/2 + xAxisTextSize, xAxisLabelPaint)
                 } else {
                     canvas.drawLine(xValue, xAxisOffset - xAxisTickHeight/2, xValue, xAxisOffset + xAxisTickHeight/2, xAxisPaint)

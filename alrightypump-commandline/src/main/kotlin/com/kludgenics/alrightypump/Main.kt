@@ -17,6 +17,9 @@ import java.io.File
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.concurrent.thread
 
+val startTime = DateTime.now() - Period.days(1)
+
+
 private fun downloadRecords(threads: MutableList<Thread>, lastUploads: MutableMap<String, DateTime>, port: SerialPort,
                     block: (connection: SerialConnection, (Record) -> Boolean) -> DateTime?) {
     println("Found ${port.descriptivePortName}. Fetching data.")
@@ -24,7 +27,7 @@ private fun downloadRecords(threads: MutableList<Thread>, lastUploads: MutableMa
         try {
             val connection = SerialConnection(port)
             connection.use {
-                val lastUpload = lastUploads.getOrImplicitDefault(port.descriptivePortName)
+                val lastUpload = lastUploads.getOrElse(port.descriptivePortName, {startTime})
                 val uploadStart = block(connection, { record -> record.time > lastUpload })
                 if (uploadStart != null)
                     lastUploads[port.descriptivePortName] = uploadStart
@@ -47,8 +50,7 @@ private fun uploadRecords(nightscout: Nightscout?, nightscout_url: String?, okHt
 
 fun main(args: Array<String>) {
     val okHttpClient = OkHttpClient()
-    okHttpClient.setCache(Cache(File("/tmp/ok"), 1024 * 1024 * 50))
-    val startTime = DateTime.now() - Period.months(3)
+    okHttpClient.cache = Cache(File("/tmp/ok"), 1024 * 1024 * 50)
     var lastUploads = ConcurrentHashMap<String, DateTime>().withDefault { startTime }
     val nightscout_url = System.getenv("NIGHTSCOUT_HOST") ?: args.getOrNull(0)
     val nightscout = if (nightscout_url == null) {
@@ -103,7 +105,8 @@ fun main(args: Array<String>) {
         threads.forEach { it.join() }
         threads.clear()
         println("Time to read from devices: ${Duration(start, mid)}")
-        uploadRecords(nightscout, nightscout_url, okHttpClient, timeline)
+        timeline.events.forEach { println(it) }
+        //uploadRecords(nightscout, nightscout_url, okHttpClient, timeline)
         val end = Instant.now()
         println("Time to upload: ${Duration(mid, end)}")
 

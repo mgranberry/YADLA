@@ -20,7 +20,7 @@ import java.util.*
 class TandemPump(private val source: BufferedSource, private val sink: BufferedSink) : InsulinPump, Glucometer {
 
     companion object {
-        @JvmField final val EPOCH = Instant.parse("2008-01-01T00:00:00")
+        @JvmField final val EPOCH = Instant.parse("2008-01-01T00:00:00Z")
         const val ITERATION_STEP = 200
         public val source: String get() = "alrightypump-tandem-$serial"
         private var _serial = ""
@@ -373,7 +373,7 @@ operator fun MutableMap<Int,TandemProfile>.invoke(idp: Idp) {
                     name = idp.name.trim(0.toChar()))
         }
         Idp.OP_DELETE -> {
-            this -= idp.idp
+            this.remove(idp.idp)
         }
         Idp.OP_NEW -> {
             this += idp.idp to TandemProfile(idp = idp.idp, name = idp.name)

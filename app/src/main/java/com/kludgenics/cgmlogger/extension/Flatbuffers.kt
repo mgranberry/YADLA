@@ -9,7 +9,7 @@ fun PathDataBuffer.nodeSequence(): Sequence<PathDataNodeBuffer> {
     var idx: Int = 0
     val max = this.nodesLength()
     val nb = PathDataNodeBuffer()
-    return sequence ({idx = 0; if (idx < max) nodes(nb, idx) else null }) {
+    return generateSequence({idx = 0; if (idx < max) nodes(nb, idx) else null }) {
         idx++
         if (idx < max)
             nodes(nb, idx)
@@ -19,12 +19,11 @@ fun PathDataBuffer.nodeSequence(): Sequence<PathDataNodeBuffer> {
 
 fun PathDataBuffer.nodeIterator() = nodeSequence().iterator()
 
-
 fun BloodGlucoseDay.bloodGlucoseSequence(): Sequence<BloodGlucose> {
     var idx: Int = 0
     val max = this.valuesLength()
     val b = BloodGlucose()
-    return sequence ({idx = 0; if (idx < max) values(b, idx) else null }) {
+    return generateSequence({idx = 0; if (idx < max) values(b, idx) else null }) {
         idx++
         if (idx < max)
             values(b, idx)

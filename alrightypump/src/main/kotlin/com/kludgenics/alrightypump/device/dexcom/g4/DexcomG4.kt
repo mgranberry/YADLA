@@ -8,7 +8,6 @@ import okio.BufferedSource
 import org.joda.time.Chronology
 import org.joda.time.Instant
 import org.joda.time.chrono.ISOChronology
-import kotlin.Iterator
 
 /**
  * Created by matthias on 11/5/15.

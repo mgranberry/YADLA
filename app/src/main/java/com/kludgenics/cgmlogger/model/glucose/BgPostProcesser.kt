@@ -55,7 +55,7 @@ object BgPostprocessor: AnkoLogger {
         }.forEach {
             info("Refreshing ${DateTime(it.start)} to ${DateTime(it.start) + Duration(it.duration)}")
             it.bgRecords.clear()
-            it.bgRecords.addAll(BGs.getOrImplicitDefault(it.start))
+            it.bgRecords.addAll(BGs.getOrElse(it.start, {emptyList<BloodGlucoseRecord>()}))
             it.data = it.populateData()
             info("Refreshed")
         }

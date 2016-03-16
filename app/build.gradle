@@ -1,5 +1,4 @@
 buildscript {
-    ext.realm_version = '0.87.1'
     ext.play_services_version = '8.3.0'
     ext.android_support_version = '23.1.1'
     repositories {
@@ -10,13 +9,14 @@ buildscript {
         classpath 'io.fabric.tools:gradle:1.20.1'
         classpath 'com.android.tools.build:gradle:2.0.0-alpha1'
         classpath 'com.getkeepsafe.dexcount:dexcount-gradle-plugin:0.3.1'
+        classpath "io.realm:realm-gradle-plugin:0.88.1"
     }
 }
 
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
-// apply plugin: 'com.getkeepsafe.dexcount'
 apply plugin: 'io.fabric'
+apply plugin: 'realm-android'
 
 repositories {
     jcenter()
@@ -76,9 +76,8 @@ dependencies {
     compile "com.google.android.gms:play-services-gcm:$play_services_version"
     compile 'com.squareup.retrofit:retrofit:2.0.0-beta2'
     compile 'com.squareup.okhttp:okhttp:2.5.0'
-    compile "io.realm:realm-android:$realm_version"
-    kapt "io.realm:realm-android:$realm_version"
-    compile 'org.jetbrains.anko:anko-sdk21:0.8'
+    kapt "io.realm:realm-android:0.87.5"
+    compile 'org.jetbrains.anko:anko-sdk21:0.8.2'
     // sdk19, sdk21, sdk23 are also available
     compile 'net.danlew:android.joda:2.9.0@aar'
     compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"

@@ -35,7 +35,7 @@ public abstract class AbstractBgChartView(context: Context, attrs: AttributeSet?
         propertyMetadata: KProperty<*>, previous: Int, current: Int ->
         info("setting lowLine to $current")
         if (current == 0) {
-            boundedPaths.removeRaw(lowPath)
+            boundedPaths.remove(lowPath)
             lowPath = null
         }
         else {
@@ -51,7 +51,7 @@ public abstract class AbstractBgChartView(context: Context, attrs: AttributeSet?
         propertyMetadata: KProperty<*>, previous: Int, current: Int ->
         info("setting targetLine to $current")
         if (current == 0) {
-            boundedPaths.removeRaw(targetPath)
+            boundedPaths.remove(targetPath)
             targetPath = null
         }
         else {
@@ -67,7 +67,7 @@ public abstract class AbstractBgChartView(context: Context, attrs: AttributeSet?
         propertyMetadata: KProperty<*>, previous: Int, current: Int ->
         info("setting highLine to $current")
         if (current == 0) {
-            boundedPaths.removeRaw(highPath)
+            boundedPaths.remove(highPath)
             highPath = null
         }
         else {

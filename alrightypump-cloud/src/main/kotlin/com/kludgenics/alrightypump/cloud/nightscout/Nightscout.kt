@@ -14,6 +14,7 @@ import org.joda.time.Chronology
 import org.joda.time.Instant
 import retrofit.MoshiConverterFactory
 import retrofit.Retrofit
+import java.nio.charset.Charset
 import java.security.MessageDigest
 import java.util.*
 import javax.inject.Inject
@@ -121,7 +122,7 @@ class Nightscout @Inject constructor (@Named("Nightscout") val url: HttpUrl,
             }.partition {
                 it.first < 1000
             }
-            val batch = r.first.map { it.second }.toArrayList()
+            val batch = r.first.map { it.second }.toMutableList()
             entryRecords = r.second.map { it.second }
             try {
                 if (!batch.isEmpty())
@@ -168,7 +169,7 @@ class Nightscout @Inject constructor (@Named("Nightscout") val url: HttpUrl,
 
     private fun calculateSecretHash(secret: String): String {
         val digestBytes = MessageDigest.getInstance("SHA-1")
-                .digest(secret.toByteArray("utf8"));
+                .digest(secret.toByteArray(Charset.forName("utf8")));
         return ByteString.of(*digestBytes).hex()
     }
 

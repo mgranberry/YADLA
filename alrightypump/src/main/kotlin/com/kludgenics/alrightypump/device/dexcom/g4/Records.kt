@@ -3,8 +3,7 @@ package com.kludgenics.alrightypump.device.dexcom.g4
 import com.kludgenics.alrightypump.*
 import com.kludgenics.alrightypump.therapy.*
 import okio.Buffer
-import org.joda.time.Duration
-import org.joda.time.Instant
+import org.joda.time.*
 import java.util.*
 
 /**
@@ -32,7 +31,7 @@ interface RecordPage {
         const final val METER_DATA = 10
         const final val USER_EVENT_DATA = 11
         const final val USER_SETTING_DATA = 12
-        final val EPOCH = Instant.parse("2009-01-01T00:00:00")
+        final val EPOCH = Instant.parse("2009-01-01T00:00:00Z")
 
         public fun parse(buffer: Buffer): RecordPage? {
             buffer.require(9)

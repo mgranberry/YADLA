@@ -17,6 +17,11 @@ object Opcodes {
     const final val TRANSMITTER_TIME_RESPONSE = 0x25
     const final val GLUCOSE_COMMAND = 0x30
     const final val GLUCOSE_RESPONSE = 0x31
+    const final val CALIBRATION_STATE_READ_COMMAND=0x32
+    const final val CALIBRATION_STATE_READ_RESPONSE=0x33
+    const final val CALIBRATION_STATE_WRITE_COMMAND=0x34
+    const final val CALIBRATION_STATE_WRITE_RESPONSE=0x35
+
     const final val SENSOR_COMMAND = 0x2e
     const final val SENSOR_RESPONSE = 0x2f
 }

@@ -1,12 +1,9 @@
 package com.kludgenics.cgmlogger.extension
-import com.kludgenics.cgmlogger.model.realm.glucose.BloodGlucoseRecord
 import io.realm.Realm
 import io.realm.RealmObject
 import io.realm.RealmQuery
 import io.realm.RealmResults
 import io.realm.exceptions.RealmException
-import org.joda.time.DateTime
-import java.util.*
 
 
 inline fun <reified T> Realm.transaction(init: Realm.() -> T): T {
@@ -79,10 +76,6 @@ inline fun <T: RealmObject> RealmQuery<T>.group(init: RealmQuery<T>.() -> RealmQ
     endGroup()
     return this
 }
-
-var BloodGlucoseRecord.dateTime: DateTime
-    get() = DateTime(date)
-    set(dt: DateTime) = { date = dt.toDate() }()
 
 data class UpdateResult<T: RealmObject>(val result: T, val changeMap: Map<String, String>)
 

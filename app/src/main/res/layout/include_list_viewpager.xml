@@ -14,7 +14,13 @@
   ~ See the License for the specific language governing permissions and
   ~ limitations under the License.
   -->
-
+<layout>
+<data>
+    <import type="com.kludgenics.cgmlogger.app.viewmodel.ObservableStatus"/>
+    <variable
+        name="status"
+        type="com.kludgenics.cgmlogger.app.viewmodel.ObservableStatus" />
+</data>
 <android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/main_content"
@@ -32,6 +38,8 @@
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
             android:background="?attr/colorPrimary"
+            android:title="@{status.statusText}"
+            android:subtitle="@{status.modificationTime.toString()}"
             app:popupTheme="@style/ThemeOverlay.AppCompat.Light"
             app:layout_scrollFlags="scroll|enterAlways" />
 
@@ -45,6 +53,7 @@
 
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/fab"
+        android:visibility="gone"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="end|bottom"
@@ -54,3 +63,4 @@
         android:src="@drawable/ic_food_24dp" />
 
 </android.support.design.widget.CoordinatorLayout>
+</layout>

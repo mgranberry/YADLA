@@ -6,15 +6,19 @@ import com.kludgenics.alrightypump.device.dexcom.g4.DexcomG4
 import com.kludgenics.alrightypump.device.tandem.*
 import com.kludgenics.alrightypump.therapy.ConcurrentSkipListTherapyTimeline
 import com.kludgenics.alrightypump.therapy.Record
-import com.squareup.okhttp.Cache
-import com.squareup.okhttp.HttpUrl
-import com.squareup.okhttp.OkHttpClient
+import okhttp3.Cache
+import okhttp3.HttpUrl
+import okhttp3.OkHttpClient
+import okhttp3.ResponseBody
 import org.joda.time.*
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 import java.io.File
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.concurrent.thread
 
-val startTime = LocalDateTime.now() - Period.years(30)
+val startTime = LocalDateTime.now() - Period.days(14)
 val t = DateTime()
 
 private fun downloadRecords(threads: MutableList<Thread>, lastUploads: MutableMap<String, LocalDateTime>, port: SerialPort,
@@ -38,16 +42,22 @@ private fun downloadRecords(threads: MutableList<Thread>, lastUploads: MutableMa
 
 private fun uploadRecords(nightscout: Nightscout?, nightscout_url: String?, okHttpClient: OkHttpClient, timeline: ConcurrentSkipListTherapyTimeline) {
     println("Uploading ${timeline.events.count()} records to $nightscout_url")
-    nightscout?.postRecords(timeline.events)
-    while (okHttpClient.dispatcher.queuedCallCount > 0) {
-        println("Waiting on ${okHttpClient.dispatcher.queuedCallCount} records to finish uploading.")
+    nightscout?.postRecords(timeline.events, object:Callback <ResponseBody> {
+        override fun onResponse(call: Call<ResponseBody>?, response: Response<ResponseBody>?) {
+        }
+
+        override fun onFailure(call: Call<ResponseBody>?, t: Throwable?) {
+        }
+
+    })
+    while (okHttpClient.dispatcher().queuedCallsCount() > 0) {
+        println("Waiting on ${okHttpClient.dispatcher().queuedCallsCount()} records to finish uploading.")
         Thread.sleep(1000)
     }
 }
 
 fun main(args: Array<String>) {
-    val okHttpClient = OkHttpClient()
-    okHttpClient.cache = Cache(File("/tmp/ok"), 1024 * 1024 * 50)
+    val okHttpClient = OkHttpClient.Builder().cache(Cache(File("/tmp/ok"), 1024 * 1024 * 50)).build()
     var lastUploads = ConcurrentHashMap<String, LocalDateTime>().withDefault { startTime }
     val nightscout_url = System.getenv("NIGHTSCOUT_HOST") ?: args.getOrNull(0)
     val nightscout = if (nightscout_url == null) {

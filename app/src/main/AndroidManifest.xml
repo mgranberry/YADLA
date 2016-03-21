@@ -41,23 +41,6 @@
             <meta-data android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED"
                        android:resource="@xml/device_filter" />
         </activity>
-        <activity android:name=".DetailActivity"/>
-        <activity android:name=".SettingsActivity"
-            android:theme="@style/Theme.AppCompat.Light"
-            android:parentActivityName=".MainActivity" >
-        <!-- Parent activity meta-data to support API level 7+ -->
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value=".MainActivity" />
-        </activity>
-        <service
-            android:name=".service.TaskService"
-            android:permission="com.google.android.gms.permission.BIND_NETWORK_TASK_SERVICE"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="com.google.android.gms.gcm.ACTION_TASK_READY"/>
-            </intent-filter>
-        </service>
-    </application>
+      </application>
 
 </manifest>

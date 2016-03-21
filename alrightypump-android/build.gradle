@@ -19,7 +19,6 @@ apply plugin: 'kotlin-android'
 repositories {
     jcenter()
     maven { url "https://jitpack.io" }
-    mavenCentral()
 }
 
 android {
@@ -41,11 +40,15 @@ android {
     sourceSets {
         main.java.srcDirs += 'src/main/kotlin'
     }
+    lintOptions {
+        abortOnError false
+    }
 }
 
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
     compile project(':alrightypump')
+    compile 'com.github.felHR85:UsbSerial:4.1.1'
     testCompile 'junit:junit:4.12'
     compile 'com.squareup.okio:okio:1.6.0'
     compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"

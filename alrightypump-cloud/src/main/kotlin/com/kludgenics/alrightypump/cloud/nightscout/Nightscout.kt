@@ -8,12 +8,13 @@ import com.kludgenics.alrightypump.device.dexcom.g4.DexcomCgmRecord
 import com.kludgenics.alrightypump.therapy.*
 import com.squareup.moshi.JsonDataException
 import com.squareup.moshi.Moshi
-import com.squareup.okhttp.*
+import okhttp3.*
 import okio.ByteString
 import org.joda.time.Chronology
 import org.joda.time.Instant
-import retrofit.MoshiConverterFactory
-import retrofit.Retrofit
+import retrofit2.Callback
+import retrofit2.Retrofit
+import retrofit2.converter.moshi.MoshiConverterFactory
 import java.nio.charset.Charset
 import java.security.MessageDigest
 import java.util.*
@@ -27,8 +28,7 @@ import javax.inject.Named
 class Nightscout @Inject constructor (@Named("Nightscout") val url: HttpUrl,
                                       okHttpClient: OkHttpClient) : InsulinPump,
         ContinuousGlucoseMonitor,
-        Glucometer
-{
+        Glucometer {
     override val profileRecords: Sequence<ProfileRecord>
         get() = throw UnsupportedOperationException()
     override val chronology: Chronology
@@ -37,7 +37,7 @@ class Nightscout @Inject constructor (@Named("Nightscout") val url: HttpUrl,
         get() = url.toString()
     override val bolusRecords: Sequence<BolusRecord>
         get() = throw UnsupportedOperationException()
-        //treatments.filter { it.insulin != null }.map { null }
+    //treatments.filter { it.insulin != null }.map { null }
     override val basalRecords: Sequence<BasalRecord>
         get() = throw UnsupportedOperationException()
     override val consumableRecords: Sequence<ConsumableRecord>
@@ -60,14 +60,14 @@ class Nightscout @Inject constructor (@Named("Nightscout") val url: HttpUrl,
     private val retrofit: Retrofit
     private val nightscoutApi: NightscoutApi
 
-    public val entries: Sequence<Record> get() = entries().mapNotNull {
+    val entries: Sequence<Record> get() = entries().mapNotNull {
         when (it.rawEntry) {
             is Record -> it
             else -> null
         }
     }
 
-    public fun entries(range: ClosedRange<Instant> = RestCallSequence.InstantRange(Instant.parse("2008-01-01T01:00:00Z"),
+    fun entries(range: ClosedRange<Instant> = RestCallSequence.InstantRange(Instant.parse("2008-01-01T01:00:00Z"),
             Instant.now())): Sequence<NightscoutEntryJson> {
         return (RestCallSequence(range) {
             start, end ->
@@ -78,8 +78,8 @@ class Nightscout @Inject constructor (@Named("Nightscout") val url: HttpUrl,
         })
     }
 
-    public val treatments: Sequence<NightscoutTreatment> get() = treatments()
-    public fun treatments(range: ClosedRange<Instant> = RestCallSequence.InstantRange(Instant.parse("2008-01-01T01:00:00Z"),
+    val treatments: Sequence<NightscoutTreatment> get() = treatments()
+    fun treatments(range: ClosedRange<Instant> = RestCallSequence.InstantRange(Instant.parse("2008-01-01T01:00:00Z"),
             Instant.now())): Sequence<NightscoutTreatment> {
         return RestCallSequence(range) {
             start, end ->
@@ -90,7 +90,8 @@ class Nightscout @Inject constructor (@Named("Nightscout") val url: HttpUrl,
         }
     }
 
-    public fun postRecords(records: Sequence<Record>) {
+    fun postRecords(records: Sequence<Record>,
+                    retrofitCallback: Callback<okhttp3.ResponseBody>) {
         var (treatmentRecords, entryRecords) = records.flatMap {
             when (it) {
                 is CalibrationRecord -> sequenceOf(NightscoutEntryJson(NightscoutCalJson(it)))
@@ -124,46 +125,21 @@ class Nightscout @Inject constructor (@Named("Nightscout") val url: HttpUrl,
             }
             val batch = r.first.map { it.second }.toMutableList()
             entryRecords = r.second.map { it.second }
-            try {
-                if (!batch.isEmpty())
-                    nightscoutApi.postRecords(batch).enqueue(object : retrofit.Callback<MutableList<NightscoutEntryJson>> {
-                        override fun onResponse(response: retrofit.Response<MutableList<NightscoutEntryJson>>?, retrofit: Retrofit?) {
-                        }
-
-                        override fun onFailure(t: Throwable?) {
-                        }
-
-                    })
-            } catch (e: JsonDataException) {
-
-            }
+            if (!batch.isEmpty())
+                nightscoutApi.postRecords(batch).enqueue(retrofitCallback)
         }
 
         val t = treatmentRecords.filterIsInstance<NightscoutTreatment>().fold(arrayListOf<NightscoutTreatment>()) {
             arrayList: ArrayList<NightscoutTreatment>, nightscoutTreatment: NightscoutTreatment ->
             if (arrayList.size >= 1000) {
-                nightscoutApi.postTreatments(arrayList).enqueue(object : retrofit.Callback<ResponseBody> {
-                    override fun onResponse(response: retrofit.Response<ResponseBody>?, retrofit: Retrofit?) {
-                    }
-
-                    override fun onFailure(t: Throwable?) {
-                    }
-
-                })
+                nightscoutApi.postTreatments(arrayList).enqueue(retrofitCallback)
                 arrayList.clear()
             }
             arrayList.add(nightscoutTreatment)
             arrayList
         }
         if (t.isNotEmpty()) {
-            nightscoutApi.postTreatments(t).enqueue(object : retrofit.Callback<ResponseBody> {
-                override fun onResponse(response: retrofit.Response<ResponseBody>?, retrofit: Retrofit?) {
-                }
-
-                override fun onFailure(t: Throwable?) {
-                }
-
-            })
+            nightscoutApi.postTreatments(t).enqueue(retrofitCallback)
         }
     }
 
@@ -185,10 +161,9 @@ class Nightscout @Inject constructor (@Named("Nightscout") val url: HttpUrl,
         NightscoutApi.registerTypeAdapters(moshiBuilder)
         val apiSecret = url.username()
         val baseUrl = url.newBuilder().username("").build()
-        okHttpClient.networkInterceptors().add(ApiSecretInterceptor(calculateSecretHash(apiSecret)))
         retrofit = Retrofit.Builder().addConverterFactory(MoshiConverterFactory.create(moshiBuilder.build()))
                 .baseUrl(baseUrl)
-                .client(okHttpClient)
+                .client(okHttpClient.newBuilder().addInterceptor(ApiSecretInterceptor(calculateSecretHash(apiSecret))).build())
                 .build()
         nightscoutApi = retrofit.create(NightscoutApi::class.java)
     }

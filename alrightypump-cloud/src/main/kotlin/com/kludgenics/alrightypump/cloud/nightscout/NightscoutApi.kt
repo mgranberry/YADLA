@@ -10,11 +10,11 @@ import com.squareup.moshi.FromJson
 import com.squareup.moshi.JsonDataException
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.ToJson
-import com.squareup.okhttp.RequestBody
-import com.squareup.okhttp.ResponseBody
+import okhttp3.RequestBody
+import okhttp3.ResponseBody
 import org.joda.time.*
-import retrofit.Call
-import retrofit.http.*
+import retrofit2.Call
+import retrofit2.http.*
 import java.text.DecimalFormat
 import java.util.*
 
@@ -111,7 +111,7 @@ open class NightscoutTreatment(private val _map: MutableMap<String, Any?>) : Nig
         val basalFormat = DecimalFormat("###.###")
     }
 
-    public val map: Map<String, Any?> get() = _map
+    val map: Map<String, Any?> get() = _map
 
     // these two aren't present, but it is useful to unify treatments and entries
     override val source: String get() = enteredBy
@@ -133,7 +133,7 @@ open class NightscoutTreatment(private val _map: MutableMap<String, Any?>) : Nig
     override val absolute: Double? by map
     override val profile: String? by map
 
-    public fun applyRecord(record: Record) {
+    fun applyRecord(record: Record) {
         _map.putAll(arrayOf<Pair<String, Any?>>(
                 "enteredBy" to record.source,
                 "created_at" to record.time.safeDateTime().toString(),
@@ -191,18 +191,15 @@ open class NightscoutTreatment(private val _map: MutableMap<String, Any?>) : Nig
 
 class NightscoutJsonAdapter {
 
-    @FromJson
-    public fun treatmentFromJson(map: MutableMap<String, Any?>): NightscoutTreatment {
+    @FromJson fun treatmentFromJson(map: MutableMap<String, Any?>): NightscoutTreatment {
         return NightscoutTreatment(map.withDefault { null })
     }
 
-    @ToJson
-    public fun treatmentToJson(treatment: NightscoutTreatment): Map<String, Any?> {
+    @ToJson fun treatmentToJson(treatment: NightscoutTreatment): Map<String, Any?> {
         return treatment.map
     }
 
-    @ToJson
-    public fun entryToJson(entry: NightscoutEntryJson): Map<String, Any?> {
+    @ToJson fun entryToJson(entry: NightscoutEntryJson): Map<String, Any?> {
         val map = hashMapOf<String, Any?>()
         map.putAll(arrayOf("date" to entry.time.safeDateTime().millis,
                 "dateString" to entry.dateString,
@@ -229,8 +226,7 @@ class NightscoutJsonAdapter {
         return map
     }
 
-    @FromJson
-    public fun entryFromJson(entry: MutableMap<String, String>): NightscoutEntryJson {
+    @FromJson fun entryFromJson(entry: MutableMap<String, String>): NightscoutEntryJson {
         return when (entry["type"] ?:  null) {
             "sgv" -> {
                 NightscoutEntryJson(NightscoutSgvJson(id = entry["_id"] as String,
@@ -266,19 +262,19 @@ class NightscoutJsonAdapter {
     }
 }
 
-data class NightscoutEntryJson(public val rawEntry: NightscoutApiEntry) : NightscoutApiEntry by rawEntry
+data class NightscoutEntryJson(val rawEntry: NightscoutApiEntry) : NightscoutApiEntry by rawEntry
 
-data class NightscoutSgvJson(public override val id: String?,
-                             public override val type: String,
-                             public override val dateString: String,
-                             public override val time: LocalDateTime,
-                             public override val source: String,
-                             public override val sgv: Int,
-                             public override val direction: String?,
-                             public override val noise: Int?,
-                             public override val filtered: Int?,
-                             public override val unfiltered: Int?,
-                             public override val rssi: Int?) : NightscoutApiSgvEntry {
+data class NightscoutSgvJson(override val id: String?,
+                             override val type: String,
+                             override val dateString: String,
+                             override val time: LocalDateTime,
+                             override val source: String,
+                             override val sgv: Int,
+                             override val direction: String?,
+                             override val noise: Int?,
+                             override val filtered: Int?,
+                             override val unfiltered: Int?,
+                             override val rssi: Int?) : NightscoutApiSgvEntry {
     override val value: RawGlucoseValue
         get() = NightscoutGlucoseValue(this)
 
@@ -314,12 +310,12 @@ data class NightscoutSgvJson(public override val id: String?,
 
 }
 
-data class NightscoutMbgJson(public override val id: String?,
-                             public override val type: String,
-                             public override val dateString: String,
-                             public override val time: LocalDateTime,
-                             public override val source: String,
-                             public override val mbg: Int) : NightscoutApiMbgEntry {
+data class NightscoutMbgJson(override val id: String?,
+                             override val type: String,
+                             override val dateString: String,
+                             override val time: LocalDateTime,
+                             override val source: String,
+                             override val mbg: Int) : NightscoutApiMbgEntry {
     override val value: GlucoseValue
         get() = BaseGlucoseValue(mbg.toDouble(), GlucoseUnit.MGDL)
     override val manual: Boolean
@@ -331,15 +327,15 @@ data class NightscoutMbgJson(public override val id: String?,
             mbg = smbgRecord.value.mgdl!!.toInt())
 }
 
-data class NightscoutCalJson(public override val id: String? = null,
-                             public override val type: String,
-                             public override val dateString: String,
-                             public override val time: LocalDateTime,
-                             public override val source: String,
-                             public override val slope: Double,
-                             public override val intercept: Double,
-                             public override val scale: Double,
-                             public override val decay: Double? = null) : NightscoutApiCalEntry {
+data class NightscoutCalJson(override val id: String? = null,
+                             override val type: String,
+                             override val dateString: String,
+                             override val time: LocalDateTime,
+                             override val source: String,
+                             override val slope: Double,
+                             override val intercept: Double,
+                             override val scale: Double,
+                             override val decay: Double? = null) : NightscoutApiCalEntry {
     constructor (calibrationRecord: CalibrationRecord) : this(type = "cal", time = calibrationRecord.time,
             dateString = calibrationRecord.time.toString(),
             source = calibrationRecord.source,
@@ -380,7 +376,7 @@ interface NightscoutApi {
 
     @POST("/api/v1/entries.json")
     @Headers("Content-Type: application/json")
-    fun postRecords(@Body body: MutableList<NightscoutEntryJson>): Call<MutableList<NightscoutEntryJson>>
+    fun postRecords(@Body body: MutableList<NightscoutEntryJson>): Call<ResponseBody>
 
     @GET("/api/v1/treatments")
     fun getTreatmentsBefore(@Query("find[created_at][\$lt]") since: String): Call<MutableList<NightscoutTreatment>>

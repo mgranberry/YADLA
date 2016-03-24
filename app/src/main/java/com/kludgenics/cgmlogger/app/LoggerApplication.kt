@@ -8,6 +8,7 @@ import org.jetbrains.anko.debug
 import io.fabric.sdk.android.Fabric;
 import com.crashlytics.android.Crashlytics;
 import net.danlew.android.joda.JodaTimeAndroid
+import org.jetbrains.anko.async
 
 /**
  * Created by matthiasgranberry on 5/28/15.
@@ -16,14 +17,14 @@ class LoggerApplication : Application(), AnkoLogger {
     override fun onCreate() {
         super.onCreate()
         debug("start")
-        JodaTimeAndroid.init(this);
-        //Fabric.with(this, Crashlytics());
+        Fabric.with(this, Crashlytics());
         // should throw as migration is required
         debug("trying realm for migration")
-        val configuration = RealmConfiguration.Builder(this)
+        JodaTimeAndroid.init(this@LoggerApplication);
+
+        val configuration = RealmConfiguration.Builder(this@LoggerApplication)
                 .deleteRealmIfMigrationNeeded()
                 .build()
         Realm.setDefaultConfiguration(configuration)
-        Realm.getDefaultInstance().close()
     }
 }

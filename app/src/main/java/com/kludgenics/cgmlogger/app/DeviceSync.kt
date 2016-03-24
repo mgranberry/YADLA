@@ -1,6 +1,7 @@
 package com.kludgenics.cgmlogger.app
 
 import android.content.Context
+import android.hardware.usb.UsbDevice
 import com.kludgenics.alrightypump.android.AndroidDeviceHelper
 import com.kludgenics.alrightypump.device.Device
 import com.kludgenics.alrightypump.device.dexcom.g4.DexcomG4
@@ -19,6 +20,8 @@ import org.jetbrains.anko.asyncResult
 import org.joda.time.LocalDateTime
 import org.joda.time.Period
 import java.util.*
+import java.util.concurrent.Executor
+import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.Future
 
@@ -27,30 +30,7 @@ import java.util.concurrent.Future
  */
 object DeviceSync {
 
-    interface OnCompletionListner {
-        fun onComplete(therapyTimeline: TherapyTimeline)
-    }
-
-    val listeners: MutableList<OnCompletionListner> = ArrayList()
-
     val syncExecutorService = Executors.newCachedThreadPool()
-    var updating: Boolean = false
-
-    @Synchronized
-    fun addOnCompletionListener (onCompletionListner: OnCompletionListner) {
-        if (!listeners.contains(onCompletionListner))
-            listeners.add(onCompletionListner)
-    }
-
-    @Synchronized
-    fun removeOnCompletionListener (onCompletionListner: OnCompletionListner) {
-        if (listeners.contains(onCompletionListner))
-            listeners.remove(onCompletionListner)
-    }
-
-    @Synchronized
-    fun notifyOnCompletionListners (therapyTimeline: TherapyTimeline) =
-        listeners.forEach { it.onComplete(therapyTimeline) }
 
     private fun downloadTandem(therapyTimeline: TherapyTimeline, device: TandemPump,
                                fetchPredicate: (Record) -> Boolean): Record? {
@@ -58,7 +38,8 @@ object DeviceSync {
                 device.basalRecords, device.bolusRecords,
                 device.smbgRecords, device.consumableRecords,
                 device.profileRecords)
-        val source = device.bolusRecords.first().source
+        val source = device.records.filterIsInstance<Record>().first().source
+        println("source=$source")
         return therapyTimeline.events.filter { it.source == source }.lastOrNull()
     }
 
@@ -71,69 +52,16 @@ object DeviceSync {
         return therapyTimeline.events.filter { it.source == source }.lastOrNull()
     }
 
-    private fun updateStatus(device: Device, record: Record?) {
-        val realm = Realm.getDefaultInstance()
-        realm.use {
-            realm.create<RealmStatus> {
-                if (record != null) {
-                    modificationTime = record.time.toDate()
-                    statusText = Status.SUCCESS
-                    serialNumber = device.serialNumber
-                } else {
-                    modificationTime = Date()
-                    statusText = Status.FAILURE
-                    serialNumber = device.serialNumber
-                }
-            }
-        }
-    }
-
-    fun sync(context: Context, onComplete: ((TherapyTimeline?)->Unit)? = null): TherapyTimeline {
-        val therapyTimeline = ConcurrentSkipListTherapyTimeline()
-        println("in sync")
-        if (!updating) {
-            context.async() {
-                updating = true
-                val devices = AndroidDeviceHelper.getDevices(context)
-                devices.map {
-                    deviceEntry ->
-                    syncDevice(context, therapyTimeline, deviceEntry)
-                }.map { completedSerial ->
-                    println(completedSerial.get())
-                }.forEach { println(it); println(therapyTimeline.events.count()) }
-                updating = false
-                onComplete?.invoke(therapyTimeline)
-            }
-        } else {
-            onComplete?.invoke(null)
-        }
-        return therapyTimeline
-    }
-
-    fun syncDevice(context: Context, therapyTimeline: ConcurrentSkipListTherapyTimeline, deviceEntry: AndroidDeviceHelper.DeviceEntry): Future<String> {
-        println("Syncing ${deviceEntry.device.serialNumber}")
-        return context.asyncResult (syncExecutorService) {
-            try {
-                deviceEntry.serialConnection.use {
-                    val updateTime = /*getLatestSuccessFor(deviceEntry.device) ?:*/ LocalDateTime.now() - Period.days(3)
-                    val fetchPredicate = { record: Record -> record.time > LocalDateTime(updateTime) }
-                    val latestEvent = when (deviceEntry.device) {
-                        is DexcomG4 -> downloadDexcomG4(therapyTimeline, deviceEntry.device as DexcomG4,
-                                fetchPredicate)
-                        is TandemPump -> downloadTandem(therapyTimeline, deviceEntry.device as TandemPump,
-                                fetchPredicate)
-                        else -> null
-                    }
-                    println("sync of ${deviceEntry.device.serialNumber} ${latestEvent?.time} done")
-                    updateStatus(deviceEntry.device, latestEvent)
-                    deviceEntry.device.serialNumber
-                }
-            } catch (e: Exception) {
-                println("Exception caught: ${e.message}")
-                e.printStackTrace()
-                throw e
-            }
-        }
+    private fun createStatus(realm: Realm, device: Device): Int {
+        return realm.create<RealmStatus> {
+            syncStartTime = Date()
+            modificationTime = syncStartTime
+            serialNumber = device.serialNumber
+            statusCode = Status.CODE_DEVICE_READ_IN_PROGRESS
+            statusText = Status.IN_PROGRESS
+            icon = R.drawable.bluetooth_circle
+            active = true
+        }.syncId
     }
 
     private fun getLatestSuccessFor(device: Device): Date? {
@@ -143,7 +71,75 @@ object DeviceSync {
                 equalTo("serialNumber", device.serialNumber)
                 equalTo("statusText", Status.SUCCESS)
             }.findAllSorted("modificationTime", Sort.DESCENDING)
-            return updates.firstOrNull()?.modificationTime
+            return updates.firstOrNull()?.syncStartTime
+        }
+    }
+
+    private fun updateStatus(realm: Realm, syncId: Int, statusCode: Int, latestRecordTime: Date? = null, inProgress: Boolean = false) {
+        val status = realm.where<RealmStatus> {
+            equalTo("syncId", syncId)
+        }.findAllSorted("modificationTime", Sort.DESCENDING).firstOrNull()
+        if (status != null) {
+            realm.beginTransaction()
+            status.modificationTime = Date()
+            status.statusCode = statusCode
+            status.statusText = when (status.statusCode) {
+                Status.CODE_DEVICE_READ_IN_PROGRESS -> Status.IN_PROGRESS
+                Status.CODE_SUCCESS -> Status.SUCCESS
+                Status.CODE_FAILURE -> Status.FAILURE
+                else -> "Unknown status"
+            }
+            status.active = inProgress
+            status.latestRecordTime = latestRecordTime
+            realm.commitTransaction()
+        }
+    }
+
+    fun sync(context: Context, device: UsbDevice): TherapyTimeline {
+        val therapyTimeline = ConcurrentSkipListTherapyTimeline()
+        val deviceEntry = AndroidDeviceHelper.getDeviceEntry(context, device)
+        if (deviceEntry != null)
+            syncDevice(context, therapyTimeline, deviceEntry).get()
+        return therapyTimeline
+    }
+
+    fun stopDeviceSync(device: UsbDevice) {
+        val deviceKey = device.deviceName
+    }
+
+    fun syncDevice(context: Context, therapyTimeline: ConcurrentSkipListTherapyTimeline, deviceEntry: AndroidDeviceHelper.DeviceEntry): Future<String> {
+        println("Syncing ${deviceEntry.device.serialNumber}")
+        return context.asyncResult (syncExecutorService) {
+            try {
+                deviceEntry.serialConnection.use {
+                    val realm = Realm.getDefaultInstance()
+                    realm.use {
+                        val syncId = createStatus(realm, deviceEntry.device)
+                        try {
+                            val updateTime = getLatestSuccessFor(deviceEntry.device) ?: LocalDateTime.now() - Period.days(3)
+
+                            val fetchPredicate = { record: Record -> record.time > LocalDateTime(updateTime) }
+                            val latestEvent = when (deviceEntry.device) {
+                                is DexcomG4 -> downloadDexcomG4(therapyTimeline, deviceEntry.device as DexcomG4,
+                                        fetchPredicate)
+                                is TandemPump -> downloadTandem(therapyTimeline, deviceEntry.device as TandemPump,
+                                        fetchPredicate)
+                                else -> null
+                            }
+                            println("sync of ${deviceEntry.device.serialNumber} ${latestEvent?.time} done")
+                            updateStatus(realm, syncId, Status.CODE_SUCCESS, latestEvent?.time?.toDate(), inProgress = false)
+                        } catch (e: ArrayIndexOutOfBoundsException) {
+                            println("sync of ${deviceEntry.device.serialNumber} failed.")
+                            updateStatus(realm, syncId, Status.CODE_FAILURE, null, false)
+                        }
+                    }
+                    deviceEntry.device.serialNumber
+                }
+            } catch (e: Exception) {
+                println("Exception caught: ${e.message}")
+                e.printStackTrace()
+                throw e
+            }
         }
     }
 }

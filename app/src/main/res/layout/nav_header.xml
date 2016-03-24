@@ -13,6 +13,7 @@
         android:layout_height="wrap_content"
         android:textColor="@color/cardview_dark_background"
         android:textAppearance="@style/TextAppearance.AppCompat.Body1"
+        android:text="Hello World"
         tools:text="Hello World"/>
 
 </LinearLayout>

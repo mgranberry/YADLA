@@ -9,7 +9,9 @@ import okio.Source
 import okio.Sink
 import okio.Timeout
 
-class AndroidSerialConnection(val device: UsbDevice, deviceConnection: UsbDeviceConnection): Source, Sink {
+class AndroidSerialConnection(private val device: UsbDevice, private val deviceConnection: UsbDeviceConnection): Source, Sink {
+
+    val manufacturerName: String get() = device.manufacturerName
 
     private val serial: UsbSerialDevice = UsbSerialDevice.createUsbSerialDevice(device, deviceConnection)
 
@@ -34,7 +36,7 @@ class AndroidSerialConnection(val device: UsbDevice, deviceConnection: UsbDevice
 
     override fun close() {
         serial.close()
-    }
+     }
 
     override fun write(source: Buffer, byteCount: Long) {
         if (byteCount < 0) throw IllegalArgumentException("byteCount < 0: " + byteCount)

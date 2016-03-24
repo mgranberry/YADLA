@@ -10,4 +10,18 @@
     <dimen name="card_margin">16dp</dimen>
     <dimen name="fab_margin">16dp</dimen>
     <dimen name="list_item_avatar_size">40dp</dimen>
+
+    <dimen name="card_side_padding">16dp</dimen>
+    <dimen name="card_bottom_padding">16dp</dimen>
+    <dimen name="card_action_padding">8dp</dimen>
+
+    <dimen name="card_media_title_size">24sp</dimen>
+    <dimen name="card_media_title_top_padding">24dp</dimen>
+    <dimen name="card_media_subtext_size">14sp</dimen>
+
+    <dimen name="card_text_title_size">24sp</dimen>
+    <dimen name="card_text_title_top_padding">24dp</dimen>
+    <dimen name="card_text_subtext_size">12sp</dimen>
+    <dimen name="card_text_supporting_text_size">14sp</dimen>
+
 </resources>

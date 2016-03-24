@@ -6,7 +6,8 @@ buildscript {
         maven { url 'https://maven.fabric.io/public' }
     }
     dependencies {
-        classpath 'io.fabric.tools:gradle:1.20.1'
+        //noinspection GradleDynamicVersion
+        classpath 'io.fabric.tools:gradle:1+'
         classpath 'com.android.tools.build:gradle:2.0.0-beta7'
         classpath "io.realm:realm-gradle-plugin:0.88.2"
     }
@@ -46,8 +47,9 @@ android {
   //      minSdkVersion 15
         minSdkVersion 21
         targetSdkVersion 23
-        versionCode 1
-        versionName "1.0"
+        vectorDrawables.useSupportLibrary = true
+        versionCode 2
+        versionName "0.0"
     }
     packagingOptions {
         exclude 'META-INF/LICENSE.txt'
@@ -83,9 +85,10 @@ dependencies {
     compile "com.android.support:recyclerview-v7:$android_support_version"
     compile "com.android.support:cardview-v7:$android_support_version"
     compile "com.android.support:design:$android_support_version"
+    compile "com.android.support:appcompat-v7:$android_support_version"
     compile 'com.squareup.retrofit2:retrofit:2.0.0'
     compile 'com.squareup.okhttp3:okhttp:3.2.0'
- //   kapt "io.realm:realm-android:0.87.5"
+    compile 'org.ocpsoft.prettytime:prettytime:3.2.7.Final'
     kapt 'com.android.databinding:compiler:2.0.0-beta7'
     compile 'org.jetbrains.anko:anko-sdk21:0.8.3'
     compile 'org.jetbrains.anko:anko-support-v4:0.8.3'

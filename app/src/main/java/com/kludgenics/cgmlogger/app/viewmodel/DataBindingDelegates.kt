@@ -10,7 +10,7 @@ import kotlin.reflect.KProperty
 object DataBindingDelegates {
     fun <T: Any?> observable(fieldId: Int): ReadWriteProperty<DataBindingObservable?, T> = ObservableVar(fieldId)
     fun <T: Any?> observable(fieldId: Int, getter: ()->T, setter: (T)->Unit):
-            ReadWriteProperty<DataBindingObservable?, T>  = ObservableThing(fieldId, getter, setter)
+            ReadWriteProperty<DataBindingObservable?, T> = ObservableThing(fieldId, getter, setter)
 }
 
 private class ObservableVar<in R: DataBindingObservable, T>(val fieldId: Int) : ReadWriteProperty<R?, T> {

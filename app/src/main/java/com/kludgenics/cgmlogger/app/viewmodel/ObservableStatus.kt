@@ -1,17 +1,14 @@
 package com.kludgenics.cgmlogger.app.viewmodel
 
 import android.databinding.Bindable
-import android.databinding.BaseObservable
 import android.databinding.PropertyChangeRegistry
-
 import com.kludgenics.cgmlogger.app.BR
 import com.kludgenics.cgmlogger.app.R
 import io.realm.RealmChangeListener
 import io.realm.RealmObject
 import io.realm.annotations.Index
 import java.security.SecureRandom
-
-import java.util.Date
+import java.util.*
 
 /**
  * Created by matthias on 3/17/16.
@@ -36,7 +33,8 @@ interface Status {
     var active: Boolean
     var icon: Int
     var syncId: Int
-
+    var nextSync: Date?
+    var clockOffsetMillis: Long?
 }
 
 open class RealmStatus(override var modificationTime: Date = Date(),
@@ -47,7 +45,9 @@ open class RealmStatus(override var modificationTime: Date = Date(),
                        override var active: Boolean = false,
                        override var icon: Int = R.drawable.bluetooth_circle,
                        override var syncStartTime: Date = Date(),
-                       override var syncId: Int = SecureRandom().nextInt()) : Status, RealmObject() {
+                       override var syncId: Int = SecureRandom().nextInt(),
+                       override var nextSync: Date? = null,
+                       override var clockOffsetMillis: Long? = null) : Status, RealmObject() {
 }
 
 class ObservableStatus(private val s: RealmStatus) : DataBindingObservable, Status, RealmChangeListener {
@@ -67,7 +67,10 @@ class ObservableStatus(private val s: RealmStatus) : DataBindingObservable, Stat
     override var modificationTime: Date by DataBindingDelegates.observable(BR.modificationTime, {s.modificationTime}, {s.modificationTime=it})
 
     @get:Bindable
-    override var latestRecordTime: Date? by DataBindingDelegates.observable(BR._all, {s.latestRecordTime}, {s.latestRecordTime=it})
+    override var latestRecordTime: Date? by DataBindingDelegates.observable(BR.latestRecordTime, {s.latestRecordTime}, {s.latestRecordTime=it})
+
+    @get:Bindable
+    override var nextSync: Date? by DataBindingDelegates.observable(BR._all, {s.nextSync}, {s.nextSync=it})
 
     @get:Bindable
     override var statusText: String? by DataBindingDelegates.observable(BR.statusText, {s.statusText}, {s.statusText=it})
@@ -85,9 +88,12 @@ class ObservableStatus(private val s: RealmStatus) : DataBindingObservable, Stat
     override var statusCode: Int by DataBindingDelegates.observable(BR.statusCode, {s.statusCode}, {s.statusCode=it})
 
     @get:Bindable
-    override var syncStartTime: Date by DataBindingDelegates.observable(BR._all, {s.syncStartTime}, {s.syncStartTime=it})
+    override var syncStartTime: Date by DataBindingDelegates.observable(BR.syncStartTime, {s.syncStartTime}, {s.syncStartTime=it})
 
     @get:Bindable
-    override var syncId: Int by DataBindingDelegates.observable(BR._all, {s.syncId}, {s.syncId=it})
+    override var syncId: Int by DataBindingDelegates.observable(BR.syncId, {s.syncId}, {s.syncId=it})
+
+    @get:Bindable
+    override var clockOffsetMillis: Long? by DataBindingDelegates.observable(BR._all, {s.clockOffsetMillis}, {s.clockOffsetMillis=it})
 
 }

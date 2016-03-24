@@ -1,15 +1,9 @@
 package com.kludgenics.cgmlogger.app.viewmodel
 
 import android.animation.ObjectAnimator
-import android.animation.ValueAnimator
 import android.databinding.BindingAdapter
 import android.support.v4.view.animation.FastOutSlowInInterpolator
 import android.support.v7.widget.CardView
-import android.view.View
-import android.view.animation.Animation
-import android.view.animation.Interpolator
-import android.view.animation.RotateAnimation
-import android.view.animation.TranslateAnimation
 
 /**
  * Created by matthias on 3/21/16.

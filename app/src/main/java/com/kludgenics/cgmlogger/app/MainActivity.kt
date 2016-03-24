@@ -1,6 +1,5 @@
 package com.kludgenics.cgmlogger.app
 
-import android.animation.ObjectAnimator
 import android.content.Intent
 import android.databinding.DataBindingUtil
 import android.os.Bundle
@@ -10,19 +9,14 @@ import android.view.Menu
 import android.view.MenuItem
 import com.kludgenics.cgmlogger.app.adapter.CardAdapter
 import com.kludgenics.cgmlogger.app.databinding.ActivityMainBinding
-import com.kludgenics.cgmlogger.app.databinding.CardDeviceStatusBinding
 import com.kludgenics.cgmlogger.app.service.SyncService
 import com.kludgenics.cgmlogger.app.viewmodel.ObservableStatus
 import com.kludgenics.cgmlogger.app.viewmodel.RealmStatus
+import com.kludgenics.cgmlogger.extension.where
 import io.realm.Realm
-import org.jetbrains.anko.AnkoLogger
-import org.jetbrains.anko.async
-import org.joda.time.DateTime
-import org.joda.time.Period
-import org.ocpsoft.prettytime.PrettyTime
-import java.util.*
-import com.kludgenics.cgmlogger.extension.*
 import io.realm.Sort
+import org.jetbrains.anko.AnkoLogger
+import java.util.*
 
 public class MainActivity :  AppCompatActivity(), AnkoLogger {
 
@@ -37,8 +31,7 @@ public class MainActivity :  AppCompatActivity(), AnkoLogger {
         super.onCreate(savedInstanceState)
         val binding: ActivityMainBinding = DataBindingUtil.setContentView(this, R.layout.activity_main)
         binding.status = ObservableStatus(RealmStatus(active = true, modificationTime = Date(), statusText = "Hello World", serialNumber = "SM12345678"))
-        // TODO this is a query on the UI thread.  It would be nice if it could be done async,
-        // but the async versions of queries don't play well with distinct.
+        // TODO this is a query on the UI thread.  It would be nice if it could be done async, but the async versions of queries don't play well with
         binding.includedListViewpager.recycler.adapter = CardAdapter(
                 realm.where<RealmStatus>()
                         .findAllSorted("modificationTime", Sort.DESCENDING)

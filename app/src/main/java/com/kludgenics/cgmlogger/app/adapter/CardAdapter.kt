@@ -59,7 +59,6 @@ class CardAdapter(private val results: RealmResults<out RealmObject>) : Recycler
                 BindingViewHolder(statusBinding)
             }
             else -> throw UnsupportedOperationException()
-
         }
     }
 

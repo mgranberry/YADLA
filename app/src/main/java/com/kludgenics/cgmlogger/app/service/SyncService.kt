@@ -31,14 +31,26 @@ import retrofit2.Response
  */
 
 class SyncService : Service() {
-    inner class DisconnectReceiver : BroadcastReceiver() {
+    inner class IntentReceiver : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
-            if (intent.action == UsbManager.ACTION_USB_DEVICE_DETACHED) {
-                val devices = intent.getParcelableArrayListExtra<UsbDevice>(UsbManager.EXTRA_DEVICE)
-                devices.forEach { DeviceSync.stopDeviceSync(it) }
+            when (intent.action) {
+                UsbManager.ACTION_USB_DEVICE_DETACHED -> {
+                    val devices = intent.getParcelableArrayListExtra<UsbDevice>(UsbManager.EXTRA_DEVICE)
+                    devices.forEach { DeviceSync.stopDeviceSync(it) }
+                }
+                ACTION_USB_PERMISSION -> {
+                    val permissionGranted = intent.getBooleanExtra(UsbManager.EXTRA_PERMISSION_GRANTED, false)
+                    println("received permission for device.  Granted? ${permissionGranted}")
+                    if (permissionGranted) {
+                        val device = intent.getParcelableExtra<UsbDevice>(UsbManager.EXTRA_DEVICE);
+                        performDeviceSync(device)
+                    } else {
+                        unregisterReceiver(this)
+                        stopSelf()
+                    }
+                }
             }
         }
-
     }
 
     companion object {
@@ -48,22 +60,7 @@ class SyncService : Service() {
 
     }
 
-     val receiver: BroadcastReceiver = object: BroadcastReceiver() {
-         override fun onReceive(context: Context, intent: Intent) {
-             val action = intent.action
-             if (ACTION_USB_PERMISSION == action) {
-                 val permissionGranted = intent.getBooleanExtra(UsbManager.EXTRA_PERMISSION_GRANTED, false)
-                 println("received permission for device.  Granted? ${permissionGranted}")
-                 if (permissionGranted) {
-                     val device = intent.getParcelableExtra<UsbDevice>(UsbManager.EXTRA_DEVICE);
-                     performDeviceSync(device)
-                 } else {
-                     unregisterReceiver(this)
-                     stopSelf()
-                 }
-             }
-         }
-     }
+     val receiver: BroadcastReceiver = IntentReceiver()
 
     override fun onBind(intent: Intent?): IBinder? {
         return null
@@ -112,17 +109,32 @@ class SyncService : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         val permissionIntent = PendingIntent.getBroadcast(this, 0, Intent(ACTION_USB_PERMISSION), 0);
-        val filter = IntentFilter(ACTION_USB_PERMISSION);
-        registerReceiver(receiver, filter);
-        AndroidDeviceHelper.getDexcomG4s(this).forEach { device ->
+        registerReceiver()
+        val tandemPumps = AndroidDeviceHelper.getTandemPumps(this)
+        val dexcomG4s = AndroidDeviceHelper.getDexcomG4s(this)
+        dexcomG4s.forEach { device ->
             println("requesting permisison for ${device}")
             usbManager.requestPermission(device, permissionIntent)
         }
-        AndroidDeviceHelper.getTandemPumps(this).forEach { device ->
+        tandemPumps.forEach { device ->
             println("requesting permisison for ${device}")
             usbManager.requestPermission(device, permissionIntent)
+        }
+        if (tandemPumps.isEmpty() && dexcomG4s.isEmpty()) {
+            unregisterReceiver()
+            stopSelf()
         }
         return Service.START_NOT_STICKY
     }
 
+    private fun registerReceiver() {
+        println("Registering Receiver")
+        val filter = IntentFilter(ACTION_USB_PERMISSION);
+        registerReceiver(receiver, filter);
+    }
+
+    private fun unregisterReceiver() {
+        println("Unregistering Receiver")
+        unregisterReceiver(receiver)
+    }
 }

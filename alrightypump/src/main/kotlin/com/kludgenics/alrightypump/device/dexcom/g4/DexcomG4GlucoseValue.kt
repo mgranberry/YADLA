@@ -6,9 +6,9 @@ import com.kludgenics.alrightypump.therapy.RawGlucoseValue
 /**
  * Created by matthias on 11/19/15.
  */
-public class DexcomG4GlucoseValue(val egvRecord: EgvRecord,
-                                  val sgvRecord: SgvRecord?,
-                                  override public var calibration: CalSetRecord?) : RawGlucoseValue {
+class DexcomG4GlucoseValue(val egvRecord: EgvRecord,
+                           val sgvRecord: SgvRecord?,
+                           override var calibration: CalSetRecord?) : RawGlucoseValue {
     override val filtered: Int?
         get() = sgvRecord?.filtered
     override val unfiltered: Int?

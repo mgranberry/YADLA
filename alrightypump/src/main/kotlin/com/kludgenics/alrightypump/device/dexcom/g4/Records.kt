@@ -32,7 +32,7 @@ interface RecordPage {
         const final val USER_SETTING_DATA = 12
         final val EPOCH = LocalDateTime.parse("2009-01-01T00:00:00")
 
-        public fun parse(buffer: Buffer): RecordPage? {
+        fun parse(buffer: Buffer): RecordPage? {
             buffer.require(9)
             val type = buffer.getByte(8).toInt() and 0xFF
             return when (type) {
@@ -67,18 +67,18 @@ interface DexcomRecord {
     val displayTime: LocalDateTime get() = toLocalDateTime(displaySeconds)
 }
 
-public data class PageHeader(public val index: Long,
-                             public val size: Long,
-                             public val recordType: Int,
-                             public val revision: Int,
-                             public val pageNumber: Int,
-                             public val r1: Int = 0,
-                             public val r2: Int = 0,
-                             public val r3: Int = 0,
-                             public val j1: Int = 0,
-                             public val j2: Int = 0) {
+data class PageHeader(val index: Long,
+                      val size: Long,
+                      val recordType: Int,
+                      val revision: Int,
+                      val pageNumber: Int,
+                      val r1: Int = 0,
+                      val r2: Int = 0,
+                      val r3: Int = 0,
+                      val j1: Int = 0,
+                      val j2: Int = 0) {
     companion object {
-        public fun parse(buffer: Buffer): PageHeader {
+        fun parse(buffer: Buffer): PageHeader {
             val index = buffer.uint32Le
             val size = buffer.uint32Le
             val recordType = buffer.uint8
@@ -94,11 +94,11 @@ public data class PageHeader(public val index: Long,
     }
 }
 
-public data class ManufacturingPage(public override val systemSeconds: Long,
-                                    public override val displaySeconds: Long,
-                                    val xml: String) : DexcomRecord {
+data class ManufacturingPage(override val systemSeconds: Long,
+                             override val displaySeconds: Long,
+                             val xml: String) : DexcomRecord {
     companion object {
-        public fun parse(buffer: Buffer): ManufacturingPage {
+        fun parse(buffer: Buffer): ManufacturingPage {
             buffer.require(35)
             val header = PageHeader.parse(buffer)
             val systemSeconds = 0L
@@ -109,10 +109,10 @@ public data class ManufacturingPage(public override val systemSeconds: Long,
     }
 }
 
-public data class ManufacturingData(public override val header: PageHeader,
-                                    public override val records: List<ManufacturingPage>) : RecordPage {
+data class ManufacturingData(override val header: PageHeader,
+                             override val records: List<ManufacturingPage>) : RecordPage {
     companion object {
-        public fun parse(buffer: Buffer): ManufacturingData {
+        fun parse(buffer: Buffer): ManufacturingData {
             val header = PageHeader.parse(buffer)
             val records = listOf(ManufacturingPage.parse(buffer))
             return ManufacturingData(header, records)
@@ -120,16 +120,16 @@ public data class ManufacturingData(public override val header: PageHeader,
     }
 }
 
-public data class EgvRecord(public val id: String,
-                            public override val systemSeconds: Long,
-                            public override val displaySeconds: Long,
-                            public val glucose: Int,
-                            public val rawGlucose: Int,
-                            public val trendArrow: Int,
-                            public val noise: Int,
-                            public val crc: Int, public val skipped: Boolean) : DexcomRecord {
+data class EgvRecord(val id: String,
+                     override val systemSeconds: Long,
+                     override val displaySeconds: Long,
+                     val glucose: Int,
+                     val rawGlucose: Int,
+                     val trendArrow: Int,
+                     val noise: Int,
+                     val crc: Int, val skipped: Boolean) : DexcomRecord {
     companion object {
-        public fun parse(id: String, buffer: Buffer): EgvRecord {
+        fun parse(id: String, buffer: Buffer): EgvRecord {
             buffer.require(13)
             val systemSeconds = buffer.uint32Le
             val displaySeconds = buffer.uint32Le
@@ -145,10 +145,10 @@ public data class EgvRecord(public val id: String,
     }
 }
 
-public data class EgvData(public override val header: PageHeader,
-                          public override val records: List<EgvRecord>) : RecordPage {
+data class EgvData(override val header: PageHeader,
+                   override val records: List<EgvRecord>) : RecordPage {
     companion object {
-        public fun parse(buffer: Buffer): EgvData {
+        fun parse(buffer: Buffer): EgvData {
             val header = PageHeader.parse(buffer)
             val records = ArrayList<EgvRecord>(header.size.toInt())
             for (i in 1..header.size)
@@ -158,28 +158,28 @@ public data class EgvData(public override val header: PageHeader,
     }
 }
 
-public data class CalSetRecord(public override val id: String,
-                               public override val systemSeconds: Long,
-                               public override val displaySeconds: Long,
-                               override public val slope: Double,
-                               override public val intercept: Double,
-                               override public val scale: Double,
-                               public val unk1: Int,
-                               public val unk2: Int,
-                               public val unk3: Int,
-                               override public val decay: Double,
-                               public val nRecs: Int,
-                               public val subRecords: List<CalSetRecord.CalSubRecord>) : DexcomRecord, Calibration, CalibrationRecord {
+data class CalSetRecord(override val id: String,
+                        override val systemSeconds: Long,
+                        override val displaySeconds: Long,
+                        override val slope: Double,
+                        override val intercept: Double,
+                        override val scale: Double,
+                        val unk1: Int,
+                        val unk2: Int,
+                        val unk3: Int,
+                        override val decay: Double,
+                        val nRecs: Int,
+                        val subRecords: List<CalSetRecord.CalSubRecord>) : DexcomRecord, Calibration, CalibrationRecord {
     override val time: LocalDateTime
         get() = displayTime
     override val source: String
         get() = DexcomG4.source
 
-    public data class CalSubRecord(public val systemSecondsEntered: Long,
-                                   public val systemSecondsApplied: Long,
-                                   public val calBg: Int, public val calRaw: Int, public val unknown: Int) {
+    data class CalSubRecord(val systemSecondsEntered: Long,
+                            val systemSecondsApplied: Long,
+                            val calBg: Int, val calRaw: Int, val unknown: Int) {
         companion object {
-            public fun parse(buffer: Buffer): CalSubRecord {
+            fun parse(buffer: Buffer): CalSubRecord {
                 val systemSecondsEntered = buffer.uint32Le
                 val calBg = buffer.int32Le
                 val calRaw = buffer.int32Le
@@ -191,7 +191,7 @@ public data class CalSetRecord(public override val id: String,
     }
 
     companion object {
-        public fun parse(id: String, buffer: Buffer, recordSize: Long): CalSetRecord {
+        fun parse(id: String, buffer: Buffer, recordSize: Long): CalSetRecord {
             val calBuffer = Buffer()
             calBuffer.write(buffer, recordSize)
             val systemSeconds = calBuffer.uint32Le
@@ -212,10 +212,10 @@ public data class CalSetRecord(public override val id: String,
     }
 }
 
-public data class CalData(public override val header: PageHeader,
-                          public override val records: List<CalSetRecord>) : RecordPage {
+data class CalData(override val header: PageHeader,
+                   override val records: List<CalSetRecord>) : RecordPage {
     companion object {
-        public fun parse(buffer: Buffer): CalData {
+        fun parse(buffer: Buffer): CalData {
             val header = PageHeader.parse(buffer)
             val records = ArrayList<CalSetRecord>(header.size.toInt())
             for (i in 1..header.size) {
@@ -227,11 +227,11 @@ public data class CalData(public override val header: PageHeader,
     }
 }
 
-public data class InsertionRecord(public override val id: String,
-                                  public override val systemSeconds: Long,
-                                  public override val displaySeconds: Long,
-                                  public val insertionSeconds: Int, public val insertionState: Int,
-                                  public val crc: Int) : DexcomRecord, CgmInsertionRecord {
+data class InsertionRecord(override val id: String,
+                           override val systemSeconds: Long,
+                           override val displaySeconds: Long,
+                           val insertionSeconds: Int, val insertionState: Int,
+                           val crc: Int) : DexcomRecord, CgmInsertionRecord {
     override val time: LocalDateTime
         get() = displayTime
     override val source: String
@@ -251,7 +251,7 @@ public data class InsertionRecord(public override val id: String,
         const final val BAD_TRANSMITTER = 8
         const final val MANUFACTURING_MODE = 9
 
-        public fun parse(id: String, buffer: Buffer): InsertionRecord {
+        fun parse(id: String, buffer: Buffer): InsertionRecord {
             val systemSeconds = buffer.uint32Le
             val displaySeconds = buffer.uint32Le
             val insertionSeconds = buffer.int32Le
@@ -263,10 +263,10 @@ public data class InsertionRecord(public override val id: String,
     }
 }
 
-public data class InsertionData(public override val header: PageHeader,
-                                public override val records: List<InsertionRecord>) : RecordPage {
+data class InsertionData(override val header: PageHeader,
+                         override val records: List<InsertionRecord>) : RecordPage {
     companion object {
-        public fun parse(buffer: Buffer): InsertionData {
+        fun parse(buffer: Buffer): InsertionData {
             val header = PageHeader.parse(buffer)
             val records = ArrayList<InsertionRecord>(header.size.toInt())
             for (i in 1..header.size)
@@ -276,12 +276,12 @@ public data class InsertionData(public override val header: PageHeader,
     }
 }
 
-public data class SgvRecord(public override val systemSeconds: Long,
-                            public override val displaySeconds: Long,
-                            public val unfiltered: Int, public val filtered: Int,
-                            public val rssi: Int, public val crc: Int) : DexcomRecord {
+data class SgvRecord(override val systemSeconds: Long,
+                     override val displaySeconds: Long,
+                     val unfiltered: Int, val filtered: Int,
+                     val rssi: Int, val crc: Int) : DexcomRecord {
     companion object {
-        public fun parse(buffer: Buffer): SgvRecord {
+        fun parse(buffer: Buffer): SgvRecord {
             buffer.require(16)
             val systemSeconds = buffer.uint32Le
             val displaySeconds = buffer.uint32Le
@@ -294,10 +294,10 @@ public data class SgvRecord(public override val systemSeconds: Long,
     }
 }
 
-public data class SgvData(public override val header: PageHeader,
-                          public override val records: List<SgvRecord>) : RecordPage {
+data class SgvData(override val header: PageHeader,
+                   override val records: List<SgvRecord>) : RecordPage {
     companion object {
-        public fun parse(buffer: Buffer): SgvData {
+        fun parse(buffer: Buffer): SgvData {
             val header = PageHeader.parse(buffer)
             val records = ArrayList<SgvRecord>(header.size.toInt())
             for (i in 1..header.size)
@@ -307,11 +307,11 @@ public data class SgvData(public override val header: PageHeader,
     }
 }
 
-public data class MeterRecord(public override val id: String,
-                              public override val systemSeconds: Long,
-                              public override val displaySeconds: Long,
-                              public val meterValue: Int, public val meterSeconds: Long,
-                              public val crc: Int) : SmbgRecord, DexcomRecord {
+data class MeterRecord(override val id: String,
+                       override val systemSeconds: Long,
+                       override val displaySeconds: Long,
+                       val meterValue: Int, val meterSeconds: Long,
+                       val crc: Int) : SmbgRecord, DexcomRecord {
     override val time: LocalDateTime
         get() = displayTime
     override val value: GlucoseValue
@@ -324,7 +324,7 @@ public data class MeterRecord(public override val id: String,
     val meterTime: LocalDateTime get() = DexcomRecord.toLocalDateTime(meterSeconds)
 
     companion object {
-        public fun parse(id: String, buffer: Buffer): MeterRecord {
+        fun parse(id: String, buffer: Buffer): MeterRecord {
             buffer.require(16)
             val systemSeconds = buffer.uint32Le
             val displaySeconds = buffer.uint32Le
@@ -336,10 +336,10 @@ public data class MeterRecord(public override val id: String,
     }
 }
 
-public data class MeterData(public override val header: PageHeader,
-                            public override val records: List<MeterRecord>) : RecordPage {
+data class MeterData(override val header: PageHeader,
+                     override val records: List<MeterRecord>) : RecordPage {
     companion object {
-        public fun parse(buffer: Buffer): MeterData {
+        fun parse(buffer: Buffer): MeterData {
             val header = PageHeader.parse(buffer)
             val records = ArrayList<MeterRecord>(header.size.toInt())
             for (i in 1..header.size)
@@ -355,20 +355,20 @@ interface EventRecord : Record, DexcomRecord {
         get() = DexcomG4.source
 }
 
-public data class FoodEventRecord(public override val id: String,
-                                  public override val time: LocalDateTime,
-                                  public override val carbohydrateGrams: Int,
-                                  override val rawRecord: UserEventRecord) : EventRecord, FoodRecord, DexcomRecord by rawRecord {
+data class FoodEventRecord(override val id: String,
+                           override val time: LocalDateTime,
+                           override val carbohydrateGrams: Int,
+                           override val rawRecord: UserEventRecord) : EventRecord, FoodRecord, DexcomRecord by rawRecord {
     constructor(rawRecord: UserEventRecord) : this(rawRecord.id,
             DexcomRecord.toLocalDateTime(rawRecord.eventSeconds),
             rawRecord.eventValue,
             rawRecord)
 }
 
-public data class InsulinEventRecord(public override val id: String,
-                                     public override val time: LocalDateTime,
-                                     public override val deliveredNormal: Double,
-                                     public override val rawRecord: UserEventRecord) : NormalBolusRecord, EventRecord,
+data class InsulinEventRecord(override val id: String,
+                              override val time: LocalDateTime,
+                              override val deliveredNormal: Double,
+                              override val rawRecord: UserEventRecord) : NormalBolusRecord, EventRecord,
         DexcomRecord by rawRecord {
     override val bolusWizard: BolusWizardRecord?
         get() = null
@@ -392,12 +392,12 @@ public data class InsulinEventRecord(public override val id: String,
         get() = null
 }
 
-public data class UserEventRecord(public override val id: String,
-                                  public override val systemSeconds: Long,
-                                  public override val displaySeconds: Long,
-                                  public val eventType: Int, public val eventSubtype: Int,
-                                  public val eventSeconds: Long, public val eventValue: Int,
-                                  public val crc: Int) : DexcomRecord, EventRecord {
+data class UserEventRecord(override val id: String,
+                           override val systemSeconds: Long,
+                           override val displaySeconds: Long,
+                           val eventType: Int, val eventSubtype: Int,
+                           val eventSeconds: Long, val eventValue: Int,
+                           val crc: Int) : DexcomRecord, EventRecord {
     companion object {
         const final val EVENT_TYPE_CARBS = 1
         const final val EVENT_TYPE_INSULIN = 2
@@ -415,7 +415,7 @@ public data class UserEventRecord(public override val id: String,
         const final val EVENT_SUBTYPE_EXERCISE_MEDIUM = 2
         const final val EVENT_SUBTYPE_EXERCISE_HEAVY = 3
 
-        public fun parse(id: String, buffer: Buffer): EventRecord {
+        fun parse(id: String, buffer: Buffer): EventRecord {
             buffer.require(16)
             val systemSeconds = buffer.uint32Le
             val displaySeconds = buffer.uint32Le
@@ -439,11 +439,11 @@ public data class UserEventRecord(public override val id: String,
         get() = this
 }
 
-public data class UserEventData(public override val header: PageHeader,
-                                public override val records: List<EventRecord>) :
+data class UserEventData(override val header: PageHeader,
+                         override val records: List<EventRecord>) :
         RecordPage {
     companion object {
-        public fun parse(buffer: Buffer): UserEventData {
+        fun parse(buffer: Buffer): UserEventData {
             val header = PageHeader.parse(buffer)
             val records = ArrayList<EventRecord>(header.size.toInt())
             for (i in 1..header.size)
@@ -453,19 +453,18 @@ public data class UserEventData(public override val header: PageHeader,
     }
 }
 
-public data class UserSettingsRecord(public override val systemSeconds: Long,
-                                     public override val displaySeconds: Long,
-                                     public val systemOffset: Long, public val displayOffset: Int,
-                                     public val transmitterId: Long, public val enableFlags: Long,
-                                     public val highAlarmValue: Int, public val highAlarmSnooze: Int,
-                                     public val lowAlarmValue: Int, public val lowAlarmSnooze: Int,
-                                     public val riseRateValue: Int, public val fallRateValue: Int,
-                                     public val outOfRangeSnooze: Int, public val language: Int,
-                                     public val alarmProfile: Int, public val setUpState: Int,
-                                     public val reserved: Int, public val crc: Int) : DexcomRecord {
+data class UserSettingsRecord(override val systemSeconds: Long,
+                              override val displaySeconds: Long,
+                              val systemOffset: Long, val displayOffset: Int,
+                              val transmitterId: Long, val enableFlags: Long,
+                              val highAlarmValue: Int, val highAlarmSnooze: Int,
+                              val lowAlarmValue: Int, val lowAlarmSnooze: Int,
+                              val riseRateValue: Int, val fallRateValue: Int,
+                              val outOfRangeSnooze: Int, val language: Int,
+                              val alarmProfile: Int, val setUpState: Int,
+                              val reserved: Int, val crc: Int) : DexcomRecord {
     companion object {
-        @JvmStatic
-        public fun parse(buffer: Buffer): UserSettingsRecord {
+        @JvmStatic fun parse(buffer: Buffer): UserSettingsRecord {
             buffer.require(48)
             val systemSeconds = buffer.uint32Le
             val displaySeconds = buffer.uint32Le
@@ -493,11 +492,11 @@ public data class UserSettingsRecord(public override val systemSeconds: Long,
     }
 }
 
-public data class UserSettingsData(public override val header: PageHeader,
-                                   public override val records: List<UserSettingsRecord>) :
+data class UserSettingsData(override val header: PageHeader,
+                            override val records: List<UserSettingsRecord>) :
         RecordPage {
     companion object {
-        public fun parse(buffer: Buffer): UserSettingsData {
+        fun parse(buffer: Buffer): UserSettingsData {
             val header = PageHeader.parse(buffer)
             val records = ArrayList<UserSettingsRecord>(header.size.toInt())
             for (i in 1..header.size)

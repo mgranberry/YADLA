@@ -2,8 +2,8 @@ package com.kludgenics.alrightypump.device.dexcom.g4
 
 import okio.Buffer
 
-public open class DexcomG4Request(override public val command: Int,
-                                  public val requestPayload: DexcomCommand) : DexcomG4Frame {
+open class DexcomG4Request(override val command: Int,
+                           val requestPayload: DexcomCommand) : DexcomG4Frame {
 
     init {
         if (command == 53)

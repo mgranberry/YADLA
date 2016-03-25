@@ -17,9 +17,9 @@ open class DexcomG4(private val source: BufferedSource,
                     private val sink: BufferedSink) : ContinuousGlucoseMonitor {
 
     companion object {
-        public val source: String get() = "alrightypump-Dexcom-G4-$serial"
+        val source: String get() = "alrightypump-Dexcom-G4-$serial"
         private var _serial = ""
-        public val serial: String get() = _serial
+        val serial: String get() = _serial
     }
 
     var rawEnabled = true
@@ -51,15 +51,15 @@ open class DexcomG4(private val source: BufferedSource,
     override val outOfRangeLow: Double
         get() = 39.0
 
-    public val egvRecords: Sequence<EgvRecord> get() = DataPageIterator<EgvRecord>(RecordPage.EGV_DATA).asSequence()
-    public val sgvRecords: Sequence<SgvRecord> get() = DataPageIterator<SgvRecord>(RecordPage.SENSOR_DATA).asSequence()
-    public val eventRecords: Sequence<EventRecord> get() = DataPageIterator<EventRecord>(RecordPage.USER_EVENT_DATA).asSequence()
-    public val settingsRecords: Sequence<UserSettingsRecord> get() = DataPageIterator<UserSettingsRecord>(RecordPage.USER_SETTING_DATA).asSequence()
-    public val calibrationRecords: Sequence<CalSetRecord> get() = DataPageIterator<CalSetRecord>(RecordPage.CAL_SET).asSequence()
-    override public val consumableRecords: Sequence<InsertionRecord> get() = DataPageIterator<InsertionRecord>(RecordPage.INSERTION_TIME).asSequence()
+    val egvRecords: Sequence<EgvRecord> get() = DataPageIterator<EgvRecord>(RecordPage.EGV_DATA).asSequence()
+    val sgvRecords: Sequence<SgvRecord> get() = DataPageIterator<SgvRecord>(RecordPage.SENSOR_DATA).asSequence()
+    val eventRecords: Sequence<EventRecord> get() = DataPageIterator<EventRecord>(RecordPage.USER_EVENT_DATA).asSequence()
+    val settingsRecords: Sequence<UserSettingsRecord> get() = DataPageIterator<UserSettingsRecord>(RecordPage.USER_SETTING_DATA).asSequence()
+    val calibrationRecords: Sequence<CalSetRecord> get() = DataPageIterator<CalSetRecord>(RecordPage.CAL_SET).asSequence()
+    override val consumableRecords: Sequence<InsertionRecord> get() = DataPageIterator<InsertionRecord>(RecordPage.INSERTION_TIME).asSequence()
 
-    public val version: String? by lazy { requestVersion() }
-    public val databasePartitionInfo: String? by lazy { readDatabasePartitionInfo() }
+    val version: String? by lazy { requestVersion() }
+    val databasePartitionInfo: String? by lazy { readDatabasePartitionInfo() }
 
     private inner class DexcomCgmSequence(private val egvs: Sequence<EgvRecord>,
                                           private val sgvs: Sequence<SgvRecord>?,
@@ -148,7 +148,7 @@ open class DexcomG4(private val source: BufferedSource,
         }
     }
 
-    public fun ping(): Boolean {
+    fun ping(): Boolean {
         val command = Ping()
         val response = commandResponse(command)
         return response is Ping
@@ -169,7 +169,7 @@ open class DexcomG4(private val source: BufferedSource,
         return response.payloadString.utf8()
     }
 
-    public fun requestSerialNumber(): String {
+    fun requestSerialNumber(): String {
         val page = readDataPageRange(RecordPage.MANUFACTURING_DATA)
         if (page != null) {
             val pages = readDataPages(RecordPage.MANUFACTURING_DATA, page.first)
@@ -180,7 +180,7 @@ open class DexcomG4(private val source: BufferedSource,
         return _serial
     }
 
-    public fun readDataPages(recordType: Int, start: Int, count: Int = 1): List<RecordPage> {
+    fun readDataPages(recordType: Int, start: Int, count: Int = 1): List<RecordPage> {
         val response = commandResponse(ReadDataPages(recordType, start, count))
         return if (response is ReadDataPagesResponse)
             response.pages
@@ -188,14 +188,14 @@ open class DexcomG4(private val source: BufferedSource,
             emptyList()
     }
 
-    public fun readDataPageRange(recordType: Int): Pair<Int, Int>? {
+    fun readDataPageRange(recordType: Int): Pair<Int, Int>? {
         val response = commandResponse(ReadDataPageRange(recordType))
         return if (response is ReadDataPageRangeResponse)
             response.start to response.end
         else null
     }
 
-    public fun commandResponse(command: DexcomCommand): ResponsePayload {
+    fun commandResponse(command: DexcomCommand): ResponsePayload {
         val packet = DexcomG4Request(command.command, command).frame
         sink.write(packet, packet.size())
         val response = DexcomG4Response(source)

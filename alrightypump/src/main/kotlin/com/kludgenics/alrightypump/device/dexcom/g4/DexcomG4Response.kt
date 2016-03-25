@@ -16,7 +16,7 @@ class DexcomG4Response(source: BufferedSource) : DexcomG4Frame, ResponseFrame {
     override val frame: Buffer
     override val payloadLength: Long
     override val command: Int get() = frame.getByte(3).toInt() and 0xFF
-    override public val valid: Boolean
+    override val valid: Boolean
         get() = (expectedChecksum == calculatedChecksum) && command != NakResponse.COMMAND
 
     init {

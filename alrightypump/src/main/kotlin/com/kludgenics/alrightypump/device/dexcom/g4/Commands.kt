@@ -15,72 +15,82 @@ interface DexcomCommand {
 
 class NullResponse(payload: Buffer) : UnsupportedDexcomResponse(payload) {
     companion object {
-        public val COMMAND: Int = 0
+        val COMMAND: Int = 0
     }
-    override public val command: Int get() = COMMAND
+
+    override val command: Int get() = COMMAND
 }
 
 class AckResponse(payload: Buffer) : UnsupportedDexcomResponse(payload) {
     companion object {
-        public val COMMAND: Int = 1
+        val COMMAND: Int = 1
     }
-    override public val command: Int get() = COMMAND
+
+    override val command: Int get() = COMMAND
 }
 
 class NakResponse(payload: Buffer) : UnsupportedDexcomResponse(payload) {
     companion object {
-        public val COMMAND: Int = 2
+        val COMMAND: Int = 2
     }
-    override public val command: Int get() = COMMAND
+
+    override val command: Int get() = COMMAND
 }
 
 class InvalidCommandResponse(payload: Buffer) : UnsupportedDexcomResponse(payload) {
     companion object {
-        public val COMMAND: Int = 3
+        val COMMAND: Int = 3
     }
-    override public val command: Int get() = COMMAND
+
+    override val command: Int get() = COMMAND
 }
 
 class InvalidParam(payload: Buffer) : UnsupportedDexcomResponse(payload) {
     companion object {
-        public val COMMAND: Int = 4
+        val COMMAND: Int = 4
     }
-    override public val command: Int get() = COMMAND
+
+    override val command: Int get() = COMMAND
 }
 
 class IncompletePacket(payload: Buffer) : UnsupportedDexcomResponse(payload) {
     companion object {
-        public val COMMAND: Int = 5
+        val COMMAND: Int = 5
     }
-    override public val command: Int get() = COMMAND
+
+    override val command: Int get() = COMMAND
 }
 
 class ReceiverError(payload: Buffer) : UnsupportedDexcomResponse(payload) {
     companion object {
-        public val COMMAND: Int = 6
+        val COMMAND: Int = 6
     }
-    override public val command: Int get() = COMMAND
+
+    override val command: Int get() = COMMAND
 }
 
 class InvalidMode(payload: Buffer) : UnsupportedDexcomResponse(payload) {
     companion object {
-        public val COMMAND: Int = 7
+        val COMMAND: Int = 7
     }
-    override public val command: Int get() = COMMAND
+
+    override val command: Int get() = COMMAND
 }
 
 class Ping : DexcomCommand, ResponsePayload {
     companion object {
-        public val COMMAND: Int = 10
+        val COMMAND: Int = 10
     }
-    override public val command: Int get() = COMMAND
+
+    override val command: Int get() = COMMAND
 }
 
 class ReadFirmwareHeader : DexcomCommand {
     companion object {
-        public val COMMAND: Int = 11
+        val COMMAND: Int = 11
     }
-    override public val command: Int get() = COMMAND
+
+    override val command: Int get() = COMMAND
 }
 
 class ReadFirmwareHeaderResponse(payload: Buffer) : XmlDexcomResponse(payload) {
@@ -90,9 +100,10 @@ class ReadFirmwareHeaderResponse(payload: Buffer) : XmlDexcomResponse(payload) {
 
 class ReadDatabasePartitionInfo : DexcomCommand {
     companion object {
-        public val COMMAND: Int = 15
+        val COMMAND: Int = 15
     }
-    override public val command: Int get() = COMMAND
+
+    override val command: Int get() = COMMAND
 }
 
 class ReadDatabasePartitionInfoResponse(payload: Buffer) : XmlDexcomResponse(payload) {
@@ -102,21 +113,24 @@ class ReadDatabasePartitionInfoResponse(payload: Buffer) : XmlDexcomResponse(pay
 
 class ReadDataPageRange(val recordType: Int) : DexcomCommand {
     companion object {
-        public val COMMAND: Int = 16
+        val COMMAND: Int = 16
     }
-    override public val command: Int get() = COMMAND
-    override public val payload: Buffer get() = Buffer().writeByte(recordType)
+
+    override val command: Int get() = COMMAND
+    override val payload: Buffer get() = Buffer().writeByte(recordType)
 }
 
 class ReadDataPageRangeResponse(payload: Buffer) : ResponsePayload {
-    public val start: Int
-    public val end: Int
+    val start: Int
+    val end: Int
+
     init {
         payload.require(8)
         start = payload.readIntLe()
         end = payload.readIntLe()
     }
-    override public val command: Int get() = ReadDataPageRange.COMMAND
+
+    override val command: Int get() = ReadDataPageRange.COMMAND
 }
 
 /**
@@ -124,14 +138,16 @@ class ReadDataPageRangeResponse(payload: Buffer) : ResponsePayload {
  */
 class ReadDataPages(val recordType: Int, val start: Int, val count: Int = 1) : DexcomCommand {
     companion object {
-        public val COMMAND: Int = 17
+        val COMMAND: Int = 17
     }
-    public override val command: Int get() = COMMAND
-    public override val payload: Buffer get() = Buffer().writeByte(recordType).writeIntLe(start).writeByte(count)
+
+    override val command: Int get() = COMMAND
+    override val payload: Buffer get() = Buffer().writeByte(recordType).writeIntLe(start).writeByte(count)
 }
 
 class ReadDataPagesResponse(payload: Buffer, count: Int = 1) : ResponsePayload {
-    public val pages: List<RecordPage>
+    val pages: List<RecordPage>
+
     init {
         pages = ArrayList<RecordPage>(count)
         for (i in 1..count) {
@@ -140,14 +156,16 @@ class ReadDataPagesResponse(payload: Buffer, count: Int = 1) : ResponsePayload {
                 pages.add(page)
         }
     }
-    public override val command: Int get() = ReadDataPages.COMMAND
+
+    override val command: Int get() = ReadDataPages.COMMAND
 }
 
 class ReadDataPageHeader : DexcomCommand {
     companion object {
-        public val COMMAND: Int = 18
+        val COMMAND: Int = 18
     }
-    override public val command: Int get() = COMMAND
+
+    override val command: Int get() = COMMAND
 }
 
 class ReadDataPageHeaderResponse(payload: Buffer) : UnsupportedDexcomResponse(payload) {
@@ -158,9 +176,10 @@ class ReadDataPageHeaderResponse(payload: Buffer) : UnsupportedDexcomResponse(pa
 
 class ReadLanguage : DexcomCommand {
     companion object {
-        public val COMMAND: Int = 27
+        val COMMAND: Int = 27
     }
-    override public val command: Int get() = COMMAND
+
+    override val command: Int get() = COMMAND
 }
 
 class ReadLanguageResponse(payload: Buffer) : UnsupportedDexcomResponse(payload) {
@@ -170,9 +189,10 @@ class ReadLanguageResponse(payload: Buffer) : UnsupportedDexcomResponse(payload)
 
 class ReadDisplayTimeOffset : DexcomCommand {
     companion object {
-        public val COMMAND: Int = 29
+        val COMMAND: Int = 29
     }
-    override public val command: Int get() = COMMAND
+
+    override val command: Int get() = COMMAND
 }
 
 class ReadDisplayTimeOffsetResponse(payload: Buffer) : UnsupportedDexcomResponse(payload) {
@@ -183,9 +203,10 @@ class ReadDisplayTimeOffsetResponse(payload: Buffer) : UnsupportedDexcomResponse
 
 class ReadSystemTime : DexcomCommand {
     companion object {
-        public val COMMAND: Int = 34
+        val COMMAND: Int = 34
     }
-    override public val command: Int get() = COMMAND
+
+    override val command: Int get() = COMMAND
 }
 
 class ReadSystemTimeResponse(payload: Buffer) : UnsupportedDexcomResponse(payload) {
@@ -195,9 +216,10 @@ class ReadSystemTimeResponse(payload: Buffer) : UnsupportedDexcomResponse(payloa
 
 class ReadSystemTimeOffset : DexcomCommand {
     companion object {
-        public val COMMAND: Int = 35
+        val COMMAND: Int = 35
     }
-    override public val command: Int get() = COMMAND
+
+    override val command: Int get() = COMMAND
 }
 
 class ReadSystemTimeOffsetResponse(payload: Buffer) : UnsupportedDexcomResponse(payload) {
@@ -207,9 +229,10 @@ class ReadSystemTimeOffsetResponse(payload: Buffer) : UnsupportedDexcomResponse(
 
 class ReadGlucoseUnit : DexcomCommand {
     companion object {
-        public val COMMAND: Int = 37
+        val COMMAND: Int = 37
     }
-    override public val command: Int get() = COMMAND
+
+    override val command: Int get() = COMMAND
 }
 
 class ReadGlucoseUnitResponse(payload: Buffer) : UnsupportedDexcomResponse(payload) {
@@ -219,9 +242,10 @@ class ReadGlucoseUnitResponse(payload: Buffer) : UnsupportedDexcomResponse(paylo
 
 class ReadClockMode : DexcomCommand {
     companion object {
-        public val COMMAND: Int = 41
+        val COMMAND: Int = 41
     }
-    override public val command: Int get() = COMMAND
+
+    override val command: Int get() = COMMAND
 }
 
 class ReadClockModeResponse(payload: Buffer) : UnsupportedDexcomResponse(payload) {

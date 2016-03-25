@@ -5,8 +5,7 @@ import com.kludgenics.alrightypump.DateTimeChangeRecord
 import com.kludgenics.alrightypump.therapy.SmbgRecord
 import okio.BufferedSink
 import okio.BufferedSource
-import org.joda.time.Chronology
-import org.joda.time.LocalDateTime
+import org.joda.time.*
 import org.joda.time.chrono.ISOChronology
 
 /**
@@ -20,6 +19,15 @@ open class DexcomG4(private val source: BufferedSource,
         val source: String get() = "alrightypump-Dexcom-G4-$serial"
         private var _serial = ""
         val serial: String get() = _serial
+    }
+
+    override val timeCorrectionOffset: Duration? get() {
+        val receiverTime = requestTime()
+        println("receiverTime:$receiverTime localTime:${LocalDateTime.now()}")
+        return if (receiverTime != null)
+            Duration(receiverTime.toDateTime(), DateTime.now())
+        else
+            null
     }
 
     var rawEnabled = true
@@ -169,12 +177,26 @@ open class DexcomG4(private val source: BufferedSource,
         return response.payloadString.utf8()
     }
 
+    fun requestTime(): LocalDateTime? {
+        val offsetResponse = commandResponse(ReadDisplayTimeOffset()) as? ReadDisplayTimeOffsetResponse
+        return if (offsetResponse != null) {
+            val timeResponse = commandResponse(ReadSystemTime()) as? ReadSystemTimeResponse
+            if (timeResponse != null) {
+                RecordPage.EPOCH + Duration((timeResponse.time.toLong()+offsetResponse.offset.toLong())*1000)
+            }
+            else
+                null
+        } else
+            null
+    }
+
     fun requestSerialNumber(): String {
         val page = readDataPageRange(RecordPage.MANUFACTURING_DATA)
         if (page != null) {
             val pages = readDataPages(RecordPage.MANUFACTURING_DATA, page.first)
             pages.filterIsInstance<ManufacturingData>().flatMap { it.records }.forEach {
                 _serial = it.xml.substringAfter("SerialNumber=\"").substringBefore('"')
+
             }
         }
         return _serial

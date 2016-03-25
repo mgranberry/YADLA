@@ -11,6 +11,7 @@ import com.squareup.moshi.Moshi
 import okhttp3.*
 import okio.ByteString
 import org.joda.time.Chronology
+import org.joda.time.Duration
 import org.joda.time.Instant
 import retrofit2.Callback
 import retrofit2.Retrofit
@@ -29,6 +30,8 @@ class Nightscout @Inject constructor (@Named("Nightscout") val url: HttpUrl,
                                       okHttpClient: OkHttpClient) : InsulinPump,
         ContinuousGlucoseMonitor,
         Glucometer {
+    override val timeCorrectionOffset: Duration?
+        get() = Duration.ZERO
     override val profileRecords: Sequence<ProfileRecord>
         get() = throw UnsupportedOperationException()
     override val chronology: Chronology

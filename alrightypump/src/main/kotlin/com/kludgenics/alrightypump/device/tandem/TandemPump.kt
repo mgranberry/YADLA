@@ -10,6 +10,7 @@ import com.kludgenics.alrightypump.therapy.SmbgRecord
 import okio.BufferedSink
 import okio.BufferedSource
 import org.joda.time.Chronology
+import org.joda.time.Duration
 import org.joda.time.LocalDateTime
 import org.joda.time.chrono.ISOChronology
 import java.util.*
@@ -18,6 +19,8 @@ import java.util.*
  * Created by matthias on 11/19/15.
  */
 class TandemPump(private val source: BufferedSource, private val sink: BufferedSink) : InsulinPump, Glucometer {
+    override val timeCorrectionOffset: Duration?
+        get() = Duration(commandResponse(VersionReq()).timestamp.toDateTime(), LocalDateTime.now().toDateTime())
 
     companion object {
         @JvmField final val EPOCH = LocalDateTime.parse("2008-01-01T00:00:00")

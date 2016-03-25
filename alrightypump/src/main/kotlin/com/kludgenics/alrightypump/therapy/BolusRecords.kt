@@ -52,5 +52,4 @@ interface BolusWizardRecord: Record {
 interface BloodGlucoseTarget {
     val targetLow: GlucoseValue
     val targetHigh: GlucoseValue
-    fun targetFor(value: GlucoseValue): GlucoseValue
 }

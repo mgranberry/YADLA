@@ -195,9 +195,16 @@ class ReadDisplayTimeOffset : DexcomCommand {
     override val command: Int get() = COMMAND
 }
 
-class ReadDisplayTimeOffsetResponse(payload: Buffer) : UnsupportedDexcomResponse(payload) {
+class ReadDisplayTimeOffsetResponse(payload: Buffer) : ResponsePayload {
     override val command: Int
         get() = ReadDisplayTimeOffset.COMMAND
+
+    val offset: Int
+    init {
+        payload.require(4)
+        offset = payload.readIntLe()
+    }
+
 }
 
 
@@ -209,9 +216,15 @@ class ReadSystemTime : DexcomCommand {
     override val command: Int get() = COMMAND
 }
 
-class ReadSystemTimeResponse(payload: Buffer) : UnsupportedDexcomResponse(payload) {
+class ReadSystemTimeResponse(payload: Buffer) : ResponsePayload {
     override val command: Int
         get() = ReadSystemTime.COMMAND
+
+    val time: Long
+    init {
+        payload.require(4)
+        time = payload.readIntLe().toLong() and 0xFFFFFFFF
+    }
 }
 
 class ReadSystemTimeOffset : DexcomCommand {
@@ -222,9 +235,16 @@ class ReadSystemTimeOffset : DexcomCommand {
     override val command: Int get() = COMMAND
 }
 
-class ReadSystemTimeOffsetResponse(payload: Buffer) : UnsupportedDexcomResponse(payload) {
+class ReadSystemTimeOffsetResponse(payload: Buffer) : ResponsePayload {
     override val command: Int
         get() = ReadSystemTimeOffset.COMMAND
+
+    val offset: Int
+    init {
+        payload.require(4)
+        offset = payload.readIntLe()
+    }
+
 }
 
 class ReadGlucoseUnit : DexcomCommand {

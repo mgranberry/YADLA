@@ -52,7 +52,6 @@ public class MainActivity :  AppCompatActivity(), AnkoLogger {
     override fun onStart() {
         super.onStart()
         startService(Intent(this, SyncService::class.java))
-
     }
 
     override fun onStop() {

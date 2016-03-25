@@ -1,6 +1,5 @@
 package com.kludgenics.cgmlogger.app.service
 
-import android.app.IntentService
 import android.app.PendingIntent
 import android.app.Service
 import android.content.BroadcastReceiver
@@ -18,7 +17,6 @@ import com.kludgenics.cgmlogger.app.DeviceSync
 import okhttp3.HttpUrl
 import okhttp3.OkHttpClient
 import okhttp3.ResponseBody
-import org.jetbrains.anko.AnkoLogger
 import org.jetbrains.anko.async
 import org.jetbrains.anko.powerManager
 import org.jetbrains.anko.usbManager

@@ -8,6 +8,9 @@ import android.databinding.BindingAdapter
 import android.support.annotation.UiThread
 import android.util.AttributeSet
 import android.widget.TextView
+import com.kludgenics.cgmlogger.app.EventBus
+import com.kludgenics.cgmlogger.app.events.ActivityLifecycleEvent
+import com.squareup.otto.Subscribe
 import org.ocpsoft.prettytime.PrettyTime
 import org.ocpsoft.prettytime.TimeUnit
 import org.ocpsoft.prettytime.impl.ResourcesTimeFormat
@@ -24,7 +27,6 @@ import kotlin.reflect.KProperty
 object FuzzyAgeViewAdapter {
     @BindingAdapter("time") @JvmStatic
     fun setTime(view: FuzzyAgeView, time: Date?) {
-        println("$view setting time to $time")
         view.time = time
     }
 }
@@ -48,6 +50,8 @@ class FuzzyAgeView : TextView {
     })
 
     private var attached = false
+    private var registered = false
+
     private val prettyTime: PrettyTime
     private val intentReceiver: BroadcastReceiver = object: BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
@@ -76,6 +80,7 @@ class FuzzyAgeView : TextView {
     override fun onAttachedToWindow() {
         super.onAttachedToWindow()
         if (!attached) {
+            EventBus.instance.register(this)
             attached = true
             registerReciever()
             onTimeChanged()
@@ -85,24 +90,30 @@ class FuzzyAgeView : TextView {
     override fun onDetachedFromWindow() {
         super.onDetachedFromWindow()
         if (attached) {
+            EventBus.instance.unregister(this)
             unregisterReceiver()
             attached = false
         }
     }
 
+    @Synchronized
     private fun registerReciever() {
-        println("FuzzyAgeView registering Receiver")
-
-        val filter = IntentFilter()
-        filter.addAction(Intent.ACTION_TIME_TICK);
-        filter.addAction(Intent.ACTION_TIME_CHANGED);
-        filter.addAction(Intent.ACTION_TIMEZONE_CHANGED);
-        context.registerReceiver(intentReceiver, filter, null, handler)
+        if (!registered) {
+            registered = true
+            val filter = IntentFilter()
+            filter.addAction(Intent.ACTION_TIME_TICK);
+            filter.addAction(Intent.ACTION_TIME_CHANGED);
+            filter.addAction(Intent.ACTION_TIMEZONE_CHANGED);
+            context.registerReceiver(intentReceiver, filter, null, handler)
+        }
     }
 
+    @Synchronized
     private fun unregisterReceiver() {
-        println("FuzzyAgeView unregistering Receiver")
-        context.unregisterReceiver(intentReceiver)
+        if (registered) {
+            registered = false
+            context.unregisterReceiver(intentReceiver)
+        }
     }
 
     internal fun onTimeChanged() {
@@ -115,4 +126,15 @@ class FuzzyAgeView : TextView {
         }
     }
 
+    @Subscribe
+    fun activityLivecycleAvailable (activityLifecycleEvent: ActivityLifecycleEvent) {
+        if (activityLifecycleEvent.canonicalName == context.javaClass.canonicalName)
+            when (activityLifecycleEvent.event) {
+                ActivityLifecycleEvent.ON_PAUSE -> unregisterReceiver()
+                ActivityLifecycleEvent.ON_RESUME -> {
+                    registerReciever()
+                    onTimeChanged()
+                }
+            }
+    }
 }

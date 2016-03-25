@@ -13,9 +13,6 @@ data class TandemBloodGlucoseTarget(val target: GlucoseValue) : BloodGlucoseTarg
         get() = target
     override val targetHigh: GlucoseValue
         get() = target
-
-    override fun targetFor(value: GlucoseValue): GlucoseValue
-            = target
 }
 
 data class TandemBolusWizard(val event1: BolusRequest1,

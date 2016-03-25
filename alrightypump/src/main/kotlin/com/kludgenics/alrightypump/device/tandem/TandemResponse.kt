@@ -29,15 +29,15 @@ class TandemResponse(source: BufferedSource) : TandemFrame() {
         return buff
     }
     override val payload: Buffer
-    public val parsedPayload: Payload?
+    val parsedPayload: Payload?
 
     override val footer: Buffer
     override val expectedChecksum: Int
     override val frame: Buffer
     override val payloadLength: Long
-    public val timestamp: LocalDateTime
-    public val command: Int
-    override public val valid: Boolean
+    val timestamp: LocalDateTime
+    val command: Int
+    override val valid: Boolean
         get() = (expectedChecksum == calculatedChecksum)
 
     init {
@@ -65,26 +65,26 @@ class TandemResponse(source: BufferedSource) : TandemFrame() {
     }
 }
 
-data class TimeDependentSettings(public val startTime: LocalTime,
-                                 public val basalRate: Double?,
-                                 public val carbRatio: Double?,
-                                 public val targetBg: GlucoseValue?,
-                                 public val isf: Int?) // mask: basal/carb/target
+data class TimeDependentSettings(val startTime: LocalTime,
+                                 val basalRate: Double?,
+                                 val carbRatio: Double?,
+                                 val targetBg: GlucoseValue?,
+                                 val isf: Int?) // mask: basal/carb/target
 
-data class BolusSettings(public val insulinDuration: Duration?, // minutes
-                         public val maxBolus: Double,
-                         public val carbEntry: Boolean?) // mask: dur/max/carb
+data class BolusSettings(val insulinDuration: Duration?, // minutes
+                         val maxBolus: Double,
+                         val carbEntry: Boolean?) // mask: dur/max/carb
 
-data class QuickBolusSettings(public val useQuickBolus: Boolean?,
-                              public val incrementInsulin: Float?,
-                              public val incrementCarbs: Float?,
-                              public val incrementsCarbs: Boolean?) // mask: use/ins/carb/which
+data class QuickBolusSettings(val useQuickBolus: Boolean?,
+                              val incrementInsulin: Float?,
+                              val incrementCarbs: Float?,
+                              val incrementsCarbs: Boolean?) // mask: use/ins/carb/which
 
-data class Reminder(public val remindIn: Duration?, // minutes
-                    public val startTime: LocalTime?, // minutes from midnight
-                    public val endTime: LocalTime?,
-                    public val days: Int?, // bitmask mtwrfss
-                    public val active: Boolean) // mask: rin, act, start, end, days
+data class Reminder(val remindIn: Duration?, // minutes
+                    val startTime: LocalTime?, // minutes from midnight
+                    val endTime: LocalTime?,
+                    val days: Int?, // bitmask mtwrfss
+                    val active: Boolean) // mask: rin, act, start, end, days
 
 data class Ack (val command: Int, val success: Int) : Payload {
     constructor(source: BufferedSource) : this(source.readByte().toInt() and 0xFF, source.readByte().toInt() and 0xFF)

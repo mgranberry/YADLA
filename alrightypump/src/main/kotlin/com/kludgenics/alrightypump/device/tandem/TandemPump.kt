@@ -22,9 +22,9 @@ class TandemPump(private val source: BufferedSource, private val sink: BufferedS
     companion object {
         @JvmField final val EPOCH = LocalDateTime.parse("2008-01-01T00:00:00")
         const val ITERATION_STEP = 200
-        public val source: String get() = "alrightypump-tandem-$serial"
+        val source: String get() = "alrightypump-tandem-$serial"
         private var _serial = ""
-        public val serial: String get() = _serial
+        val serial: String get() = _serial
     }
 
     val recordCache = TreeMap<Int, LogEvent>()
@@ -34,7 +34,7 @@ class TandemPump(private val source: BufferedSource, private val sink: BufferedS
     override val chronology: Chronology
         get() = ISOChronology.getInstance()
     val versionResponse: VersionResp by lazy {VersionResp(commandResponse(VersionReq()).payload)}
-    override val serialNumber: String = { _serial = readSerialNumber(); _serial }()
+    override val serialNumber: String by lazy { _serial = readSerialNumber(); _serial }
     override val outOfRangeLow: Double
         get() = 19.0
     override val outOfRangeHigh: Double
@@ -43,7 +43,7 @@ class TandemPump(private val source: BufferedSource, private val sink: BufferedS
         get() = throw UnsupportedOperationException()
     override val smbgRecords: Sequence<SmbgRecord>
         get() = records.filterIsInstance<SmbgRecord>()
-    override val bolusRecords: Sequence<TandemBolus> get () = BolusWizardAssemblingSequence()
+    override val bolusRecords: Sequence<TandemBolus> get() = BolusWizardAssemblingSequence()
     override val basalRecords: Sequence<BasalRecord> get() = BasalRateAssemblingSequence()
     override val consumableRecords: Sequence<ConsumableRecord>
         get() = records.filterIsInstance<ConsumableRecord>()
@@ -55,15 +55,15 @@ class TandemPump(private val source: BufferedSource, private val sink: BufferedS
         get() = ProfileAssemblingSequence()
 
     val logRange: IntRange = LogSizeResp(commandResponse(LogSizeReq()).payload).range
-    val profiles: List<TandemProfile> = readProfiles()
+    val profiles: List<TandemProfile> get() = readProfiles()
 
     private fun readProfiles() : List<TandemProfile> {
         return IdpListResp(commandResponse(IdpListReq()).payload).idps.map { TandemProfile(readProfile(it)) }
     }
 
-    public fun readProfile(idp: Int) : IdpResp = IdpResp(commandResponse(IdpReq(idp)).payload)
+    fun readProfile(idp: Int) : IdpResp = IdpResp(commandResponse(IdpReq(idp)).payload)
 
-    public fun commandResponse(payload: TandemPayload): TandemResponse {
+    fun commandResponse(payload: TandemPayload): TandemResponse {
         val packet = TandemRequest(payload).frame
         //println("Sending: ${packet.snapshot().hex()}")
         sink.write(packet, packet.size())
@@ -72,15 +72,15 @@ class TandemPump(private val source: BufferedSource, private val sink: BufferedS
         return response
     }
 
-    public fun readResponse(): TandemResponse {
+    fun readResponse(): TandemResponse {
         return TandemResponse(source)
     }
 
-    public fun readSerialNumber() : String {
+    fun readSerialNumber() : String {
         return versionResponse.pumpSN.toString()
     }
 
-    public fun readLogRecords(start: Int, end: Int): Collection<LogEvent> {
+    fun readLogRecords(start: Int, end: Int): Collection<LogEvent> {
         var nRead = 0
         var nRequested = 0
         for (seqNo in start..end) {

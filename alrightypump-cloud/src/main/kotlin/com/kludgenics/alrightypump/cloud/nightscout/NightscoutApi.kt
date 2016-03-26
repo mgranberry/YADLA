@@ -139,9 +139,11 @@ open class NightscoutTreatment(private val _map: MutableMap<String, Any?>) : Nig
                 "created_at" to record.time.safeDateTime().toString(),
                 //"notes" to record.toString(),
                 "eventType" to "<none>"))
-        if (record is NormalBolusRecord)
-            _map.put("insulin", bolusFormat.format(record.requestedNormal).toDouble())
         if (record is BolusRecord) {
+            if (record.requestedNormal != null)
+                _map.put("insulin", bolusFormat.format(record.requestedNormal!!).toDouble())
+            if (record.deliveredNormal != null)
+                _map.put("insulin", bolusFormat.format(record.deliveredNormal!!).toDouble())
             if (record.bolusWizard != null) {
                 _map.putAll(arrayOf("glucose" to if (record.bolusWizard?.bg?.glucose != 0.0) record.bolusWizard?.bg?.glucose else null,
                         "units" to if (record.bolusWizard?.bg != null && record.bolusWizard?.bg?.glucose != 0.0) {
@@ -155,13 +157,16 @@ open class NightscoutTreatment(private val _map: MutableMap<String, Any?>) : Nig
                                         (record.bolusWizard?.recommendation?.correctionBolus ?: 0.0)) "Meal Bolus"
                                 else "Correction Bolus"))
             }
+            if (record.requestedExtended != null) {
+                _map.putAll(arrayOf("enteredInsulin" to basalFormat.format((record.requestedNormal ?: 0.0) + (record.requestedExtended ?: 0.0)).toDouble(),
+                        "duration" to (record.extendedDuration ?: record.expectedExtendedDuration)?.standardMinutes,
+                        "relative" to basalFormat.format(record.requestedExtended ?: 0.0
+                                / (record.expectedExtendedDuration?.standardMinutes?.toDouble() ?: 0.0 / 60.00)),
+                        "eventType" to "Combo Bolus"))
+            }
         }
         if (record is ExtendedBolusRecord) {
-            _map.putAll(arrayOf<Pair<String, Any?>>("enteredInsulin" to basalFormat.format((record.requestedNormal ?: 0.0) + record.requestedExtended).toDouble(),
-                    "duration" to (record.extendedDuration ?: record.expectedExtendedDuration).standardMinutes,
-                    "relative" to basalFormat.format((record.deliveredExtended ?: record.requestedExtended)
-                            / (record.expectedExtendedDuration.standardMinutes / 60.00)).toDouble(),
-                    "eventType" to "Combo Bolus"))
+            _map["eventType"] ="Combo Bolus"
         }
         if (record is TemporaryBasalRecord) {
             if (record.rate != null) {

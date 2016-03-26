@@ -10,6 +10,7 @@ import io.realm.RealmObject
 import io.realm.annotations.PrimaryKey
 import org.joda.time.Duration
 import org.joda.time.LocalDateTime
+import java.io.Closeable
 import java.util.*
 
 interface TypedRecord : Record {
@@ -69,7 +70,7 @@ object EventType {
     const val INVALID = 4
 }
 
-class PersistedTherapyTimeline() : TherapyTimeline {
+class PersistedTherapyTimeline() : TherapyTimeline, Closeable {
     private val realm: Realm get() = Realm.getDefaultInstance()
 
     override val events: Sequence<Record>
@@ -110,6 +111,7 @@ class PersistedTherapyTimeline() : TherapyTimeline {
                 is RawCgmRecord -> PersistedRawCgmRecord(record, event)
                 is CgmRecord -> PersistedCgmRecord(record, event)
                 is SmbgRecord -> PersistedSmbgRecord(record, event)
+                is BolusRecord -> PersistedBolusRecord(record, event)
                 is FoodRecord -> PersistedFoodRecord(record, event)
                 is CgmInsertionRecord -> PersistedCgmInsertionRecord(record, event)
                 is TemporaryBasalStartRecord -> PersistedTemporaryBasalStartRecord(record, event)
@@ -118,7 +120,6 @@ class PersistedTherapyTimeline() : TherapyTimeline {
                 is CannulaChangedRecord -> PersistedCannulaChangedRecord(record)
                 is CartridgeChangeRecord -> PersistedCartridgeChangeRecord(record)
             //is ScheduledBasalRecord,
-                is BolusRecord -> PersistedBolusRecord(record, event)
                 else -> null
             }
             if (persistedRecord != null && persistedRecord is TypedRecord) {
@@ -130,6 +131,12 @@ class PersistedTherapyTimeline() : TherapyTimeline {
             }
         }
     }
+
+    override fun close() {
+        if (realm.isClosed)
+            realm.close()
+    }
+
 }
 
 
@@ -151,10 +158,7 @@ open class PersistedCalibration(var _slope: Double = Double.NaN,
 open class PersistedCalibrationRecord(var record: PersistedRecord = PersistedRecord(),
                                       var _calibration: PersistedCalibration = PersistedCalibration(),
                                       @PrimaryKey
-                                      override var eventKey: String="") : Calibration by _calibration, TypedRecord, RealmObject() {
-    override val eventType: Int
-        get() = EventType.OTHER
-
+                                      override var eventKey: String="") : Calibration, TypedRecord, RealmObject() {
     constructor(record: PersistedRecord, calibration: Calibration) : this(record, PersistedCalibration(calibration))
 
     override var _date: Date
@@ -168,6 +172,16 @@ open class PersistedCalibrationRecord(var record: PersistedRecord = PersistedRec
         get() = record.time
     override val source: String
         get() = record._source
+    override val slope: Double
+        get() = _calibration.slope
+    override val intercept: Double
+        get() = _calibration.intercept
+    override val scale: Double
+        get() = _calibration.scale
+    override val decay: Double
+        get() = _calibration.decay
+    override val eventType: Int
+        get() = EventType.OTHER
 }
 
 open class PersistedGlucoseValue(var _glucose: Double? = null, var _unit: Int = GlucoseUnit.MGDL) : GlucoseValue, RealmObject() {
@@ -529,6 +543,7 @@ open class PersistedBolusRecord(var record: PersistedRecord = PersistedRecord(),
             _requestedExtended = bolusRecord.requestedExtended,
             _deliveredExtended = bolusRecord.deliveredExtended,
             _extendedDuration = bolusRecord.extendedDuration?.millis,
+            _expectedExtendedDuration = bolusRecord.expectedExtendedDuration?.millis,
             _bolusWizard = if (bolusRecord.bolusWizard != null) PersistedBolusWizardRecord(bolusRecord.bolusWizard!!) else null,
             _manual = bolusRecord.manual)
     override val eventType: Int
@@ -557,7 +572,7 @@ open class PersistedBolusRecord(var record: PersistedRecord = PersistedRecord(),
             else
                 null
         }
-    override val bolusWizard: BolusWizardRecord?
+    override val bolusWizard: PersistedBolusWizardRecord?
         get() = _bolusWizard
     override val manual: Boolean
         get() = _manual

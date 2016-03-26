@@ -97,10 +97,12 @@ open class DexcomG4(private val source: BufferedSource,
 
             override fun next(): DexcomCgmRecord {
                 val bg = bgIterator.next()
-                if (currentCal != null && bg.first.displayTime < currentCal!!.displayTime && calIterator != null) {
-                    while (bg.first.displayTime < currentCal!!.displayTime && calIterator.hasNext())
+                val cal = currentCal
+                if (cal != null && bg.first.displayTime < cal.displayTime && calIterator != null) {
+                    while (bg.first.displayTime < cal.displayTime && calIterator.hasNext())
                         currentCal = calIterator.next()
-                    if (bg.first.displayTime < currentCal!!.displayTime)
+                    val finalCal = currentCal
+                    if (finalCal != null && bg.first.displayTime < finalCal.displayTime)
                         currentCal = null
                 }
                 return DexcomCgmRecord(bg.first, bg.second, currentCal)

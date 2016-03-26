@@ -6,7 +6,6 @@ import com.kludgenics.alrightypump.device.Glucometer
 import com.kludgenics.alrightypump.device.InsulinPump
 import com.kludgenics.alrightypump.device.dexcom.g4.DexcomCgmRecord
 import com.kludgenics.alrightypump.therapy.*
-import com.squareup.moshi.JsonDataException
 import com.squareup.moshi.Moshi
 import okhttp3.*
 import okio.ByteString
@@ -107,7 +106,6 @@ class Nightscout @Inject constructor (@Named("Nightscout") val url: HttpUrl,
                 is TemporaryBasalStartRecord,
                 is TemporaryBasalEndRecord,
                 is SuspendedBasalRecord,
-                is CannulaChangedRecord,
                 is CartridgeChangeRecord,
                 is CannulaChangedRecord,
                     // is ScheduledBasalRecord,

@@ -8,7 +8,6 @@ import org.jetbrains.anko.debug
 import io.fabric.sdk.android.Fabric;
 import com.crashlytics.android.Crashlytics;
 import net.danlew.android.joda.JodaTimeAndroid
-import org.jetbrains.anko.async
 
 /**
  * Created by matthiasgranberry on 5/28/15.

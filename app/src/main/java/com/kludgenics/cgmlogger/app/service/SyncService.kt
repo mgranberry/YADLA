@@ -17,9 +17,7 @@ import com.kludgenics.cgmlogger.app.DeviceSync
 import okhttp3.HttpUrl
 import okhttp3.OkHttpClient
 import okhttp3.ResponseBody
-import org.jetbrains.anko.async
-import org.jetbrains.anko.powerManager
-import org.jetbrains.anko.usbManager
+import org.jetbrains.anko.*
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -28,7 +26,7 @@ import retrofit2.Response
  * Created by matthias on 3/22/16.
  */
 
-class SyncService : Service() {
+class SyncService : Service(), AnkoLogger {
     inner class IntentReceiver : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
             when (intent.action) {
@@ -38,7 +36,7 @@ class SyncService : Service() {
                 }
                 ACTION_USB_PERMISSION -> {
                     val permissionGranted = intent.getBooleanExtra(UsbManager.EXTRA_PERMISSION_GRANTED, false)
-                    println("received permission for device.  Granted? ${permissionGranted}")
+                    info("received permission for device.  Granted? ${permissionGranted}")
                     if (permissionGranted) {
                         val device = intent.getParcelableExtra<UsbDevice>(UsbManager.EXTRA_DEVICE);
                         performDeviceSync(device)
@@ -55,7 +53,6 @@ class SyncService : Service() {
         val ACTION_USB_PERMISSION = "com.kludgenics.cgmlogger.ACTION_USB_PERMISSION"
         @JvmStatic
         val TAG = SyncService::class.java.simpleName
-
     }
 
      val receiver: BroadcastReceiver = IntentReceiver()
@@ -72,8 +69,8 @@ class SyncService : Service() {
                 wakeLock.acquire(60000)
                 val timeline = DeviceSync.sync(this@SyncService, device)
                 uploadToNightscout(timeline)
-                timeline.events.forEach { println("${it.time} ${it.id} $it") }
             } finally {
+                info("Releasing wakelock, stopping.")
                 wakeLock.release()
                 unregisterReceiver(receiver)
                 stopSelf()
@@ -82,7 +79,7 @@ class SyncService : Service() {
     }
 
     fun uploadToNightscout(timeline: TherapyTimeline?) {
-        println("Sync complete, received ${timeline?.events?.count()}")
+        info("Sync complete, received ${timeline?.events?.count()}")
         val nightscout_url = "https://12345678901234@omnominable.granberrys.us/"
         try {
             val nightscout = Nightscout(HttpUrl.parse(nightscout_url), OkHttpClient())
@@ -99,6 +96,7 @@ class SyncService : Service() {
                         t?.cause?.printStackTrace()
                     }
                 })
+            info("Upload completed")
         } catch (e: Exception) {
             println("Exception $e")
             e.printStackTrace()
@@ -106,16 +104,17 @@ class SyncService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        info("onStartCommand()")
         val permissionIntent = PendingIntent.getBroadcast(this, 0, Intent(ACTION_USB_PERMISSION), 0);
         registerReceiver()
         val tandemPumps = AndroidDeviceHelper.getTandemPumps(this)
         val dexcomG4s = AndroidDeviceHelper.getDexcomG4s(this)
         dexcomG4s.forEach { device ->
-            println("requesting permisison for ${device}")
+            info("requesting permisison for ${device}")
             usbManager.requestPermission(device, permissionIntent)
         }
         tandemPumps.forEach { device ->
-            println("requesting permisison for ${device}")
+            info("requesting permisison for ${device}")
             usbManager.requestPermission(device, permissionIntent)
         }
         if (tandemPumps.isEmpty() && dexcomG4s.isEmpty()) {
@@ -126,13 +125,18 @@ class SyncService : Service() {
     }
 
     private fun registerReceiver() {
-        println("Registering Receiver")
+        info("Registering Receiver")
         val filter = IntentFilter(ACTION_USB_PERMISSION);
         registerReceiver(receiver, filter);
     }
 
     private fun unregisterReceiver() {
-        println("Unregistering Receiver")
+        info("Unregistering Receiver")
         unregisterReceiver(receiver)
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        info("onDestroy()")
     }
 }

@@ -2,13 +2,13 @@ package com.kludgenics.cgmlogger.app
 
 import android.content.Context
 import android.hardware.usb.UsbDevice
+import com.crashlytics.android.Crashlytics
 import com.kludgenics.alrightypump.android.AndroidDeviceHelper
 import com.kludgenics.alrightypump.device.Device
 import com.kludgenics.alrightypump.device.dexcom.g4.DexcomG4
 import com.kludgenics.alrightypump.device.tandem.TandemPump
-import com.kludgenics.alrightypump.therapy.ConcurrentSkipListTherapyTimeline
-import com.kludgenics.alrightypump.therapy.Record
-import com.kludgenics.alrightypump.therapy.TherapyTimeline
+import com.kludgenics.alrightypump.therapy.*
+import com.kludgenics.cgmlogger.app.model.PersistedTherapyTimeline
 import com.kludgenics.cgmlogger.app.viewmodel.RealmStatus
 import com.kludgenics.cgmlogger.app.viewmodel.Status
 import com.kludgenics.cgmlogger.extension.create
@@ -28,6 +28,7 @@ import java.util.concurrent.Future
 /**
  * Created by matthias on 3/18/16.
  */
+
 object DeviceSync {
 
     val syncExecutorService = Executors.newCachedThreadPool()
@@ -45,6 +46,7 @@ object DeviceSync {
 
     private fun downloadDexcomG4(therapyTimeline: TherapyTimeline, device: DexcomG4,
                                  fetchPredicate: (Record) -> Boolean): Record? {
+        device.timeCorrectionOffset
         therapyTimeline.merge(fetchPredicate,
                 device.cgmRecords, device.smbgRecords, device.calibrationRecords,
                 device.eventRecords, device.consumableRecords)
@@ -75,7 +77,7 @@ object DeviceSync {
         }
     }
 
-    private fun updateStatus(realm: Realm, syncId: Int, statusCode: Int, latestRecordTime: Date? = null, inProgress: Boolean = false) {
+    private fun updateStatus(realm: Realm, syncId: Int, statusCode: Int, latestRecordTime: Date? = null, inProgress: Boolean = false, clockOffsetMillis: Long? = null) {
         val status = realm.where<RealmStatus> {
             equalTo("syncId", syncId)
         }.findAllSorted("modificationTime", Sort.DESCENDING).firstOrNull()
@@ -90,13 +92,17 @@ object DeviceSync {
                 else -> "Unknown status"
             }
             status.active = inProgress
-            status.latestRecordTime = latestRecordTime
+            status.latestRecordTime = if (clockOffsetMillis != null && latestRecordTime != null)
+                Date(latestRecordTime.time + clockOffsetMillis)
+            else
+                latestRecordTime
+            status.clockOffsetMillis = clockOffsetMillis
             realm.commitTransaction()
         }
     }
 
     fun sync(context: Context, device: UsbDevice): TherapyTimeline {
-        val therapyTimeline = ConcurrentSkipListTherapyTimeline()
+        val therapyTimeline = PersistedTherapyTimeline()
         val deviceEntry = AndroidDeviceHelper.getDeviceEntry(context, device)
         if (deviceEntry != null)
             syncDevice(context, therapyTimeline, deviceEntry).get()
@@ -107,8 +113,9 @@ object DeviceSync {
         val deviceKey = device.deviceName
     }
 
-    fun syncDevice(context: Context, therapyTimeline: ConcurrentSkipListTherapyTimeline, deviceEntry: AndroidDeviceHelper.DeviceEntry): Future<String> {
+    fun syncDevice(context: Context, therapyTimeline: TherapyTimeline, deviceEntry: AndroidDeviceHelper.DeviceEntry): Future<String> {
         println("Syncing ${deviceEntry.device.serialNumber}")
+        Crashlytics.log("Syncing ${deviceEntry.device.serialNumber}")
         return context.asyncResult (syncExecutorService) {
             try {
                 deviceEntry.serialConnection.use {
@@ -127,10 +134,12 @@ object DeviceSync {
                                 else -> null
                             }
                             println("sync of ${deviceEntry.device.serialNumber} ${latestEvent?.time} done")
-                            updateStatus(realm, syncId, Status.CODE_SUCCESS, latestEvent?.time?.toDate(), inProgress = false)
+                            updateStatus(realm, syncId, Status.CODE_SUCCESS, latestEvent?.time?.toDate(), inProgress = false, clockOffsetMillis = deviceEntry.device.timeCorrectionOffset?.millis)
                         } catch (e: ArrayIndexOutOfBoundsException) {
                             println("sync of ${deviceEntry.device.serialNumber} failed.")
+                            e.printStackTrace()
                             updateStatus(realm, syncId, Status.CODE_FAILURE, null, false)
+                            Crashlytics.logException(e)
                         }
                     }
                     deviceEntry.device.serialNumber
@@ -138,6 +147,7 @@ object DeviceSync {
             } catch (e: Exception) {
                 println("Exception caught: ${e.message}")
                 e.printStackTrace()
+                Crashlytics.logException(e)
                 throw e
             }
         }

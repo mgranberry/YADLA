@@ -16,9 +16,9 @@ import java.util.*
 
 interface Status {
     companion object {
-        val SUCCESS = "Success"
-        val FAILURE = "Failure"
-        val IN_PROGRESS = "In Progress"
+        val SUCCESS = "Sync attempt successful."
+        val FAILURE = "Sync attempt has failed."
+        val IN_PROGRESS = "Sync In Progress"
         val CODE_SUCCESS = 0
         val CODE_FAILURE = 1
         val CODE_DEVICE_READ_IN_PROGRESS = 2

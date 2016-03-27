@@ -84,6 +84,7 @@ fun main(args: Array<String>) {
                                 downloadRecords(threads, lastUploads, it) {
                                     connection, predicate ->
                                     val tslim = TandemPump(connection.source(), connection.sink())
+                                    println("Final offset: ${tslim.timeCorrectionOffset}")
                                     timeline.merge(predicate, tslim.basalRecords, tslim.bolusRecords,
                                             tslim.smbgRecords, tslim.consumableRecords, tslim.profileRecords)
                                     timeline.events.lastOrNull()?.time
@@ -94,6 +95,7 @@ fun main(args: Array<String>) {
                                 downloadRecords(threads, lastUploads, it) {
                                     connection, predicate ->
                                     val g4 = DexcomG4(connection.source(), connection.sink())
+                                    println("Final offset: ${g4.timeCorrectionOffset}")
                                     g4.rawEnabled = true
                                     timeline.merge(predicate, g4.cgmRecords, g4.smbgRecords, g4.calibrationRecords,
                                             g4.eventRecords, g4.consumableRecords)

@@ -29,8 +29,7 @@ interface TypedRecord : Record {
                 PersistedCgmInsertionRecord::class.java,
                 PersistedFoodRecord::class.java)
 
-        fun inflate(record: TypedRecord): TypedRecord? {
-            val realm = Realm.getDefaultInstance()
+        fun inflate(realm: Realm, record: TypedRecord): TypedRecord? {
             val realmClass =
                     try {
                         CLASSES.first { realm.where(it).equalTo("record.eventKey", record.eventKey).findAll().size != 0 }
@@ -74,27 +73,27 @@ class PersistedTherapyTimeline() : TherapyTimeline, Closeable {
     private val realm: Realm get() = Realm.getDefaultInstance()
 
     override val events: Sequence<Record>
-        get() = realm.where<PersistedRecord>().findAllSorted("_date").asSequence().map { TypedRecord.inflate(it) }.filterNotNull()
+        get() = realm.where<PersistedRecord>().findAllSorted("_date").asSequence().map { TypedRecord.inflate(realm, it) }.filterNotNull()
 
     override val bolusEvents: Sequence<BolusRecord>
         get() = realm.where<PersistedRecord> {
             equalTo("_eventType", EventType.BOLUS)
-        }.findAllSorted("_date").asSequence().map { TypedRecord.inflate(it) as BolusRecord? }.filterNotNull()
+        }.findAllSorted("_date").asSequence().map { TypedRecord.inflate(realm, it) as BolusRecord? }.filterNotNull()
 
     override val glucoseEvents: Sequence<GlucoseRecord>
         get() = realm.where<PersistedRecord> {
             equalTo("_eventType", EventType.GLUCOSE)
-        }.findAllSorted("_date").asSequence().map { TypedRecord.inflate(it) as GlucoseRecord? }.filterNotNull()
+        }.findAllSorted("_date").asSequence().map { TypedRecord.inflate(realm, it) as GlucoseRecord? }.filterNotNull()
 
     override val basalEvents: Sequence<BasalRecord>
         get() = realm.where<PersistedRecord> {
             equalTo("_eventType", EventType.BASAL)
-        }.findAllSorted("_date").asSequence().map { TypedRecord.inflate(it) as BasalRecord? }.filterNotNull()
+        }.findAllSorted("_date").asSequence().map { TypedRecord.inflate(realm, it) as BasalRecord? }.filterNotNull()
 
     override fun events(start: LocalDateTime, end: LocalDateTime): Collection<Record> {
         return realm.where<PersistedRecord> {
             between("_date", start.toDate(), end.toDate())
-        }.findAllSorted("_date").asSequence().map { TypedRecord.inflate(it) }.filterNotNull().toList()
+        }.findAllSorted("_date").asSequence().map { TypedRecord.inflate(realm, it) }.filterNotNull().toList()
     }
 
     override fun merge(vararg additionalEvents: Sequence<Record>) {

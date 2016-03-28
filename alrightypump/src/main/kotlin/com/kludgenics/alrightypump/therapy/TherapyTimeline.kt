@@ -43,11 +43,11 @@ abstract class AbstractMapTherapyTimeline: TherapyTimeline {
 }
 
 open class NavigableMapTherapyTimeline : AbstractMapTherapyTimeline() {
-    protected override val _events: NavigableMap<LocalDateTime, MutableSet<Record>> = TreeMap()
-    protected override val _eventSet: () -> MutableSet<Record> = { HashSet(1) }
+    override val _events: NavigableMap<LocalDateTime, MutableSet<Record>> = TreeMap()
+    override val _eventSet: () -> MutableSet<Record> = { HashSet(1) }
 }
 
 class ConcurrentSkipListTherapyTimeline : AbstractMapTherapyTimeline() {
-    protected override val _events: NavigableMap<LocalDateTime, MutableSet<Record>> = ConcurrentSkipListMap()
-    protected override val _eventSet = { Collections.newSetFromMap(ConcurrentHashMap<Record, Boolean>())}
+    override val _events: NavigableMap<LocalDateTime, MutableSet<Record>> = ConcurrentSkipListMap()
+    override val _eventSet = { Collections.newSetFromMap(ConcurrentHashMap<Record, Boolean>())}
 }

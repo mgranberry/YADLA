@@ -78,7 +78,7 @@ object CRC {
 
 open class CrcSource(delegate: Source, initialCrc: Int, val finalXor: Int) : ForwardingSource(delegate) {
     private var _crc = initialCrc
-    public val crc: Int get() = (_crc xor finalXor) and 0xffff
+    val crc: Int get() = (_crc xor finalXor) and 0xffff
 
     private val buffer = Buffer()
 
@@ -92,7 +92,7 @@ open class CrcSource(delegate: Source, initialCrc: Int, val finalXor: Int) : For
 
 open class CrcSink(delegate: Sink, initialCrc: Int, val finalXor: Int) : ForwardingSink(delegate) {
     private var _crc = initialCrc
-    public val crc: Int get() = (_crc xor finalXor) and 0xffff
+    val crc: Int get() = (_crc xor finalXor) and 0xffff
 
     private val buffer = Buffer()
 

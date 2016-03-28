@@ -7,7 +7,7 @@ import com.kludgenics.alrightypump.device.dexcom.g5.StateMachine.State.*
 
 class StateMachine {
     sealed class State {
-        public class AwaitingBond : State()
+        class AwaitingBond : State()
         object Bonded : State()
         object Connected : State()
         object AwaitingConnection : State()

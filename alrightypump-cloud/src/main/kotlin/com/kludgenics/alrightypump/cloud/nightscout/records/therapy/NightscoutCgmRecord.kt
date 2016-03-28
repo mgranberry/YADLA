@@ -5,7 +5,7 @@ import com.kludgenics.alrightypump.therapy.Calibration
 import com.kludgenics.alrightypump.therapy.GlucoseUnit
 import com.kludgenics.alrightypump.therapy.RawGlucoseValue
 
-data class NightscoutGlucoseValue(public val sgv: NightscoutApiSgvEntry) : RawGlucoseValue {
+data class NightscoutGlucoseValue(val sgv: NightscoutApiSgvEntry) : RawGlucoseValue {
     override val calibration: Calibration?
         get() = null
     override val filtered: Int?

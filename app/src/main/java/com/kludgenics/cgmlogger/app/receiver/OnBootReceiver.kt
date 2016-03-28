@@ -7,7 +7,7 @@ import android.content.Intent
 /**
  * Created by matthiasgranberry on 5/29/15.
  */
-public class OnBootReceiver: BroadcastReceiver() {
+class OnBootReceiver: BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
     }
 }

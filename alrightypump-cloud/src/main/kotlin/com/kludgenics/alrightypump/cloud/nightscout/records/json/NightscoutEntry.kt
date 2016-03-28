@@ -7,7 +7,7 @@ import org.joda.time.format.ISODateTimeFormat
  * Created by matthiasgranberry on 5/26/15.
  */
 
-public interface NightscoutEntry {
+interface NightscoutEntry {
     val id: String?
     val source: String
     val type: String

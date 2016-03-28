@@ -124,7 +124,6 @@ class DeviceSync : AnkoLogger {
         if (shouldSync) {
             try {
                 info("Starting sync")
-                Thread.sleep(500)
                 val deviceEntry = AndroidDeviceHelper.getDeviceEntry(context, device)
                 info ("AndroidDeviceHelper.getDeviceEntry($context, $device) returned $deviceEntry")
                 deviceEntry?.serialConnection?.use {
@@ -159,7 +158,7 @@ class DeviceSync : AnkoLogger {
                     therapyTimeline.use {
                         val syncId = createStatus(realm, deviceEntry.device)
                         try {
-                            val updateTime = getLatestSuccessFor(deviceEntry.device) ?: LocalDateTime.now() - Period.days(3)
+                            val updateTime = getLatestSuccessFor(deviceEntry.device) ?: LocalDateTime.now() - Period.days(30)
 
                             val fetchPredicate = { record: Record -> record.time > LocalDateTime(updateTime) }
                             val latestEvent = when (deviceEntry.device) {

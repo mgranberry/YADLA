@@ -6,7 +6,7 @@ import java.io.Closeable
 import java.io.IOException
 
 
-public class SerialConnection(private val port: SerialPort) : Closeable {
+class SerialConnection(private val port: SerialPort) : Closeable {
 
     init {
         port.baudRate = 115200

@@ -6,9 +6,9 @@ package com.kludgenics.alrightypump.therapy
 
 interface GlucoseUnit {
     companion object {
-        public const val MMOL = 0
-        public const val MGDL = 1
-        public const val MMOL_MGDL_FACTOR = 18.01559
+        const val MMOL = 0
+        const val MGDL = 1
+        const val MMOL_MGDL_FACTOR = 18.01559
     }
 }
 
@@ -29,8 +29,8 @@ interface GlucoseValue {
     val unit: Int
 }
 
-public open class BaseGlucoseValue(public override val glucose: Double,
-                                   public override val unit: Int) : GlucoseValue {
+open class BaseGlucoseValue(override val glucose: Double,
+                                   override val unit: Int) : GlucoseValue {
     override fun toString(): String {
         return "${this.javaClass.simpleName}(glucose=$glucose, unit=$unit)"
     }

@@ -18,7 +18,7 @@ import io.realm.Sort
 import org.jetbrains.anko.AnkoLogger
 import java.util.*
 
-public class MainActivity :  AppCompatActivity(), AnkoLogger {
+class MainActivity :  AppCompatActivity(), AnkoLogger {
 
     val realm = Realm.getDefaultInstance()
     // Note: Your consumer key and secret should be obfuscated in your source code before shipping.

@@ -80,7 +80,7 @@ interface DexcomG5Response {
     }
 }
 
-data class AuthChallengeCommand(public val challengeHash: ByteString) : DexcomG5Command {
+data class AuthChallengeCommand(val challengeHash: ByteString) : DexcomG5Command {
     override val payload: ByteString by lazy {
         Buffer().writeByte(Opcodes.AUTH_CHALLENGE_COMMAND)
                 .write(challengeHash)
@@ -88,17 +88,17 @@ data class AuthChallengeCommand(public val challengeHash: ByteString) : DexcomG5
     }
 }
 
-data class AuthChallengeResponse(public val opcode: Int,
-                                 public val tokenHash: ByteString,
-                                 public val challenge: ByteString) : DexcomG5Response {
+data class AuthChallengeResponse(val opcode: Int,
+                                 val tokenHash: ByteString,
+                                 val challenge: ByteString) : DexcomG5Response {
     constructor(opcode: Int, source: BufferedSource) : this(opcode = opcode,
             tokenHash = source.readByteString(8),
             challenge = source.readByteString(8))
     // Cipher.getInstance("AES/ECB/NoPadding")
 }
 
-data class AuthRequestCommand(public val singleUseToken: ByteString,
-                              public val token: ByteString) : DexcomG5Command {
+data class AuthRequestCommand(val singleUseToken: ByteString,
+                              val token: ByteString) : DexcomG5Command {
     override val payload: ByteString by lazy {
         Buffer().writeByte(Opcodes.AUTH_REQUEST_COMMAND)
                 .write(token)
@@ -107,9 +107,9 @@ data class AuthRequestCommand(public val singleUseToken: ByteString,
     }
 }
 
-data class AuthStatusResponse(public val opcode: Int,
-                         public val authenticated: Int,
-                         public val bonded: Int) : DexcomG5Response {
+data class AuthStatusResponse(val opcode: Int,
+                              val authenticated: Int,
+                              val bonded: Int) : DexcomG5Response {
     constructor(opcode: Int, source: BufferedSource) : this(opcode = opcode,
             authenticated = source.readByte().toInt() and 0xFF,
             bonded = source.readByte().toInt() and 0xFF)
@@ -127,13 +127,13 @@ class DisconnectCommand : DexcomG5Command {
     }
 }
 
-class GlucoseResponse(public val opcode: Int,
-                      public val status: Int,
-                      public val sequence: Int,
-                      public val timestamp: Int,
-                      public val glucose: Int,
-                      public val state: Int,
-                      public val trend: Int) : DexcomG5Response {
+class GlucoseResponse(val opcode: Int,
+                      val status: Int,
+                      val sequence: Int,
+                      val timestamp: Int,
+                      val glucose: Int,
+                      val state: Int,
+                      val trend: Int) : DexcomG5Response {
     constructor(opcode: Int, source: BufferedSource) : this(opcode = opcode,
             status = source.readByte().toInt(),
             sequence = source.readIntLe(),
@@ -151,7 +151,7 @@ class GlucoseCommand : DexcomG5Command {
     }
 }
 
-data class KeepaliveCommand(public val time: Int) : DexcomG5Command {
+data class KeepaliveCommand(val time: Int) : DexcomG5Command {
     override val payload: ByteString by lazy {
         Buffer().writeByte(Opcodes.KEEPALIVE_COMMAND)
                 .writeByte(time)
@@ -167,18 +167,18 @@ class TransmitterTimeCommand : DexcomG5Command {
     }
 }
 
-class TransmitterTimeResponse(public val opcode: Int,
-                              public val status: Int,
-                              public val currentTime: Int,
-                              public val sessionStartTime: Int) : DexcomG5Response {
+class TransmitterTimeResponse(val opcode: Int,
+                              val status: Int,
+                              val currentTime: Int,
+                              val sessionStartTime: Int) : DexcomG5Response {
     constructor(opcode: Int, source: BufferedSource) : this(opcode = opcode,
             status = source.readByte().toInt() and 0xFF,
             currentTime = source.readIntLe(),
             sessionStartTime = source.readIntLe())
 }
 
-class UnknownResponse(public val opcode: Int,
-                      public val contents: ByteString) : DexcomG5Response {
+class UnknownResponse(val opcode: Int,
+                      val contents: ByteString) : DexcomG5Response {
     constructor(opcode: Int, source: BufferedSource) : this(opcode,
             contents=source.readByteString())
 }
@@ -191,11 +191,11 @@ class SensorCommand : DexcomG5Command {
     }
 }
 
-class SensorResponse(public val opcode: Int,
-                     public val status: Int,
-                     public val timestamp: Int,
-                     public val unfiltered: Int,
-                     public val filtered: Int) : DexcomG5Response {
+class SensorResponse(val opcode: Int,
+                     val status: Int,
+                     val timestamp: Int,
+                     val unfiltered: Int,
+                     val filtered: Int) : DexcomG5Response {
     constructor(opcode: Int, source: BufferedSource) : this(opcode=opcode,
             status=source.readByte().toInt() and 0xFF,
             timestamp=source.readIntLe(),

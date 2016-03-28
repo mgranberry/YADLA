@@ -44,9 +44,9 @@ interface TandemBolus : BolusRecord {
     override val manual: Boolean get() = false
 }
 
-data class TandemNormalBolus(public val bolusActivated: BolusActivated,
-                             public val bolusCompleted: BolusCompleted?,
-                             public override val bolusWizard: TandemBolusWizard) : NormalBolusRecord,
+data class TandemNormalBolus(val bolusActivated: BolusActivated,
+                             val bolusCompleted: BolusCompleted?,
+                             override val bolusWizard: TandemBolusWizard) : NormalBolusRecord,
         TandemBolus,
         TandemTherapyRecord,
         LogEvent by bolusWizard {
@@ -70,9 +70,9 @@ data class TandemNormalBolus(public val bolusActivated: BolusActivated,
         get() = null
 }
 
-data class TandemExtendedBolus(public val extendedActivated: BolexActivated,
-                               public val bolexCompleted: BolexCompleted?,
-                               public override val bolusWizard: TandemBolusWizard) : ExtendedBolusRecord,
+data class TandemExtendedBolus(val extendedActivated: BolexActivated,
+                               val bolexCompleted: BolexCompleted?,
+                               override val bolusWizard: TandemBolusWizard) : ExtendedBolusRecord,
         TandemBolus,
         TandemTherapyRecord,
         LogEvent by bolusWizard {
@@ -99,11 +99,11 @@ data class TandemExtendedBolus(public val extendedActivated: BolexActivated,
 
 }
 
-data class TandemComboBolus(public val bolusActivated: BolusActivated,
-                            public val extendedActivated: BolexActivated,
-                            public val bolusCompleted: BolusCompleted?,
-                            public val bolexCompleted: BolexCompleted?,
-                            public override val bolusWizard: TandemBolusWizard) : ComboBolusRecord,
+data class TandemComboBolus(val bolusActivated: BolusActivated,
+                            val extendedActivated: BolexActivated,
+                            val bolusCompleted: BolusCompleted?,
+                            val bolexCompleted: BolexCompleted?,
+                            override val bolusWizard: TandemBolusWizard) : ComboBolusRecord,
         TandemBolus,
         TandemTherapyRecord,
         LogEvent by bolusWizard {

@@ -58,7 +58,7 @@ class RestCallSequence<T:NightscoutApiEntry>(val range: ClosedRange<Instant>,
                             override val endInclusive: Instant) : ClosedRange<Instant>
 
 
-    public fun Instant.toRecordRange(): ClosedRange<Instant> {
+    fun Instant.toRecordRange(): ClosedRange<Instant> {
         val now = DateTime.now()
         val dateTime = this.toDateTime()
         val dateStart = dateTime.withTimeAtStartOfDay()

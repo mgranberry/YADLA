@@ -31,7 +31,7 @@ open class DexcomG4(private val source: BufferedSource,
     }
 
     var rawEnabled = true
-    override val serialNumber = requestSerialNumber()
+    override val serialNumber: String by lazy { requestSerialNumber() }
 
     override val cgmRecords: Sequence<DexcomCgmRecord>
         get() =

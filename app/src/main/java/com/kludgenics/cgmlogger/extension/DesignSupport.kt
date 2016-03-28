@@ -47,7 +47,7 @@ fun View.snackbar(text: Int, duration: Int = Snackbar.LENGTH_SHORT, init: Snackb
 
 private object ViewCounter {
     private var viewCounter = AtomicInteger(1)
-    public fun generateViewId(): Int {
+    fun generateViewId(): Int {
         while (true) {
             val result = viewCounter.get()
             // aapt-generated IDs have the high byte nonzero; clamp to the range under that.

@@ -25,6 +25,7 @@ import okhttp3.ResponseBody
 import okio.Buffer
 import org.jetbrains.anko.AnkoLogger
 import org.jetbrains.anko.async
+import org.jetbrains.anko.info
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -34,24 +35,19 @@ import java.util.*
  * Created by matthias on 12/13/15.
  */
 class DownloadActivity : AnkoLogger, Activity() {
-    val realm = Realm.getDefaultInstance()
-    lateinit var binding: CardDeviceStatusBinding
-    lateinit var toolbar: Toolbar
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        realm.close()
     }
 
     override fun onStart() {
         super.onStart()
-        println("Syncing")
+        info("Syncing")
         startService(Intent(this, SyncService::class.java))
-        println("Finishing activity")
+        info("Finishing activity")
         finish()
     }
 }

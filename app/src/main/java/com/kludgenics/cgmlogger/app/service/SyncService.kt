@@ -11,28 +11,26 @@ import android.hardware.usb.UsbManager
 import android.os.IBinder
 import android.os.PowerManager
 import com.kludgenics.alrightypump.android.AndroidDeviceHelper
-import com.kludgenics.alrightypump.cloud.nightscout.Nightscout
-import com.kludgenics.alrightypump.therapy.TherapyTimeline
 import com.kludgenics.cgmlogger.app.DeviceSync
-import okhttp3.HttpUrl
-import okhttp3.OkHttpClient
-import okhttp3.ResponseBody
+import com.kludgenics.cgmlogger.app.NightscoutSync
+import com.kludgenics.cgmlogger.app.model.PersistedTherapyTimeline
 import org.jetbrains.anko.*
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
 
 /**
  * Created by matthias on 3/22/16.
  */
 
 class SyncService : Service(), AnkoLogger {
+    var isRegistered = false
+
     inner class IntentReceiver : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
             when (intent.action) {
                 UsbManager.ACTION_USB_DEVICE_DETACHED -> {
-                    val devices = intent.getParcelableArrayListExtra<UsbDevice>(UsbManager.EXTRA_DEVICE)
-                    devices.forEach { DeviceSync.stopDeviceSync(it) }
+                    val device = intent.getParcelableExtra<UsbDevice>(UsbManager.EXTRA_DEVICE)
+                    info ("device detached: $device")
+                    if (device != null)
+                        DeviceSync.getInstance().stopDeviceSync(device)
                 }
                 ACTION_USB_PERMISSION -> {
                     val permissionGranted = intent.getBooleanExtra(UsbManager.EXTRA_PERMISSION_GRANTED, false)
@@ -41,7 +39,7 @@ class SyncService : Service(), AnkoLogger {
                         val device = intent.getParcelableExtra<UsbDevice>(UsbManager.EXTRA_DEVICE);
                         performDeviceSync(device)
                     } else {
-                        unregisterReceiver(this)
+                        unregisterReceiver()
                         stopSelf()
                     }
                 }
@@ -51,8 +49,6 @@ class SyncService : Service(), AnkoLogger {
 
     companion object {
         val ACTION_USB_PERMISSION = "com.kludgenics.cgmlogger.ACTION_USB_PERMISSION"
-        @JvmStatic
-        val TAG = SyncService::class.java.simpleName
     }
 
      val receiver: BroadcastReceiver = IntentReceiver()
@@ -64,44 +60,26 @@ class SyncService : Service(), AnkoLogger {
 
     fun performDeviceSync(device: UsbDevice) {
         async() {
-            val wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, TAG)
+            val wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, loggerTag)
             try {
-                wakeLock.acquire(60000)
-                val timeline = DeviceSync.sync(this@SyncService, device)
-                uploadToNightscout(timeline)
+                wakeLock.acquire()
+                DeviceSync.getInstance().sync(this@SyncService, device)
+                info("sync finished")
+                val timeline = PersistedTherapyTimeline()
+                timeline.use {
+                    NightscoutSync.getInstance().uploadToNightscout(timeline)
+                }
+            } catch (e: Exception) {
+                error("sync failed:", e)
             } finally {
                 info("Releasing wakelock, stopping.")
                 wakeLock.release()
-                unregisterReceiver(receiver)
+                unregisterReceiver()
                 stopSelf()
             }
         }
     }
 
-    fun uploadToNightscout(timeline: TherapyTimeline?) {
-        info("Sync complete, received ${timeline?.events?.count()}")
-        val nightscout_url = "https://12345678901234@omnominable.granberrys.us/"
-        try {
-            val nightscout = Nightscout(HttpUrl.parse(nightscout_url), OkHttpClient())
-            if (timeline != null)
-                nightscout.postRecords(timeline.events, object : Callback<ResponseBody> {
-                    override fun onResponse(call: Call<ResponseBody>?, response: Response<ResponseBody>?) {
-
-                    }
-
-                    override fun onFailure(call: Call<ResponseBody>?, t: Throwable?) {
-                        println("Throwable2: $t ${t?.message} ${t?.cause}")
-                        t?.printStackTrace()
-                        println("cause")
-                        t?.cause?.printStackTrace()
-                    }
-                })
-            info("Upload completed")
-        } catch (e: Exception) {
-            println("Exception $e")
-            e.printStackTrace()
-        }
-    }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         info("onStartCommand()")
@@ -124,19 +102,29 @@ class SyncService : Service(), AnkoLogger {
         return Service.START_NOT_STICKY
     }
 
+    @Synchronized
     private fun registerReceiver() {
-        info("Registering Receiver")
-        val filter = IntentFilter(ACTION_USB_PERMISSION);
-        registerReceiver(receiver, filter);
+        if (!isRegistered) {
+            isRegistered = true
+            info("Registering Receiver")
+            val filter = IntentFilter(ACTION_USB_PERMISSION);
+            filter.addAction(UsbManager.ACTION_USB_DEVICE_DETACHED)
+            registerReceiver(receiver, filter);
+        }
     }
 
+    @Synchronized
     private fun unregisterReceiver() {
-        info("Unregistering Receiver")
-        unregisterReceiver(receiver)
+        if (isRegistered) {
+            isRegistered = false
+            info("Unregistering Receiver")
+            unregisterReceiver(receiver)
+        }
     }
 
     override fun onDestroy() {
         super.onDestroy()
         info("onDestroy()")
+        unregisterReceiver()
     }
 }

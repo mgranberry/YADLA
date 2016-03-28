@@ -18,11 +18,14 @@ interface Status {
     companion object {
         val SUCCESS = "Sync attempt successful."
         val FAILURE = "Sync attempt has failed."
-        val IN_PROGRESS = "Sync In Progress"
+        val EOF = "Sync stopped because the device was disconnected."
+        val IN_PROGRESS = "Sync in progress."
+
         val CODE_SUCCESS = 0
         val CODE_FAILURE = 1
         val CODE_DEVICE_READ_IN_PROGRESS = 2
         val CODE_UNKNOWN = 3
+        val CODE_EOF = 4
     }
     var modificationTime: Date
     var syncStartTime: Date

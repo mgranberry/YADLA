@@ -32,22 +32,21 @@ class AndroidDeviceHelper private constructor() {
                 getDevicesFor(context, 0x0047, 0x22a3)
 
         fun getDeviceEntry (context: Context, device: UsbDevice): DeviceEntry? {
-            val manager = context.getSystemService(Context.USB_SERVICE) as UsbManager;
-            val connection = manager.openDevice(device)
-            println("connection:${connection}")
-            val serial = AndroidSerialConnection(device, connection)
-            println("serial:$serial")
-            serial.open()
-            val res = when (device) {
-                in getTandemPumps(context) -> DeviceEntry(serial, TandemPump(Okio.buffer(serial as Source), Okio.buffer(serial as Sink)))
-                in getDexcomG4s(context) -> DeviceEntry(serial, DexcomG4(Okio.buffer(serial as Source), Okio.buffer(serial as Sink)))
-                else -> {
-                    serial.close()
-                    null
+            val serial = AndroidSerialConnection(context, device)
+            var entry: DeviceEntry? = null
+            try {
+                entry = when (device) {
+                    in getTandemPumps(context) -> DeviceEntry(serial, TandemPump(Okio.buffer(serial as Source), Okio.buffer(serial as Sink)))
+                    in getDexcomG4s(context) -> DeviceEntry(serial, DexcomG4(Okio.buffer(serial as Source), Okio.buffer(serial as Sink)))
+                    else -> {
+                        null
+                    }
                 }
+            } finally {
+                if (entry == null)
+                    serial.close()
             }
-            println("res: $res")
-            return res
+            return entry
         }
     }
 }

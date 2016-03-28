@@ -15,23 +15,31 @@ import com.kludgenics.cgmlogger.extension.create
 import com.kludgenics.cgmlogger.extension.where
 import io.realm.Realm
 import io.realm.Sort
-import org.jetbrains.anko.async
+import org.jetbrains.anko.AnkoLogger
 import org.jetbrains.anko.asyncResult
+import org.jetbrains.anko.info
 import org.joda.time.LocalDateTime
 import org.joda.time.Period
+import java.io.EOFException
 import java.util.*
-import java.util.concurrent.Executor
-import java.util.concurrent.ExecutorService
-import java.util.concurrent.Executors
-import java.util.concurrent.Future
+import java.util.concurrent.*
+import java.util.concurrent.locks.ReentrantLock
+import kotlin.concurrent.withLock
 
 /**
  * Created by matthias on 3/18/16.
  */
 
-object DeviceSync {
-
+class DeviceSync : AnkoLogger {
+    private constructor ()
+    companion object {
+        private val _instance: DeviceSync by lazy { DeviceSync() }
+        fun getInstance() = _instance
+    }
     val syncExecutorService = Executors.newCachedThreadPool()
+    val executingSyncs: MutableSet<UsbDevice> = HashSet()
+    val devices: MutableMap<UsbDevice, AndroidDeviceHelper.DeviceEntry> = HashMap()
+    val executingSyncLock = ReentrantLock()
 
     private fun downloadTandem(therapyTimeline: TherapyTimeline, device: TandemPump,
                                fetchPredicate: (Record) -> Boolean): Record? {
@@ -40,7 +48,7 @@ object DeviceSync {
                 device.smbgRecords, device.consumableRecords,
                 device.profileRecords)
         val source = device.records.filterIsInstance<Record>().first().source
-        println("source=$source")
+        info("source=$source")
         return therapyTimeline.events.filter { it.source == source }.lastOrNull()
     }
 
@@ -89,6 +97,7 @@ object DeviceSync {
                 Status.CODE_DEVICE_READ_IN_PROGRESS -> Status.IN_PROGRESS
                 Status.CODE_SUCCESS -> Status.SUCCESS
                 Status.CODE_FAILURE -> Status.FAILURE
+                Status.CODE_EOF -> Status.EOF
                 else -> "Unknown status"
             }
             status.active = inProgress
@@ -101,26 +110,53 @@ object DeviceSync {
         }
     }
 
-    fun sync(context: Context, device: UsbDevice): TherapyTimeline {
-        val therapyTimeline = PersistedTherapyTimeline()
-        val deviceEntry = AndroidDeviceHelper.getDeviceEntry(context, device)
-        if (deviceEntry != null)
-            syncDevice(context, therapyTimeline, deviceEntry).get()
-        return therapyTimeline
+    fun sync(context: Context, device: UsbDevice) {
+        val shouldSync = executingSyncLock.withLock {
+            if (executingSyncs.contains(device)) {
+                info("$device already in deviceMap: $executingSyncs")
+                false
+            } else {
+                info("Adding $device to deviceMap: $executingSyncs")
+                executingSyncs += device
+                true
+            }
+        }
+        if (shouldSync) {
+            try {
+                info("Starting sync")
+                Thread.sleep(500)
+                val deviceEntry = AndroidDeviceHelper.getDeviceEntry(context, device)
+                info ("AndroidDeviceHelper.getDeviceEntry($context, $device) returned $deviceEntry")
+                deviceEntry?.serialConnection?.use {
+                    devices[device] = deviceEntry
+                    info("calling syncDevice")
+                    val res = syncDevice(context, deviceEntry).get()
+                    info("syncDevice result is:$res")
+                }
+            } finally {
+                executingSyncLock.withLock {
+                    info("Removing $device from deviceMap: $executingSyncs")
+                    devices.remove(device)
+                    executingSyncs -= device
+                }
+            }
+        }
     }
 
     fun stopDeviceSync(device: UsbDevice) {
-        val deviceKey = device.deviceName
+        val r = devices[device]
+        r?.serialConnection?.close()
     }
 
-    fun syncDevice(context: Context, therapyTimeline: TherapyTimeline, deviceEntry: AndroidDeviceHelper.DeviceEntry): Future<String> {
-        println("Syncing ${deviceEntry.device.serialNumber}")
+    fun syncDevice(context: Context, deviceEntry: AndroidDeviceHelper.DeviceEntry): Future<String> {
+        info("Syncing ${deviceEntry.device.serialNumber}")
         Crashlytics.log("Syncing ${deviceEntry.device.serialNumber}")
         return context.asyncResult (syncExecutorService) {
             try {
-                deviceEntry.serialConnection.use {
-                    val realm = Realm.getDefaultInstance()
-                    realm.use {
+                val realm = Realm.getDefaultInstance()
+                realm.use {
+                    val therapyTimeline = PersistedTherapyTimeline()
+                    therapyTimeline.use {
                         val syncId = createStatus(realm, deviceEntry.device)
                         try {
                             val updateTime = getLatestSuccessFor(deviceEntry.device) ?: LocalDateTime.now() - Period.days(3)
@@ -133,19 +169,21 @@ object DeviceSync {
                                         fetchPredicate)
                                 else -> null
                             }
-                            println("sync of ${deviceEntry.device.serialNumber} ${latestEvent?.time} done")
+                            info("sync of ${deviceEntry.device.serialNumber} ${latestEvent?.time} done")
                             updateStatus(realm, syncId, Status.CODE_SUCCESS, latestEvent?.time?.toDate(), inProgress = false, clockOffsetMillis = deviceEntry.device.timeCorrectionOffset?.millis)
                         } catch (e: ArrayIndexOutOfBoundsException) {
-                            println("sync of ${deviceEntry.device.serialNumber} failed.")
+                            info("sync of ${deviceEntry.device.serialNumber} failed.")
                             e.printStackTrace()
                             updateStatus(realm, syncId, Status.CODE_FAILURE, null, false)
                             Crashlytics.logException(e)
+                        } catch (e: EOFException) {
+                            updateStatus(realm, syncId, Status.CODE_EOF, null, false)
                         }
                     }
-                    deviceEntry.device.serialNumber
                 }
+                deviceEntry.device.serialNumber
             } catch (e: Exception) {
-                println("Exception caught: ${e.message}")
+                info("Exception caught: ${e.message}")
                 e.printStackTrace()
                 Crashlytics.logException(e)
                 throw e

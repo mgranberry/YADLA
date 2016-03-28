@@ -1,5 +1,6 @@
 package com.kludgenics.cgmlogger.app.model
 
+import android.util.Log
 import com.crashlytics.android.Crashlytics
 import com.kludgenics.alrightypump.therapy.*
 import com.kludgenics.cgmlogger.extension.transaction
@@ -16,7 +17,6 @@ import java.util.*
 interface TypedRecord : Record {
     companion object {
         val CLASSES = arrayOf<Class<out RealmObject>>(PersistedRawCgmRecord::class.java,
-                PersistedCgmRecord::class.java,
                 PersistedBolusRecord::class.java,
                 PersistedBolusWizardRecord::class.java,
                 PersistedCalibrationRecord::class.java,
@@ -29,17 +29,20 @@ interface TypedRecord : Record {
                 PersistedCgmInsertionRecord::class.java,
                 PersistedFoodRecord::class.java)
 
-        fun inflate(realm: Realm, record: TypedRecord): TypedRecord? {
-            val realmClass =
-                    try {
-                        CLASSES.first { realm.where(it).equalTo("record.eventKey", record.eventKey).findAll().size != 0 }
-                    } catch (e: java.util.NoSuchElementException) {
-                        println("Boo! element for $record could not be found ")
-                        Crashlytics.log("record is: $record")
-                        Crashlytics.logException(e)
-                        null
-                    }
-            return if (realmClass != null) realm.where(realmClass).equalTo("record.eventKey", record.eventKey).findFirst() as TypedRecord else null
+        fun inflate(realm: Realm, record: PersistedRecord): TypedRecord? {
+            var resultObject: RealmObject? = null
+            try {
+                CLASSES.first {
+                    resultObject = realm.where(it).equalTo("eventKey", record.eventKey).findFirst()
+                    resultObject != null
+                }
+            } catch (e: java.util.NoSuchElementException) {
+                println("Boo! element for $record could not be found ")
+                Crashlytics.log("record is: $record")
+                Crashlytics.logException(e)
+                resultObject = null
+            }
+            return resultObject as? TypedRecord
         }
     }
 
@@ -71,6 +74,7 @@ object EventType {
 
 class PersistedTherapyTimeline() : TherapyTimeline, Closeable {
     private val realm: Realm get() = Realm.getDefaultInstance()
+    private val TAG: String = javaClass.simpleName
 
     override val events: Sequence<Record>
         get() = realm.where<PersistedRecord>().findAllSorted("_date").asSequence().map { TypedRecord.inflate(realm, it) }.filterNotNull()
@@ -102,63 +106,58 @@ class PersistedTherapyTimeline() : TherapyTimeline, Closeable {
 
     override fun merge(predicate: (Record) -> Boolean, vararg additionalEvents: Sequence<Record>) {
         val events = additionalEvents.flatMap { it.takeWhile(predicate).asIterable() }
-        events.forEach { event ->
-            val record = PersistedRecord(_id = event.id, _date = Date(event.time.toDateTime().millis), _source = event.source)
-            record.eventKey = "${event.javaClass.simpleName}-${event.time.toDate().time}"
-            val persistedRecord: RealmObject? = when (event) {
-                is CalibrationRecord -> PersistedCalibrationRecord(record, event as Calibration)
-                is RawCgmRecord -> PersistedRawCgmRecord(record, event)
-                is CgmRecord -> PersistedCgmRecord(record, event)
-                is SmbgRecord -> PersistedSmbgRecord(record, event)
-                is BolusRecord -> PersistedBolusRecord(record, event)
-                is FoodRecord -> PersistedFoodRecord(record, event)
-                is CgmInsertionRecord -> PersistedCgmInsertionRecord(record, event)
-                is TemporaryBasalStartRecord -> PersistedTemporaryBasalStartRecord(record, event)
-                is TemporaryBasalEndRecord -> PersistedTemporaryBasalEndRecord(record, event)
-                is SuspendedBasalRecord -> PersistedSuspendedBasalRecord(record, event)
-                is CannulaChangedRecord -> PersistedCannulaChangedRecord(record)
-                is CartridgeChangeRecord -> PersistedCartridgeChangeRecord(record)
-            //is ScheduledBasalRecord,
-                else -> null
-            }
-            if (persistedRecord != null && persistedRecord is TypedRecord) {
-                record._eventType = persistedRecord.eventType
-                persistedRecord.eventKey = record.eventKey
-                realm.transaction {
-                    realm.copyToRealmOrUpdate(persistedRecord) as TypedRecord
+        realm.transaction {
+            events.forEach { event ->
+                try {
+                    val record = PersistedRecord(_id = event.id, _date = Date(event.time.toDateTime().millis), _source = event.source)
+                    record.eventKey = "${event.javaClass.simpleName}-${event.time.toDate().time}"
+                    val persistedRecord: RealmObject? = when (event) {
+                        is CalibrationRecord -> PersistedCalibrationRecord(record, event as Calibration)
+                        is RawCgmRecord -> PersistedRawCgmRecord(record, event)
+                        is CgmRecord -> PersistedRawCgmRecord(record, event)
+                        is SmbgRecord -> PersistedSmbgRecord(record, event)
+                        is BolusRecord -> PersistedBolusRecord(record, event)
+                        is FoodRecord -> PersistedFoodRecord(record, event)
+                        is CgmInsertionRecord -> PersistedCgmInsertionRecord(record, event)
+                        is TemporaryBasalStartRecord -> PersistedTemporaryBasalStartRecord(record, event)
+                        is TemporaryBasalEndRecord -> PersistedTemporaryBasalEndRecord(record, event)
+                        is SuspendedBasalRecord -> PersistedSuspendedBasalRecord(record, event)
+                        is CannulaChangedRecord -> PersistedCannulaChangedRecord(record)
+                        is CartridgeChangeRecord -> PersistedCartridgeChangeRecord(record)
+                    //is ScheduledBasalRecord,
+                        else -> null
+                    }
+                    if (persistedRecord != null && persistedRecord is TypedRecord) {
+                        record._eventType = persistedRecord.eventType
+                        persistedRecord.eventKey = record.eventKey
+                        realm.copyToRealmOrUpdate(persistedRecord) as TypedRecord
+                    }
+                } catch (e: org.joda.time.IllegalInstantException) {
+                    Log.e(TAG, "ditching illegal time record")
                 }
             }
         }
     }
 
     override fun close() {
-        if (realm.isClosed)
+        if (!realm.isClosed)
             realm.close()
     }
 
 }
 
-
-open class PersistedCalibration(var _slope: Double = Double.NaN,
-                                var _intercept: Double = Double.NaN,
-                                var _scale: Double = Double.NaN,
-                                var _decay: Double = Double.NaN) : Calibration, RealmObject() {
-    constructor(calibration: Calibration) : this(_slope = calibration.slope,
-            _intercept = calibration.intercept,
-            _scale = calibration.scale,
-            _decay = calibration.decay)
-
-    override val slope: Double get() = _slope
-    override val intercept: Double get() = _intercept
-    override val scale: Double get() = _scale
-    override val decay: Double get() = _decay
-}
-
 open class PersistedCalibrationRecord(var record: PersistedRecord = PersistedRecord(),
-                                      var _calibration: PersistedCalibration = PersistedCalibration(),
+                                      var _slope: Double = Double.NaN,
+                                      var _intercept: Double = Double.NaN,
+                                      var _scale: Double = Double.NaN,
+                                      var _decay: Double = Double.NaN,
                                       @PrimaryKey
-                                      override var eventKey: String="") : Calibration, TypedRecord, RealmObject() {
-    constructor(record: PersistedRecord, calibration: Calibration) : this(record, PersistedCalibration(calibration))
+                                      override var eventKey: String="") : Calibration, CalibrationRecord, TypedRecord, RealmObject() {
+    constructor(record: PersistedRecord, calibration: Calibration) : this(record,
+            calibration.slope,
+            calibration.intercept,
+            calibration.scale,
+            calibration.decay)
 
     override var _date: Date
         get() = record._date
@@ -172,46 +171,35 @@ open class PersistedCalibrationRecord(var record: PersistedRecord = PersistedRec
     override val source: String
         get() = record._source
     override val slope: Double
-        get() = _calibration.slope
+        get() = _slope
     override val intercept: Double
-        get() = _calibration.intercept
+        get() = _intercept
     override val scale: Double
-        get() = _calibration.scale
+        get() = _scale
     override val decay: Double
-        get() = _calibration.decay
+        get() = _decay
     override val eventType: Int
         get() = EventType.OTHER
 }
 
-open class PersistedGlucoseValue(var _glucose: Double? = null, var _unit: Int = GlucoseUnit.MGDL) : GlucoseValue, RealmObject() {
-    constructor(glucoseValue: GlucoseValue) : this(glucoseValue.glucose, glucoseValue.unit)
-
-    override val glucose: Double? get() = _glucose
-    override val unit: Int get() = _unit
-}
-
-open class PersistedRawGlucoseValue(var _glucose: Double? = null,
-                                    var _unit: Int = GlucoseUnit.MGDL,
-                                    var _calibration: PersistedCalibration? = null,
-                                    var _filtered: Int? = null,
-                                    var _unfiltered: Int? = null) : RawGlucoseValue, RealmObject() {
-    constructor(rawGlucoseValue: RawGlucoseValue) : this(_glucose = rawGlucoseValue.glucose,
-            _unit = rawGlucoseValue.unit,
-            _calibration = null)
-
-    override val glucose: Double? get() = _glucose
-    override val unit: Int get() = _unit
-    override val calibration: Calibration? get() = _calibration
-    override val filtered: Int? get() = _filtered
-    override val unfiltered: Int? get() = _unfiltered
-}
+class ProxyGlucoseValue(glucoseValue: GlucoseValue) : GlucoseValue by glucoseValue
+class ProxyRawGlucoseValue(glucoseValue: RawGlucoseValue) : RawGlucoseValue by glucoseValue
 
 open class PersistedRawCgmRecord(var record: PersistedRecord = PersistedRecord(),
-                                 var _value: PersistedRawGlucoseValue = PersistedRawGlucoseValue(),
+                                 var _glucose: Double? = null,
+                                 var _unit: Int = GlucoseUnit.MGDL,
+                                 var _filtered: Int? = null,
+                                 var _unfiltered: Int? = null,
                                  @PrimaryKey
-                                 override var eventKey: String="") : TypedRecord, RawCgmRecord, RealmObject() {
-    constructor (record: PersistedRecord, rawCgmRecord: RawCgmRecord) : this(record, PersistedRawGlucoseValue(rawCgmRecord.value))
-    override val value: PersistedRawGlucoseValue get() = _value
+                                 override var eventKey: String="") : TypedRecord, RawCgmRecord, RawGlucoseValue, RealmObject() {
+    constructor (record: PersistedRecord, rawCgmRecord: RawCgmRecord) : this(record,
+            rawCgmRecord.value.glucose,
+            rawCgmRecord.value.unit,
+            rawCgmRecord.value.filtered,
+            rawCgmRecord.value.unfiltered)
+    constructor (record: PersistedRecord, rawCgmRecord: CgmRecord) : this(record,
+            rawCgmRecord.value.glucose,
+            rawCgmRecord.value.unit)
     override val eventType: Int
         get() = EventType.GLUCOSE
 
@@ -226,35 +214,23 @@ open class PersistedRawCgmRecord(var record: PersistedRecord = PersistedRecord()
         get() = record.time
     override val source: String
         get() = record._source
-}
 
-open class PersistedCgmRecord(var record: PersistedRecord = PersistedRecord(),
-                              var _value: PersistedGlucoseValue = PersistedGlucoseValue(),
-                              @PrimaryKey
-                              override var eventKey: String="") : TypedRecord, CgmRecord, RealmObject() {
-    constructor (record: PersistedRecord, rawCgmRecord: CgmRecord) : this(record, PersistedGlucoseValue(rawCgmRecord.value))
-    override var _date: Date
-        get() = record._date
-        set(value) {
-            record._date = value
-        }
-    override val id: String?
-        get() = record._id
-    override val time: LocalDateTime
-        get() = record.time
-    override val source: String
-        get() = record._source
-    override val value: GlucoseValue get() = _value
-    override val eventType: Int
-        get() = EventType.GLUCOSE
+    override val value: ProxyRawGlucoseValue get() = ProxyRawGlucoseValue(this)
+    override val glucose: Double? get() = _glucose
+    override val unit: Int get() = _unit
+    override val calibration: Calibration? get() = null
+    override val filtered: Int? get() = _filtered
+    override val unfiltered: Int? get() = _unfiltered
+
 }
 
 open class PersistedSmbgRecord(var record: PersistedRecord = PersistedRecord(),
-                               var _value: PersistedGlucoseValue = PersistedGlucoseValue(),
+                               var _glucose: Double? = null,
+                               var _unit: Int = GlucoseUnit.MGDL,
                                var _manual: Boolean = true,
                                @PrimaryKey
-                               override var eventKey: String="") : TypedRecord, SmbgRecord, RealmObject() {
-    constructor (record: PersistedRecord, smbgRecord: SmbgRecord) : this(record, PersistedGlucoseValue(smbgRecord.value), smbgRecord.manual)
+                               override var eventKey: String="") : GlucoseValue, TypedRecord, SmbgRecord, RealmObject() {
+    constructor (record: PersistedRecord, smbgRecord: SmbgRecord) : this(record, smbgRecord.value.glucose, smbgRecord.value.unit, smbgRecord.manual)
     override var _date: Date
         get() = record._date
         set(value) {
@@ -267,7 +243,12 @@ open class PersistedSmbgRecord(var record: PersistedRecord = PersistedRecord(),
     override val source: String
         get() = record._source
     override val value: GlucoseValue
-        get() = _value
+        get() = ProxyGlucoseValue(this)
+    override val glucose: Double?
+        get() = _glucose
+    override val unit: Int
+        get() = _unit
+
     override val manual: Boolean
         get() = _manual
     override val eventType: Int
@@ -447,14 +428,6 @@ open class PersistedCartridgeChangeRecord(var record: PersistedRecord = Persiste
         get() = EventType.OTHER
 }
 
-open class PersistedBloodGlucoseTarget(var _targetLow: PersistedGlucoseValue = PersistedGlucoseValue(),
-                                       var _targetHigh: PersistedGlucoseValue = PersistedGlucoseValue()) : BloodGlucoseTarget, RealmObject() {
-    override val targetLow: GlucoseValue
-        get() = _targetLow
-    override val targetHigh: GlucoseValue
-        get() = _targetHigh
-}
-
 open class PersistedBolusWizardRecommendation(var _carbBolus: Double = Double.NaN,
                                               var _correctionBolus: Double = Double.NaN) : BolusWizardRecord.Recommendation, RealmObject() {
     override val carbBolus: Double
@@ -464,23 +437,21 @@ open class PersistedBolusWizardRecommendation(var _carbBolus: Double = Double.Na
 }
 
 open class PersistedBolusWizardRecord(var record: PersistedRecord = PersistedRecord(),
-                                      var _bg: PersistedGlucoseValue = PersistedGlucoseValue(),
+                                      var _bg_glucose: Double? = null,
+                                      var _bg_unit: Int = GlucoseUnit.MGDL,
                                       var _carbs: Int = 0,
                                       var _insulinOnBoard: Double = Double.NaN,
                                       var _carbRatio: Double = Double.NaN,
                                       var _insulinSensitivity: Double = Double.NaN,
-                                      var _target: PersistedBloodGlucoseTarget = PersistedBloodGlucoseTarget(),
                                       var _recommendation: PersistedBolusWizardRecommendation = PersistedBolusWizardRecommendation(),
-                                      override var eventKey: String = "") : TypedRecord, BolusWizardRecord, RealmObject() {
-
-
+                                      override var eventKey: String = "") : TypedRecord, BolusWizardRecord, GlucoseValue, RealmObject() {
     constructor(bolusWizardRecord: BolusWizardRecord) : this(record=PersistedRecord(),
-            _bg = PersistedGlucoseValue(bolusWizardRecord.bg),
+            _bg_glucose = bolusWizardRecord.bg.glucose,
+            _bg_unit = bolusWizardRecord.bg.unit,
             _carbs = bolusWizardRecord.carbs,
             _insulinOnBoard = bolusWizardRecord.insulinOnBoard,
             _carbRatio = bolusWizardRecord.carbRatio,
             _insulinSensitivity = bolusWizardRecord.insulinSensitivity,
-            _target = with (bolusWizardRecord.target) { PersistedBloodGlucoseTarget(PersistedGlucoseValue(targetLow), PersistedGlucoseValue(targetHigh)) },
             _recommendation = with (bolusWizardRecord.recommendation) { PersistedBolusWizardRecommendation(
                     _carbBolus = carbBolus,
                     _correctionBolus = correctionBolus)})
@@ -498,7 +469,7 @@ open class PersistedBolusWizardRecord(var record: PersistedRecord = PersistedRec
     override val eventType: Int
         get() = EventType.OTHER
     override val bg: GlucoseValue
-        get() = _bg
+        get() = ProxyGlucoseValue(this)
     override val carbs: Int
         get() = _carbs
     override val insulinOnBoard: Double
@@ -508,7 +479,16 @@ open class PersistedBolusWizardRecord(var record: PersistedRecord = PersistedRec
     override val insulinSensitivity: Double
         get() = _insulinSensitivity
     override val target: BloodGlucoseTarget
-        get() = _target
+        get() = object: BloodGlucoseTarget {
+            override val targetLow: GlucoseValue
+                get() = throw UnsupportedOperationException()
+            override val targetHigh: GlucoseValue
+                get() = throw UnsupportedOperationException()
+        }
+    override val glucose: Double?
+        get() = _bg_glucose
+    override val unit: Int
+        get() = _bg_unit
     override val recommendation: BolusWizardRecord.Recommendation
         get() = _recommendation
 }

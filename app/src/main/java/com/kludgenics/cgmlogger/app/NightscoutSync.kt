@@ -1,45 +1,83 @@
 package com.kludgenics.cgmlogger.app
 
 import com.kludgenics.alrightypump.cloud.nightscout.Nightscout
-import com.kludgenics.alrightypump.therapy.TherapyTimeline
+import com.kludgenics.cgmlogger.app.model.InflatedRecord
+import com.kludgenics.cgmlogger.app.model.PersistedTherapyTimeline
+import com.kludgenics.cgmlogger.app.model.SyncStore
+import com.kludgenics.cgmlogger.extension.transaction
+import com.squareup.moshi.JsonDataException
+import io.realm.Realm
 import okhttp3.HttpUrl
 import okhttp3.OkHttpClient
-import okhttp3.ResponseBody
 import org.jetbrains.anko.AnkoLogger
 import org.jetbrains.anko.info
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
+import java.io.IOException
 
 class NightscoutSync: AnkoLogger {
     private constructor()
+
+    var okHttpClient = OkHttpClient()
+
     companion object {
-        private val _instance: NightscoutSync by lazy {NightscoutSync()}
+        private val _instance: NightscoutSync by lazy { NightscoutSync() }
         @JvmStatic
         fun getInstance(): NightscoutSync = NightscoutSync._instance
     }
 
-    fun uploadToNightscout(timeline: TherapyTimeline?) {
-        info("Sync complete, received ${timeline?.events?.count()}")
-        val nightscout_url = "https://12345678901234@omnominable.granberrys.us/"
+    fun testUrl(url: String): String? {
         try {
-            val nightscout = Nightscout(HttpUrl.parse(nightscout_url), OkHttpClient())
-            if (timeline != null)
-                nightscout.postRecords(timeline.events, object : Callback<ResponseBody> {
-                    override fun onResponse(call: Call<ResponseBody>?, response: Response<ResponseBody>?) {
+            val parsedUrl = HttpUrl.parse(url)
+            if (parsedUrl == null)
+                return "Please enter a valid URL."
+            val nightscout = Nightscout(parsedUrl, okHttpClient)
+            val result = nightscout.status()
+            if (!result.isSuccessful)
+                return "Failed to connect with result ${result.code()} ${result.message()}.  Check address.  Do not include \"/api/v1/\""
+            val status = result.body()
+            if (status == null)
+                return "Unable to read status."
+            if (status.apiEnabled == false)
+                return "API disabled on server.  Unable to upload."
+            val auth = nightscout.verifyAuth().body()
+            if (auth == null || auth.message != "OK")
+                return "Auth verification failed.  Check password."
+            return null
+        } catch (e: IOException) {
+            return "Error reading data: ${e.message}.  Check to make sure that address is correct."
+        } catch (e: JsonDataException) {
+            return "Error reading data: ${e.message}.  Check to make sure the address is correct."
+        }
+    }
 
+    fun uploadToNightscout(timeline: PersistedTherapyTimeline, syncStore: SyncStore) {
+        val newEvents = timeline.eventsWithoutSource(syncStore)
+        info("!!!Sync complete, received ${newEvents.count()}")
+        val nightscout_url = syncStore.parameters
+        info("uploading to $nightscout_url")
+        try {
+            info("Trying")
+            val nightscout = Nightscout(HttpUrl.parse(nightscout_url), okHttpClient)
+            val uploadCalls = nightscout.prepareUploads(timeline.eventsWithoutSource(syncStore)).toList()
+            info("cc: ${uploadCalls.count()}")
+            uploadCalls.forEach {
+                chunk: Nightscout.ChunkedCall<InflatedRecord> ->
+                info("call")
+                val response = chunk.call.execute();
+                info("executed")
+                val realm = Realm.getDefaultInstance()
+                realm.use {
+                    realm.transaction {
+                        info("$response")
+                        if (response.isSuccessful)
+                            chunk.argumentList.forEach {
+                                it.record.syncedStores.add(syncStore)
+                            }
                     }
-
-                    override fun onFailure(call: Call<ResponseBody>?, t: Throwable?) {
-                        println("Throwable2: $t ${t?.message} ${t?.cause}")
-                        t?.printStackTrace()
-                        println("cause")
-                        t?.cause?.printStackTrace()
-                    }
-                })
-            info("Upload completed")
+                }
+            }
+            info("Upload queued")
         } catch (e: Exception) {
-            println("Exception $e")
+            info("Exception in nightscoutSync", e)
             e.printStackTrace()
         }
     }

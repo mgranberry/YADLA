@@ -18,6 +18,7 @@ import io.realm.Sort
 import org.jetbrains.anko.AnkoLogger
 import org.jetbrains.anko.asyncResult
 import org.jetbrains.anko.info
+import org.joda.time.Duration
 import org.joda.time.LocalDateTime
 import org.joda.time.Period
 import java.io.EOFException
@@ -158,9 +159,11 @@ class DeviceSync : AnkoLogger {
                     therapyTimeline.use {
                         val syncId = createStatus(realm, deviceEntry.device)
                         try {
-                            val updateTime = getLatestSuccessFor(deviceEntry.device) ?: LocalDateTime.now() - Period.days(30)
-
-                            val fetchPredicate = { record: Record -> record.time > LocalDateTime(updateTime) }
+                            val offset = deviceEntry.device.timeCorrectionOffset ?: Duration.ZERO
+                            val updateTime = LocalDateTime(getLatestSuccessFor(deviceEntry.device) ?:
+                                    (System.currentTimeMillis() - Period.days(30).toStandardSeconds().seconds * 1000L)) - offset
+                            info("Syncing back to $updateTime")
+                            val fetchPredicate = { record: Record -> record.time > updateTime }
                             val latestEvent = when (deviceEntry.device) {
                                 is DexcomG4 -> downloadDexcomG4(therapyTimeline, deviceEntry.device as DexcomG4,
                                         fetchPredicate)

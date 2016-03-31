@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout>
+    <data>
+        <variable
+            name="configurationHandler"
+            type="com.kludgenics.cgmlogger.app.viewmodel.NightscoutConfig"/>
+    </data>
+    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        style="@style/Widget.CardContent">
+        <TextView
+            android:layout_width="wrap_content"
+            android:text="@string/list_extra_uploader_not_configured"
+            android:layout_height="wrap_content" />
+        <View
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_weight="1"/>
+        <TextView
+            android:text="@string/list_extra_button_configure"
+            android:textColor="?attr/colorPrimary"
+            android:layout_gravity="end"
+            android:layout_height="wrap_content"
+            android:layout_width="wrap_content"
+            android:onClick="@{configurationHandler.onConfigureUploader}"/>
+    </LinearLayout>
+</layout>

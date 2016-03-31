@@ -9,39 +9,42 @@ import android.view.Menu
 import android.view.MenuItem
 import com.kludgenics.cgmlogger.app.adapter.CardAdapter
 import com.kludgenics.cgmlogger.app.databinding.ActivityMainBinding
+import com.kludgenics.cgmlogger.app.databinding.DialogConfigureNightscoutBinding
+import com.kludgenics.cgmlogger.app.model.PersistedRecord
+import com.kludgenics.cgmlogger.app.model.SyncStore
 import com.kludgenics.cgmlogger.app.service.SyncService
+import com.kludgenics.cgmlogger.app.viewmodel.NightscoutConfig
 import com.kludgenics.cgmlogger.app.viewmodel.ObservableStatus
 import com.kludgenics.cgmlogger.app.viewmodel.RealmStatus
+import com.kludgenics.cgmlogger.extension.group
+import com.kludgenics.cgmlogger.extension.transaction
 import com.kludgenics.cgmlogger.extension.where
 import io.realm.Realm
 import io.realm.Sort
 import org.jetbrains.anko.AnkoLogger
+import org.jetbrains.anko.alert
+import org.jetbrains.anko.async
+import org.jetbrains.anko.info
+import org.joda.time.Duration
+import org.joda.time.Instant
 import java.util.*
 
 class MainActivity :  AppCompatActivity(), AnkoLogger {
 
     val realm = Realm.getDefaultInstance()
-    // Note: Your consumer key and secret should be obfuscated in your source code before shipping.
-    companion object {
-        const val TWITTER_KEY = "XpH1SOqMSaH3v8P7A9e0RFBHm";
-        const val TWITTER_SECRET = "BYYqmgAxxSyzfxbkYomajXZNvthMmvMLrdhhOChwHiUqGtln94";
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val binding: ActivityMainBinding = DataBindingUtil.setContentView(this, R.layout.activity_main)
-        binding.status = ObservableStatus(RealmStatus(active = true, modificationTime = Date(), statusText = "Hello World", serialNumber = "SM12345678"))
+        setSupportActionBar(binding.includedListViewpager.toolbar)
+
+        binding.status = ObservableStatus(realm.where<RealmStatus>().findAllSorted("modificationTime", Sort.DESCENDING).firstOrNull() ?: RealmStatus(active = true, modificationTime = Date(), statusText = "Hello World", serialNumber = "SM12345678"))
         // TODO this is a query on the UI thread.  It would be nice if it could be done async, but the async versions of queries don't play well with
         binding.includedListViewpager.recycler.adapter = CardAdapter(
                 realm.where<RealmStatus>()
                         .findAllSorted("modificationTime", Sort.DESCENDING)
                         .distinct("serialNumber"))
-
-        realm.where<RealmStatus>()
-                .findAllSorted("modificationTime", Sort.DESCENDING).forEach { println("${it.modificationTime} ${it.latestRecordTime} ${it.serialNumber} ${it.statusText}") }
-
         binding.includedListViewpager.recycler.layoutManager = LinearLayoutManager(this)
-        //setContentView(R.layout.activity_main)
     }
 
     override fun onDestroy() {
@@ -59,7 +62,8 @@ class MainActivity :  AppCompatActivity(), AnkoLogger {
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
-        return super.onCreateOptionsMenu(menu)
+        menuInflater.inflate(R.menu.main, menu);
+        return true
     }
 
     override fun onOptionsItemSelected(item: MenuItem?): Boolean {
@@ -70,7 +74,17 @@ class MainActivity :  AppCompatActivity(), AnkoLogger {
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
-            return true
+            alert {
+                title("Nightscout URL")
+                message("Set this to your Nightscout's address.")
+                val binding = DialogConfigureNightscoutBinding.inflate(layoutInflater)
+                binding.config = NightscoutConfig(SyncStore())
+                customView ( binding.root )
+                negativeButton("CANCEL") {
+                    this.cancel()
+                }
+                positiveButton("SAVE", { binding.config.onSave() })
+            }.show()
         }
 
         return super.onOptionsItemSelected(item)

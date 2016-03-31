@@ -31,4 +31,8 @@
     <string name="pref_message_api_key">Enter your 12-digit API key here (API_SECRET in Nightscout config)</string>
     <string name="pref_default_api_key">API_SECRET</string>
     <string name="image_description_connection_type">Connection Type</string>
+    <string name="list_extra_uploader_not_configured">Uploader not configured.</string>
+    <string name="list_extra_button_configure">CONFIGURE</string>
+    <string name="button_text_cancel">CANCEL</string>
+    <string name="button_text_save">SAVE</string>
 </resources>

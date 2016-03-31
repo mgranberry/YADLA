@@ -42,7 +42,7 @@ private fun downloadRecords(threads: MutableList<Thread>, lastUploads: MutableMa
 
 private fun uploadRecords(nightscout: Nightscout?, nightscout_url: String?, okHttpClient: OkHttpClient, timeline: ConcurrentSkipListTherapyTimeline) {
     println("Uploading ${timeline.events.count()} records to $nightscout_url")
-    nightscout?.postRecords(timeline.events, object:Callback <ResponseBody> {
+    nightscout?.prepareUploads(timeline.events, object:Callback <ResponseBody> {
         override fun onResponse(call: Call<ResponseBody>?, response: Response<ResponseBody>?) {
         }
 

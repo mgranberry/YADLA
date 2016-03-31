@@ -29,7 +29,7 @@ interface TypedRecord : Record {
                 PersistedCgmInsertionRecord::class.java,
                 PersistedFoodRecord::class.java)
 
-        fun inflate(realm: Realm, record: PersistedRecord): TypedRecord? {
+        fun inflate(realm: Realm, record: PersistedRecord): InflatedRecord? {
             var resultObject: RealmObject? = null
             try {
                 CLASSES.first {
@@ -42,13 +42,17 @@ interface TypedRecord : Record {
                 Crashlytics.logException(e)
                 resultObject = null
             }
-            return resultObject as? TypedRecord
+            return resultObject as? InflatedRecord
         }
     }
 
     var _date: Date
     var eventKey: String
     val eventType: Int
+}
+
+interface InflatedRecord : TypedRecord {
+    var record: PersistedRecord
 }
 
 open class PersistedRecord(var syncedStores: RealmList<SyncStore> = RealmList(),
@@ -73,8 +77,22 @@ object EventType {
 }
 
 class PersistedTherapyTimeline() : TherapyTimeline, Closeable {
-    private val realm: Realm get() = Realm.getDefaultInstance()
+    private val realm: Realm by lazy { Realm.getDefaultInstance() }
     private val TAG: String = javaClass.simpleName
+
+    fun eventsWithoutSource(syncStore: SyncStore): Sequence<InflatedRecord> {
+        realm.refresh()
+        val id = syncStore.storeId
+        return realm.where<PersistedRecord> { not().equalTo("syncedStores.storeId", id) }
+                .findAllSorted("_date")
+                .asSequence().map { TypedRecord.inflate(realm, it) }.filterNotNull()
+    }
+
+    fun markComplete(records: Sequence<PersistedRecord>, syncStore: SyncStore) {
+        realm.transaction {
+            records.forEach { it.syncedStores.add(syncStore) }
+        }
+    }
 
     override val events: Sequence<Record>
         get() = realm.where<PersistedRecord>().findAllSorted("_date").asSequence().map { TypedRecord.inflate(realm, it) }.filterNotNull()
@@ -146,13 +164,13 @@ class PersistedTherapyTimeline() : TherapyTimeline, Closeable {
 
 }
 
-open class PersistedCalibrationRecord(var record: PersistedRecord = PersistedRecord(),
+open class PersistedCalibrationRecord(override var record: PersistedRecord = PersistedRecord(),
                                       var _slope: Double = Double.NaN,
                                       var _intercept: Double = Double.NaN,
                                       var _scale: Double = Double.NaN,
                                       var _decay: Double = Double.NaN,
                                       @PrimaryKey
-                                      override var eventKey: String="") : Calibration, CalibrationRecord, TypedRecord, RealmObject() {
+                                      override var eventKey: String="") : Calibration, CalibrationRecord, InflatedRecord, RealmObject() {
     constructor(record: PersistedRecord, calibration: Calibration) : this(record,
             calibration.slope,
             calibration.intercept,
@@ -185,13 +203,13 @@ open class PersistedCalibrationRecord(var record: PersistedRecord = PersistedRec
 class ProxyGlucoseValue(glucoseValue: GlucoseValue) : GlucoseValue by glucoseValue
 class ProxyRawGlucoseValue(glucoseValue: RawGlucoseValue) : RawGlucoseValue by glucoseValue
 
-open class PersistedRawCgmRecord(var record: PersistedRecord = PersistedRecord(),
+open class PersistedRawCgmRecord(override var record: PersistedRecord = PersistedRecord(),
                                  var _glucose: Double? = null,
                                  var _unit: Int = GlucoseUnit.MGDL,
                                  var _filtered: Int? = null,
                                  var _unfiltered: Int? = null,
                                  @PrimaryKey
-                                 override var eventKey: String="") : TypedRecord, RawCgmRecord, RawGlucoseValue, RealmObject() {
+                                 override var eventKey: String="") : InflatedRecord, RawCgmRecord, RawGlucoseValue, RealmObject() {
     constructor (record: PersistedRecord, rawCgmRecord: RawCgmRecord) : this(record,
             rawCgmRecord.value.glucose,
             rawCgmRecord.value.unit,
@@ -224,12 +242,12 @@ open class PersistedRawCgmRecord(var record: PersistedRecord = PersistedRecord()
 
 }
 
-open class PersistedSmbgRecord(var record: PersistedRecord = PersistedRecord(),
+open class PersistedSmbgRecord(override var record: PersistedRecord = PersistedRecord(),
                                var _glucose: Double? = null,
                                var _unit: Int = GlucoseUnit.MGDL,
                                var _manual: Boolean = true,
                                @PrimaryKey
-                               override var eventKey: String="") : GlucoseValue, TypedRecord, SmbgRecord, RealmObject() {
+                               override var eventKey: String="") : GlucoseValue, InflatedRecord, SmbgRecord, RealmObject() {
     constructor (record: PersistedRecord, smbgRecord: SmbgRecord) : this(record, smbgRecord.value.glucose, smbgRecord.value.unit, smbgRecord.manual)
     override var _date: Date
         get() = record._date
@@ -255,10 +273,10 @@ open class PersistedSmbgRecord(var record: PersistedRecord = PersistedRecord(),
         get() = EventType.GLUCOSE
 }
 
-open class PersistedFoodRecord(var record: PersistedRecord = PersistedRecord(),
+open class PersistedFoodRecord(override var record: PersistedRecord = PersistedRecord(),
                                var _carbohydrateGrams: Int = 0,
                                @PrimaryKey
-                               override var eventKey: String="") : TypedRecord, FoodRecord, RealmObject() {
+                               override var eventKey: String="") : InflatedRecord, FoodRecord, RealmObject() {
     constructor(record: PersistedRecord, foodRecord: FoodRecord) : this (record, _carbohydrateGrams = foodRecord.carbohydrateGrams)
     override var _date: Date
         get() = record._date
@@ -277,10 +295,10 @@ open class PersistedFoodRecord(var record: PersistedRecord = PersistedRecord(),
         get() = EventType.OTHER
 }
 
-open class PersistedCgmInsertionRecord(var record: PersistedRecord = PersistedRecord(),
+open class PersistedCgmInsertionRecord(override var record: PersistedRecord = PersistedRecord(),
                                        var _removed: Boolean = false,
                                        @PrimaryKey
-                                       override var eventKey: String="") : TypedRecord, CgmInsertionRecord, RealmObject() {
+                                       override var eventKey: String="") : InflatedRecord, CgmInsertionRecord, RealmObject() {
     constructor(record: PersistedRecord, cgmInsertionRecord: CgmInsertionRecord) : this (record, _removed = cgmInsertionRecord.removed)
     override var _date: Date
         get() = record._date
@@ -300,7 +318,7 @@ open class PersistedCgmInsertionRecord(var record: PersistedRecord = PersistedRe
         get() = EventType.OTHER
 }
 
-interface PersistedBasalRecord : TypedRecord, BasalRecord {
+interface PersistedBasalRecord : InflatedRecord, BasalRecord {
     var _rate: Double?
     override val rate: Double?
         get() = _rate
@@ -321,12 +339,12 @@ interface PersistedTemporaryBasalRecord : PersistedBasalRecord, TemporaryBasalRe
         get() = EventType.BASAL
 }
 
-open class PersistedTemporaryBasalStartRecord(var record: PersistedRecord = PersistedRecord(),
+open class PersistedTemporaryBasalStartRecord(override var record: PersistedRecord = PersistedRecord(),
                                               override var _percent: Double? = null,
                                               override var _durationMillis: Long = 0,
                                               override var _rate: Double? = null,
                                               @PrimaryKey
-                                              override var eventKey: String="") : TypedRecord, PersistedTemporaryBasalRecord, TemporaryBasalStartRecord, RealmObject() {
+                                              override var eventKey: String="") : InflatedRecord, PersistedTemporaryBasalRecord, TemporaryBasalStartRecord, RealmObject() {
     constructor(record: PersistedRecord, temporaryBasalStartRecord: TemporaryBasalStartRecord) : this (record, _percent = temporaryBasalStartRecord.percent,
             _durationMillis = temporaryBasalStartRecord.duration.millis,
             _rate = temporaryBasalStartRecord.rate)
@@ -343,12 +361,12 @@ open class PersistedTemporaryBasalStartRecord(var record: PersistedRecord = Pers
         get() = record._source
 }
 
-open class PersistedTemporaryBasalEndRecord(var record: PersistedRecord = PersistedRecord(),
+open class PersistedTemporaryBasalEndRecord(override var record: PersistedRecord = PersistedRecord(),
                                             override var _percent: Double? = null,
                                             override var _durationMillis: Long = 0,
                                             override var _rate: Double? = null,
                                             @PrimaryKey
-                                            override var eventKey: String="") : TypedRecord, PersistedTemporaryBasalRecord, TemporaryBasalEndRecord, RealmObject() {
+                                            override var eventKey: String="") : InflatedRecord, PersistedTemporaryBasalRecord, TemporaryBasalEndRecord, RealmObject() {
     constructor(record: PersistedRecord, temporaryBasalEndRecord: TemporaryBasalEndRecord) : this (record, _percent = temporaryBasalEndRecord.percent,
             _durationMillis = temporaryBasalEndRecord.duration.millis,
             _rate = temporaryBasalEndRecord.rate)
@@ -370,12 +388,12 @@ open class PersistedTemporaryBasalEndRecord(var record: PersistedRecord = Persis
         get() = super<PersistedTemporaryBasalRecord>.rate
 }
 
-open class PersistedSuspendedBasalRecord(var record: PersistedRecord = PersistedRecord(),
+open class PersistedSuspendedBasalRecord(override var record: PersistedRecord = PersistedRecord(),
                                          override var _percent: Double? = null,
                                          override var _durationMillis: Long = 0,
                                          override var _rate: Double? = null,
                                          @PrimaryKey
-                                         override var eventKey: String="") : TypedRecord, PersistedTemporaryBasalRecord, SuspendedBasalRecord, RealmObject() {
+                                         override var eventKey: String="") : InflatedRecord, PersistedTemporaryBasalRecord, SuspendedBasalRecord, RealmObject() {
     constructor(record: PersistedRecord, suspendedBasalRecord: SuspendedBasalRecord) : this (record, _percent = suspendedBasalRecord.percent,
             _durationMillis = suspendedBasalRecord.duration.millis,
             _rate = suspendedBasalRecord.rate)
@@ -392,9 +410,9 @@ open class PersistedSuspendedBasalRecord(var record: PersistedRecord = Persisted
         get() = record._source
 }
 
-open class PersistedCannulaChangedRecord(var record: PersistedRecord = PersistedRecord(),
+open class PersistedCannulaChangedRecord(override var record: PersistedRecord = PersistedRecord(),
                                          @PrimaryKey
-                                         override var eventKey: String="") : TypedRecord, CannulaChangedRecord, RealmObject() {
+                                         override var eventKey: String="") : InflatedRecord, CannulaChangedRecord, RealmObject() {
     override var _date: Date
         get() = record._date
         set(value) {
@@ -410,9 +428,9 @@ open class PersistedCannulaChangedRecord(var record: PersistedRecord = Persisted
         get() = EventType.OTHER
 }
 
-open class PersistedCartridgeChangeRecord(var record: PersistedRecord = PersistedRecord(),
+open class PersistedCartridgeChangeRecord(override var record: PersistedRecord = PersistedRecord(),
                                           @PrimaryKey
-                                          override var eventKey: String="") : TypedRecord, CartridgeChangeRecord, RealmObject() {
+                                          override var eventKey: String="") : InflatedRecord, CartridgeChangeRecord, RealmObject() {
     override var _date: Date
         get() = record._date
         set(value) {
@@ -436,7 +454,7 @@ open class PersistedBolusWizardRecommendation(var _carbBolus: Double = Double.Na
         get() = _correctionBolus
 }
 
-open class PersistedBolusWizardRecord(var record: PersistedRecord = PersistedRecord(),
+open class PersistedBolusWizardRecord(override var record: PersistedRecord = PersistedRecord(),
                                       var _bg_glucose: Double? = null,
                                       var _bg_unit: Int = GlucoseUnit.MGDL,
                                       var _carbs: Int = 0,
@@ -444,7 +462,7 @@ open class PersistedBolusWizardRecord(var record: PersistedRecord = PersistedRec
                                       var _carbRatio: Double = Double.NaN,
                                       var _insulinSensitivity: Double = Double.NaN,
                                       var _recommendation: PersistedBolusWizardRecommendation = PersistedBolusWizardRecommendation(),
-                                      override var eventKey: String = "") : TypedRecord, BolusWizardRecord, GlucoseValue, RealmObject() {
+                                      override var eventKey: String = "") : InflatedRecord, BolusWizardRecord, GlucoseValue, RealmObject() {
     constructor(bolusWizardRecord: BolusWizardRecord) : this(record=PersistedRecord(),
             _bg_glucose = bolusWizardRecord.bg.glucose,
             _bg_unit = bolusWizardRecord.bg.unit,
@@ -493,7 +511,7 @@ open class PersistedBolusWizardRecord(var record: PersistedRecord = PersistedRec
         get() = _recommendation
 }
 
-open class PersistedBolusRecord(var record: PersistedRecord = PersistedRecord(),
+open class PersistedBolusRecord(override var record: PersistedRecord = PersistedRecord(),
                                 var _requestedNormal: Double? = null,
                                 var _deliveredNormal: Double? = null,
                                 var _requestedExtended: Double? = null,
@@ -503,7 +521,7 @@ open class PersistedBolusRecord(var record: PersistedRecord = PersistedRecord(),
                                 var _bolusWizard: PersistedBolusWizardRecord? = null,
                                 var _manual: Boolean = false,
                                 @PrimaryKey
-                                override var eventKey: String="") : TypedRecord, BolusRecord, RealmObject() {
+                                override var eventKey: String="") : InflatedRecord, BolusRecord, RealmObject() {
     override var _date: Date
         get() = record._date
         set(value) {

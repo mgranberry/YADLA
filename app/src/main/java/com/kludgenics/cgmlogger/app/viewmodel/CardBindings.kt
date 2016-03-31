@@ -14,10 +14,13 @@ object CardBindings {
     @BindingAdapter("isActive") @JvmStatic
     fun setIsActive(view: CardView, isActive: Boolean) {
         val targets = if (isActive) 2f to 10f else 10f to 2f
-        val animator = ObjectAnimator.ofFloat(view, "cardElevation", targets.first, targets.second);
-        animator.interpolator = INTERPOLATOR
-        animator.setAutoCancel(true)
-        animator.duration = 500
-        animator.start()
+        if (view.cardElevation == targets.first) {
+            val animator = ObjectAnimator.ofFloat(view, "cardElevation", targets.first, targets.second);
+            animator.interpolator = INTERPOLATOR
+            animator.setAutoCancel(true)
+            animator.duration = 500
+            animator.start()
+        } else
+            view.cardElevation = targets.second
     }
 }

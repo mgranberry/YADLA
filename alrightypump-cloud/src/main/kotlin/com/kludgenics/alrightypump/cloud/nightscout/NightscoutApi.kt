@@ -6,10 +6,7 @@ import com.kludgenics.alrightypump.cloud.nightscout.records.json.Sgv
 import com.kludgenics.alrightypump.cloud.nightscout.records.therapy.NightscoutGlucoseValue
 import com.kludgenics.alrightypump.device.dexcom.g4.DexcomCgmRecord
 import com.kludgenics.alrightypump.therapy.*
-import com.squareup.moshi.FromJson
-import com.squareup.moshi.JsonDataException
-import com.squareup.moshi.Moshi
-import com.squareup.moshi.ToJson
+import com.squareup.moshi.*
 import okhttp3.RequestBody
 import okhttp3.ResponseBody
 import org.joda.time.*
@@ -349,67 +346,85 @@ data class NightscoutCalJson(override val id: String? = null,
             scale = calibrationRecord.scale)
 }
 
+data class NightscoutStatus (var status: String="",
+                             var name: String="",
+                             var version: String="",
+                             var serverTime: String="",
+                             var apiEnabled: Boolean=false,
+                             var careportalEnabled: Boolean=false,
+                             var head: String="")
+
+data class NightscoutCodeVerification (var status: Int = 0,
+                                       var message: String = "")
+
 @Suppress("UNUSED_METHOD")
 interface NightscoutApi {
     companion object {
         fun registerTypeAdapters(builder: Moshi.Builder): Moshi.Builder {
-            return builder.add(NightscoutJsonAdapter())
+            return builder
+                    .add(NightscoutJsonAdapter())
         }
     }
 
-    @GET("/api/v1/entries/sgv.json")
+    @GET("api/v1/status.json")
+    fun getStatus(): Call<NightscoutStatus>
+
+    @GET("api/v1/verifyauth")
+    fun verifyAuth(): Call<NightscoutCodeVerification>
+
+    @GET("api/v1/entries/sgv.json")
     fun getSgvRecords(@Query("count") count: Int, @Query("find[date][\$gte]") start: Long): Call<MutableList<NightscoutSgvJson>>
 
-    @GET("/api/v1/entries/mbg.json")
+    @GET("api/v1/entries/mbg.json")
     fun getMeterRecords(@Query("count") count: Int, @Query("find[date][\$gte]") start: Long): Call<MutableList<NightscoutMbgJson>>
 
-    @GET("/api/v1/entries/cal.json")
+    @GET("api/v1/entries/cal.json")
     fun getCalRecords(@Query("count") count: Int, @Query("find[date][\$gte]") start: Long): Call<MutableList<NightscoutCalJson>>
 
-    @GET("/api/v1/entries.json")
+    @GET("api/v1/entries.json")
     fun getRecordsSince(@Query("find[date][\$gte]") since: Long, @Query("count") count: Int): Call<MutableList<NightscoutEntryJson>>
 
-    @GET("/api/v1/entries.json")
+    @GET("api/v1/entries.json")
     fun getRecordsBefore(@Query("find[date][\$lt]") before: Long, @Query("count") count: Int): Call<MutableList<NightscoutEntryJson>>
 
-    @GET("/api/v1/entries.json")
+    @GET("api/v1/entries.json")
     fun getRecordsBetween(@Query("find[date][\$gte]") since: Long, @Query("find[date][\$lt]") before: Long, @Query("count") count: Int): Call<MutableList<NightscoutEntryJson>>
 
-    @POST("/api/v1/entries.json")
+    @POST("api/v1/entries.json")
     @Headers("Content-Type: application/json")
     fun postRecords(@Header("api-secret") apiSecret: String, @Body body: MutableList<NightscoutEntryJson>): Call<MutableList<NightscoutEntryJson>>
 
-    @POST("/api/v1/entries.json")
+    @POST("api/v1/entries.json")
     @Headers("Content-Type: application/json")
     fun postRecords(@Body body: MutableList<NightscoutEntryJson>): Call<ResponseBody>
 
-    @GET("/api/v1/treatments")
+    @GET("api/v1/treatments")
     fun getTreatmentsBefore(@Query("find[created_at][\$lt]") since: String): Call<MutableList<NightscoutTreatment>>
 
-    @GET("/api/v1/treatments")
+    @GET("api/v1/treatments")
     fun getTreatmentsBefore(@Query("find[created_at][\$lt]") before: String, @Query("count") count: Int): Call<MutableList<NightscoutTreatment>>
 
-    @GET("/api/v1/treatments")
+    @GET("api/v1/treatments")
     fun getTreatmentsSince(@Query("find[created_at][\$gte]") since: String): Call<MutableList<NightscoutTreatment>>
 
-    @GET("/api/v1/treatments")
+    @GET("api/v1/treatments")
     fun getTreatmentsSince(@Query("find[created_at][\$gte]") since: String, @Query("count") count: Int): Call<MutableList<NightscoutTreatment>>
 
-    @GET("/api/v1/treatments")
+    @GET("api/v1/treatments")
     fun getTreatmentsBetween(@Query("find[created_at][\$gte]") since: String, @Query("find[created_at][\$lt]") before: String, @Query("count") count: Int): Call<MutableList<NightscoutTreatment>>
 
-    @POST("/api/v1/treatments")
+    @POST("api/v1/treatments")
     @Headers("Content-Type: application/json")
     fun postTreatments(@Header("api-secret") apiSecret: String, @Body treatments: MutableList<NightscoutTreatment>): Call<ResponseBody>
 
-    @POST("/api/v1/treatments")
+    @POST("api/v1/treatments")
     @Headers("Content-Type: application/json")
     fun postTreatments(@Body treatments: MutableList<NightscoutTreatment>): Call<ResponseBody>
 
-    @GET("/api/v1/profile")
+    @GET("api/v1/profile")
     fun getProfile(): Call<ResponseBody>
 
-    @POST("/api/v1/profile")
+    @POST("api/v1/profile")
     fun postProfiles(@Header("api-secret") apiSecret: String, @Body profile: RequestBody): Call<ResponseBody>
 }
 

@@ -1,6 +1,8 @@
 package com.kludgenics.alrightypump.cloud.nightscout
 
 import com.kludgenics.alrightypump.DateTimeChangeRecord
+import com.kludgenics.alrightypump.cloud.mutableChunked
+import com.kludgenics.alrightypump.cloud.nightscout.records.json.NightscoutEntry
 import com.kludgenics.alrightypump.device.ContinuousGlucoseMonitor
 import com.kludgenics.alrightypump.device.Glucometer
 import com.kludgenics.alrightypump.device.InsulinPump
@@ -12,7 +14,7 @@ import okio.ByteString
 import org.joda.time.Chronology
 import org.joda.time.Duration
 import org.joda.time.Instant
-import retrofit2.Callback
+import retrofit2.Call
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
 import java.nio.charset.Charset
@@ -29,6 +31,9 @@ class Nightscout @Inject constructor (@Named("Nightscout") val url: HttpUrl,
                                       okHttpClient: OkHttpClient) : InsulinPump,
         ContinuousGlucoseMonitor,
         Glucometer {
+
+    data class ChunkedCall<T>(val argumentList: List<T>, val call: Call<ResponseBody>)
+
     override val timeCorrectionOffset: Duration?
         get() = Duration.ZERO
     override val profileRecords: Sequence<ProfileRecord>
@@ -62,6 +67,26 @@ class Nightscout @Inject constructor (@Named("Nightscout") val url: HttpUrl,
     private val retrofit: Retrofit
     private val nightscoutApi: NightscoutApi
 
+    fun status(): retrofit2.Response<NightscoutStatus> {
+        val call = nightscoutApi.getStatus()
+        return try {
+            call.execute()
+        } catch (e: InterruptedException) {
+            call.cancel()
+            throw e
+        }
+    }
+
+    fun verifyAuth(): retrofit2.Response<NightscoutCodeVerification> {
+        val call = nightscoutApi.verifyAuth()
+        return try {
+            call.execute()
+        } catch (e: InterruptedException) {
+            call.cancel()
+            throw e
+        }
+    }
+
     val entries: Sequence<Record> get() = entries().mapNotNull {
         when (it.rawEntry) {
             is Record -> it
@@ -92,15 +117,14 @@ class Nightscout @Inject constructor (@Named("Nightscout") val url: HttpUrl,
         }
     }
 
-    fun postRecords(records: Sequence<Record>,
-                    retrofitCallback: Callback<okhttp3.ResponseBody>) {
-        var (treatmentRecords, entryRecords) = records.flatMap {
+    fun <T: Record> prepareUploads(records: Sequence <T> ): Sequence<ChunkedCall<T>> {
+        var (treatmentRecords, entryRecords: List<Pair<T, Record>>) = records.flatMap {
             when (it) {
-                is CalibrationRecord -> sequenceOf(NightscoutEntryJson(NightscoutCalJson(it)))
-                is DexcomCgmRecord -> sequenceOf(NightscoutEntryJson(NightscoutSgvJson(it))) // TODO this is the only place where there is a device dependency :(
-                is RawCgmRecord -> sequenceOf(NightscoutEntryJson(NightscoutSgvJson(it)))
-                is CgmRecord -> sequenceOf(NightscoutEntryJson(NightscoutSgvJson(it)))
-                is SmbgRecord -> sequenceOf(NightscoutEntryJson(NightscoutMbgJson(it)))
+                is CalibrationRecord -> sequenceOf(it as T to NightscoutEntryJson(NightscoutCalJson(it)))
+                is DexcomCgmRecord -> sequenceOf(it as T to NightscoutEntryJson(NightscoutSgvJson(it))) // TODO this is the only place where there is a device dependency :(
+                is RawCgmRecord -> sequenceOf(it as T to NightscoutEntryJson(NightscoutSgvJson(it)))
+                is CgmRecord -> sequenceOf(it as T to NightscoutEntryJson(NightscoutSgvJson(it)))
+                is SmbgRecord -> sequenceOf(it as T to NightscoutEntryJson(NightscoutMbgJson(it)))
                 is FoodRecord,
                 is CgmInsertionRecord,
                 is TemporaryBasalStartRecord,
@@ -112,37 +136,22 @@ class Nightscout @Inject constructor (@Named("Nightscout") val url: HttpUrl,
                 is BolusRecord -> {
                     val treatment = NightscoutTreatment(HashMap())
                     treatment.applyRecord(it)
-                    sequenceOf(treatment)
+                    sequenceOf(it as T to treatment)
                 }
-                else -> emptySequence<Record>()
+                else -> emptySequence<Pair<T, Record>>()
             }
-        }.partition { it is NightscoutApiTreatment }
-        while (!entryRecords.isEmpty()) {
-            val r = entryRecords.filterIsInstance<NightscoutEntryJson>().mapIndexed {
-                i, nightscoutEntryJson ->
-                i to nightscoutEntryJson
-            }.partition {
-                it.first < 1000
-            }
-            val batch = r.first.map { it.second }.toMutableList()
-            entryRecords = r.second.map { it.second }
-            if (!batch.isEmpty())
-                nightscoutApi.postRecords(batch).enqueue(retrofitCallback)
-        }
+        }.partition { it.second is NightscoutApiTreatment }
 
-        val t = treatmentRecords.filterIsInstance<NightscoutTreatment>().fold(arrayListOf<NightscoutTreatment>()) {
-            arrayList: ArrayList<NightscoutTreatment>, nightscoutTreatment: NightscoutTreatment ->
-            if (arrayList.size >= 1000) {
-                nightscoutApi.postTreatments(arrayList).enqueue(retrofitCallback)
-                arrayList.clear()
-            }
-            arrayList.add(nightscoutTreatment)
-            arrayList
-        }
-        if (t.isNotEmpty()) {
-            nightscoutApi.postTreatments(t).enqueue(retrofitCallback)
-        }
+        val entryChunks = entryRecords.filter { it.second is NightscoutEntryJson }.asSequence().mutableChunked(1000)
+        val treatmentChunks: Sequence<MutableList<Pair<T, Record>>> = treatmentRecords.filter { it.second is NightscoutTreatment }.asSequence().mutableChunked(1000)
+
+        return entryChunks.map {
+            ChunkedCall(it.map { it.first }, nightscoutApi.postRecords(it.map { it.second as NightscoutEntryJson }.toMutableList()))
+        }.plus(treatmentChunks.map {
+            ChunkedCall(it.map { it.first }, nightscoutApi.postTreatments(it.map { it.second as NightscoutTreatment }.toMutableList()))
+        })
     }
+
 
     private fun calculateSecretHash(secret: String): String {
         val digestBytes = MessageDigest.getInstance("SHA-1")

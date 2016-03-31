@@ -14,6 +14,9 @@ import com.kludgenics.alrightypump.android.AndroidDeviceHelper
 import com.kludgenics.cgmlogger.app.DeviceSync
 import com.kludgenics.cgmlogger.app.NightscoutSync
 import com.kludgenics.cgmlogger.app.model.PersistedTherapyTimeline
+import com.kludgenics.cgmlogger.app.model.SyncStore
+import com.kludgenics.cgmlogger.extension.*
+import io.realm.Realm
 import org.jetbrains.anko.*
 
 /**
@@ -67,7 +70,15 @@ class SyncService : Service(), AnkoLogger {
                 info("sync finished")
                 val timeline = PersistedTherapyTimeline()
                 timeline.use {
-                    NightscoutSync.getInstance().uploadToNightscout(timeline)
+                    val realm = Realm.getDefaultInstance()
+                    realm.use {
+                        val nightscoutInstances = realm.where<SyncStore> {
+                            equalTo("storeType", SyncStore.STORE_TYPE_NIGHTSCOUT)
+                        }.findAll()
+                        nightscoutInstances.toList().forEach {
+                            NightscoutSync.getInstance().uploadToNightscout(timeline, it)
+                        }
+                    }
                 }
             } catch (e: Exception) {
                 error("sync failed:", e)
@@ -83,21 +94,23 @@ class SyncService : Service(), AnkoLogger {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         info("onStartCommand()")
-        val permissionIntent = PendingIntent.getBroadcast(this, 0, Intent(ACTION_USB_PERMISSION), 0);
-        registerReceiver()
-        val tandemPumps = AndroidDeviceHelper.getTandemPumps(this)
-        val dexcomG4s = AndroidDeviceHelper.getDexcomG4s(this)
-        dexcomG4s.forEach { device ->
-            info("requesting permisison for ${device}")
-            usbManager.requestPermission(device, permissionIntent)
-        }
-        tandemPumps.forEach { device ->
-            info("requesting permisison for ${device}")
-            usbManager.requestPermission(device, permissionIntent)
-        }
-        if (tandemPumps.isEmpty() && dexcomG4s.isEmpty()) {
-            unregisterReceiver()
-            stopSelf()
+        async() {
+            val permissionIntent = PendingIntent.getBroadcast(this@SyncService, 0, Intent(ACTION_USB_PERMISSION), 0);
+            registerReceiver()
+            val tandemPumps = AndroidDeviceHelper.getTandemPumps(this@SyncService)
+            val dexcomG4s = AndroidDeviceHelper.getDexcomG4s(this@SyncService)
+            dexcomG4s.forEach { device ->
+                info("requesting permisison for ${device}")
+                usbManager.requestPermission(device, permissionIntent)
+            }
+            tandemPumps.forEach { device ->
+                info("requesting permisison for ${device}")
+                usbManager.requestPermission(device, permissionIntent)
+            }
+            if (tandemPumps.isEmpty() && dexcomG4s.isEmpty()) {
+                unregisterReceiver()
+                stopSelf()
+            }
         }
         return Service.START_NOT_STICKY
     }

@@ -10,23 +10,16 @@ import android.view.MenuItem
 import com.kludgenics.cgmlogger.app.adapter.CardAdapter
 import com.kludgenics.cgmlogger.app.databinding.ActivityMainBinding
 import com.kludgenics.cgmlogger.app.databinding.DialogConfigureNightscoutBinding
-import com.kludgenics.cgmlogger.app.model.PersistedRecord
 import com.kludgenics.cgmlogger.app.model.SyncStore
 import com.kludgenics.cgmlogger.app.service.SyncService
 import com.kludgenics.cgmlogger.app.viewmodel.NightscoutConfig
 import com.kludgenics.cgmlogger.app.viewmodel.ObservableStatus
 import com.kludgenics.cgmlogger.app.viewmodel.RealmStatus
-import com.kludgenics.cgmlogger.extension.group
-import com.kludgenics.cgmlogger.extension.transaction
 import com.kludgenics.cgmlogger.extension.where
 import io.realm.Realm
 import io.realm.Sort
 import org.jetbrains.anko.AnkoLogger
 import org.jetbrains.anko.alert
-import org.jetbrains.anko.async
-import org.jetbrains.anko.info
-import org.joda.time.Duration
-import org.joda.time.Instant
 import java.util.*
 
 class MainActivity :  AppCompatActivity(), AnkoLogger {
@@ -55,10 +48,6 @@ class MainActivity :  AppCompatActivity(), AnkoLogger {
     override fun onStart() {
         super.onStart()
         startService(Intent(this, SyncService::class.java))
-    }
-
-    override fun onStop() {
-        super.onStop()
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {

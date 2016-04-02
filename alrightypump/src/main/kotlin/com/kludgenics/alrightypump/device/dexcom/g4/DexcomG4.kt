@@ -30,6 +30,7 @@ open class DexcomG4(private val source: BufferedSource,
             null
     }
 
+    var bleEnabled = false
     var rawEnabled = true
     override val serialNumber: String by lazy { requestSerialNumber() }
 
@@ -221,6 +222,8 @@ open class DexcomG4(private val source: BufferedSource,
 
     fun commandResponse(command: DexcomCommand): ResponsePayload {
         val packet = DexcomG4Request(command.command, command).frame
+        if (bleEnabled)
+            sink.write(byteArrayOf(1, 1))
         sink.write(packet, packet.size())
         val response = DexcomG4Response(source)
         val payload = DexcomG4Response.parsePayload(command.command, response.command, response.payload)

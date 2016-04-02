@@ -1,5 +1,7 @@
 package com.kludgenics.cgmlogger.app.viewmodel
 
+import android.databinding.BaseObservable
+import android.databinding.Observable
 import kotlin.properties.Delegates
 import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.KProperty
@@ -9,21 +11,21 @@ import kotlin.reflect.KProperty
  */
 
 object DataBindingDelegates {
-    fun <T: Any?> observable(fieldId: Int, initialValue: T):
-            ReadWriteProperty<DataBindingObservable?, T> = ObservableVar(fieldId, initialValue)
+    fun <T: Any?> observable(fieldId: Int, initialValue: T?):
+            ReadWriteProperty<DataBindingObservable, T?> = ObservableVar(fieldId, initialValue)
     fun <T: Any?> observable(fieldId: Int, getter: ()->T, setter: (T)->Unit):
-            ReadWriteProperty<DataBindingObservable?, T> = ObservableThing(fieldId, getter, setter)
+            ReadWriteProperty<DataBindingObservable, T> = ObservableThing(fieldId, getter, setter)
 }
 
-private class ObservableVar<in R: DataBindingObservable, T>(val fieldId: Int, initialValue: T) : ReadWriteProperty<R?, T> {
-    private var value: T = initialValue
+private class ObservableVar<in R: DataBindingObservable, T>(val fieldId: Int, initialValue: T?) : ReadWriteProperty<R, T?> {
+    private var value: T? = initialValue
 
-    override fun getValue(thisRef: R?, property: KProperty<*>): T {
+    override fun getValue(thisRef: R, property: KProperty<*>): T? {
         return value
     }
 
-    override fun setValue(thisRef: R?, property: KProperty<*>, value: T) {
-        thisRef?.notifyPropertyChanged(fieldId)
+    override fun setValue(thisRef: R, property: KProperty<*>, value: T?) {
+        thisRef.notifyPropertyChanged(fieldId)
         this.value = value
     }
 }

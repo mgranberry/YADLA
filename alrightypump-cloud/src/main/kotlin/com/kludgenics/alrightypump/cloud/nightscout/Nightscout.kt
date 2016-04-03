@@ -2,7 +2,6 @@ package com.kludgenics.alrightypump.cloud.nightscout
 
 import com.kludgenics.alrightypump.DateTimeChangeRecord
 import com.kludgenics.alrightypump.cloud.mutableChunked
-import com.kludgenics.alrightypump.cloud.nightscout.records.json.NightscoutEntry
 import com.kludgenics.alrightypump.device.ContinuousGlucoseMonitor
 import com.kludgenics.alrightypump.device.Glucometer
 import com.kludgenics.alrightypump.device.InsulinPump
@@ -20,15 +19,13 @@ import retrofit2.converter.moshi.MoshiConverterFactory
 import java.nio.charset.Charset
 import java.security.MessageDigest
 import java.util.*
-import javax.inject.Inject
-import javax.inject.Named
 
 /**
  * Created by matthias on 11/29/15.
  */
 
-class Nightscout @Inject constructor (@Named("Nightscout") val url: HttpUrl,
-                                      okHttpClient: OkHttpClient) : InsulinPump,
+class Nightscout constructor (val url: HttpUrl,
+                              okHttpClient: OkHttpClient) : InsulinPump,
         ContinuousGlucoseMonitor,
         Glucometer {
 

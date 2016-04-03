@@ -70,8 +70,8 @@ class BleScanner(val applicationContext: Context, val statusCallback: StatusCall
             scanner.startScan(filters,
                     ScanSettings.Builder()
                             .setMatchMode(ScanSettings.MATCH_MODE_AGGRESSIVE)
-                            .setReportDelay(500)
-                            .setScanMode(ScanSettings.SCAN_MODE_BALANCED)
+                            .setReportDelay(1000)
+                            .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
                             .setCallbackType(scanCallbackType).build(),
                     scanCallback)
         }

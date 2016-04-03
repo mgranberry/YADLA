@@ -42,14 +42,14 @@ private fun downloadRecords(threads: MutableList<Thread>, lastUploads: MutableMa
 
 private fun uploadRecords(nightscout: Nightscout?, nightscout_url: String?, okHttpClient: OkHttpClient, timeline: ConcurrentSkipListTherapyTimeline) {
     println("Uploading ${timeline.events.count()} records to $nightscout_url")
-    nightscout?.prepareUploads(timeline.events, object:Callback <ResponseBody> {
+    val calls = nightscout?.prepareUploads(timeline.events)
+    calls?.forEach { it.call.enqueue(object : Callback<ResponseBody> {
         override fun onResponse(call: Call<ResponseBody>?, response: Response<ResponseBody>?) {
         }
 
         override fun onFailure(call: Call<ResponseBody>?, t: Throwable?) {
         }
-
-    })
+    }) }
     while (okHttpClient.dispatcher().queuedCallsCount() > 0) {
         println("Waiting on ${okHttpClient.dispatcher().queuedCallsCount()} records to finish uploading.")
         Thread.sleep(1000)

@@ -5,10 +5,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.util.Log
-import okio.Buffer
-import okio.Sink
-import okio.Source
-import okio.Timeout
+import okio.*
 import java.io.Closeable
 import java.util.*
 import java.util.concurrent.ArrayBlockingQueue
@@ -96,6 +93,12 @@ class ShareGatt(context: Context, val device: BluetoothDevice) : Closeable {
         }
     }
 
+    val responseCharacteristic: BluetoothGattCharacteristic by lazy {
+        shareService.characteristics.first {
+            it.uuid == ShareUuids.RESPONSE_1 || it.uuid == ShareUuids.RESPONSE_2
+        }
+    }
+
     private val commandQueue: LinkedBlockingQueue<() -> Unit> = LinkedBlockingQueue()
     @Volatile private var commandPending: Boolean = false
 
@@ -123,9 +126,7 @@ class ShareGatt(context: Context, val device: BluetoothDevice) : Closeable {
     private val readQueue: BlockingQueue<ByteArray> = ArrayBlockingQueue(100)
     private val writeQueue: BlockingQueue<ByteArray> = ArrayBlockingQueue(100)
 
-    private var writing: Boolean = false
-
-    private val gattCallback: BluetoothGattCallback = object : BluetoothGattCallback() {
+    private val gattCallback = object : BluetoothGattCallback() {
 
         fun postNextCommand() {
             val next = commandQueue.poll()
@@ -142,7 +143,6 @@ class ShareGatt(context: Context, val device: BluetoothDevice) : Closeable {
 
         override fun onConnectionStateChange(gatt: BluetoothGatt, status: Int, newState: Int) {
             Log.d(TAG, "onConnectionStateChange($gatt, $status, $newState)")
-            postNextCommand()
             when (newState) {
                 BluetoothProfile.STATE_CONNECTED -> {
                     Log.d(TAG, "gatt connected.  Discovering services.")
@@ -160,8 +160,6 @@ class ShareGatt(context: Context, val device: BluetoothDevice) : Closeable {
         override fun onServicesDiscovered(gatt: BluetoothGatt, status: Int) {
             Log.d(TAG, "onServicesDiscovered($gatt, $status)")
             Log.d(TAG, "onServicesDiscovered, ${gatt.device} ${gatt.device.bondState}")
-            postNextCommand()
-            //if (gatt.device.bondState != BluetoothDevice.BOND_BONDED)
             setupAuthentication()
             setupReceiver()
         }
@@ -171,9 +169,16 @@ class ShareGatt(context: Context, val device: BluetoothDevice) : Closeable {
             postNextCommand()
             when (status) {
                 BluetoothGatt.GATT_SUCCESS -> {
-                    if (heartbeatCharacteristic == characteristic)
-                        gatt.setCharacteristicNotification(heartbeatCharacteristic, true)
-                    gatt.execute { gatt.readCharacteristic(heartbeatCharacteristic) }
+                    when (characteristic) {
+                        heartbeatCharacteristic -> {
+                            gatt.setCharacteristicNotification(heartbeatCharacteristic, true)
+                            gatt.execute { Log.d(TAG, "heartbeat"); gatt.readCharacteristic(heartbeatCharacteristic) }
+                        }
+                        rxCharacteristic -> {
+                            Log.d(TAG, "rxCharacteristic")
+                            readQueue.add(characteristic.value)
+                        }
+                    }
                 }
             }
         }
@@ -185,7 +190,6 @@ class ShareGatt(context: Context, val device: BluetoothDevice) : Closeable {
 
         override fun onReadRemoteRssi(gatt: BluetoothGatt, rssi: Int, status: Int) {
             Log.d(TAG, "onReadRemoteRssi($gatt, $rssi, $status)")
-            postNextCommand()
         }
 
         override fun onDescriptorRead(gatt: BluetoothGatt, descriptor: BluetoothGattDescriptor?, status: Int) {
@@ -201,7 +205,15 @@ class ShareGatt(context: Context, val device: BluetoothDevice) : Closeable {
 
         override fun onCharacteristicChanged(gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic?) {
             Log.d(TAG, "onCharacteristicChanged($gatt, $characteristic(${characteristic?.uuid}=${characteristic?.value?.size})")
-            postNextCommand()
+            when (characteristic) {
+                heartbeatCharacteristic -> {
+                    // keep this to see when new data is available
+                }
+                rxCharacteristic -> {
+                    Log.d(TAG, "received data size ${characteristic.value.size}")
+                    readQueue.add(characteristic.value)
+                }
+            }
         }
 
         override fun onCharacteristicWrite(gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic?, status: Int) {
@@ -209,15 +221,11 @@ class ShareGatt(context: Context, val device: BluetoothDevice) : Closeable {
             postNextCommand()
             when (status) {
                 BluetoothGatt.GATT_SUCCESS -> {
-                    synchronized(writing) {
-                        val bytes: ByteArray? = writeQueue.poll()
-                        if (bytes == null)
-                            writing = false
-                        else {
-                            txCharacteristic.value = bytes
-                            val result = gatt.writeCharacteristic(txCharacteristic)
-                            Log.d(TAG, "onCharacteristicWrite result is $result")
-                        }
+                    val bytes: ByteArray? = writeQueue.poll()
+                    if (bytes != null) {
+                        txCharacteristic.value = bytes
+                        val result = gatt.execute { Log.d(TAG, "writeChar ${txCharacteristic.value.size} bytes"); gatt.writeCharacteristic(txCharacteristic) }
+                        Log.d(TAG, "onCharacteristicWrite result is $result")
                     }
                 }
                 else -> onFailure("Unexpected GATT status $status during write.")
@@ -231,17 +239,20 @@ class ShareGatt(context: Context, val device: BluetoothDevice) : Closeable {
         Log.d(TAG, "authenticating device")
         val bondingKey = "SM50556137000000".toByteArray()
         authCharacteristic.value = bondingKey
-        gatt.execute { gatt.writeCharacteristic(authCharacteristic) }
+        gatt.execute { Log.d(TAG, "authCharacteristic"); gatt.writeCharacteristic(authCharacteristic) }
     }
 
     private fun setupReceiver() {
         Log.d(TAG, "configuring rx characteristic")
-        setupNotifications(rxCharacteristic, true)
+        setupIndication(rxCharacteristic)
+        Log.d(TAG, "configuring response characteristic")
+        setupIndication(responseCharacteristic)
         Log.d(TAG, "configuring heartbeat characteristic")
-        setupNotifications(heartbeatCharacteristic, true)
+        setupNotification(heartbeatCharacteristic)
+
     }
 
-    private fun setupNotifications(characteristic: BluetoothGattCharacteristic, enabled: Boolean) {
+    private fun setupNotification(characteristic: BluetoothGattCharacteristic, enabled: Boolean = true) {
         var ret = gatt.setCharacteristicNotification(characteristic, enabled)
         if (!ret) {
             onFailure("Failed to ${if (enabled) "enable" else "disable"} notifications for ${characteristic.uuid}.")
@@ -249,7 +260,18 @@ class ShareGatt(context: Context, val device: BluetoothDevice) : Closeable {
         }
         val descriptor = characteristic.getDescriptor(ShareUuids.CHARACTERISTIC_UPDATE_NOTIFICATION_DESCRIPTOR)
         descriptor.value = if (enabled) BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE else BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE
-        gatt.execute { gatt.writeDescriptor(descriptor) }
+        gatt.execute { Log.d(TAG, "descriptor"); gatt.writeDescriptor(descriptor) }
+    }
+
+    private fun setupIndication(characteristic: BluetoothGattCharacteristic, enabled: Boolean = true) {
+        var ret = gatt.setCharacteristicNotification(characteristic, enabled)
+        if (!ret) {
+            onFailure("Failed to ${if (enabled) "enable" else "disable"} notifications for ${characteristic.uuid}.")
+            return
+        }
+        val descriptor = characteristic.getDescriptor(ShareUuids.CHARACTERISTIC_UPDATE_NOTIFICATION_DESCRIPTOR)
+        descriptor.value = if (enabled) BluetoothGattDescriptor.ENABLE_INDICATION_VALUE else BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE
+        gatt.execute { Log.d(TAG, "descriptor"); gatt.writeDescriptor(descriptor) }
     }
 
     private fun onFailure(message: String) {
@@ -260,18 +282,16 @@ class ShareGatt(context: Context, val device: BluetoothDevice) : Closeable {
     fun write(bytes: ByteArray) {
         val chunkedBytes = bytes.asSequence().chunked(20).map { it.toByteArray() }
         chunkedBytes.forEach {
-            synchronized(writing) {
-                if (writing) {
-                    writeQueue.put(it)
-                    Log.d(TAG, "queueing bytes")
-                } else {
-                    writing = true
-                    txCharacteristic.value = it
-                    var ret = gatt.writeCharacteristic(txCharacteristic)
-                    Log.d(TAG, "write ret=$ret")
-                }
+            writeQueue.put(it)
+            gatt.execute {
+                val nextValue = writeQueue.poll()
+                if (nextValue != null) {
+                    txCharacteristic.value = nextValue
+                    Log.d(TAG, "writing ${txCharacteristic.value.size} bytes");
+                    gatt.writeCharacteristic(txCharacteristic)
+                } else false
             }
-        }
+       }
     }
 
     fun read(): ByteArray {

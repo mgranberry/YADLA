@@ -225,6 +225,7 @@ open class DexcomG4(private val source: BufferedSource,
         if (bleEnabled)
             sink.write(byteArrayOf(1, 1))
         sink.write(packet, packet.size())
+        sink.emit()
         val response = DexcomG4Response(source)
         val payload = DexcomG4Response.parsePayload(command.command, response.command, response.payload)
         return payload

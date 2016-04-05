@@ -115,8 +115,13 @@ class SyncService : Service(), AnkoLogger {
                 }
             }
         }
+
+        val nextSync = if (syncEvent.nextSync?.time ?: 0 > System.currentTimeMillis())
+            syncEvent.nextSync!!.time
+        else
+            System.currentTimeMillis() + 60000*5
         val pendingIntent = PendingIntent.getService(applicationContext, 0, Intent(applicationContext, this.javaClass), PendingIntent.FLAG_UPDATE_CURRENT)
-        alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, syncEvent.nextSync?.time ?: System.currentTimeMillis() + 60000*5, pendingIntent)
+        alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, nextSync, pendingIntent)
         unregisterReceiver()
     }
 

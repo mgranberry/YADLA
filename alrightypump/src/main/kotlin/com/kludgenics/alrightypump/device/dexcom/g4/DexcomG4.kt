@@ -21,17 +21,25 @@ open class DexcomG4(private val source: BufferedSource,
         val serial: String get() = _serial
     }
 
+    private var _timeCorrectionOffset: Duration? = null
     override val timeCorrectionOffset: Duration? get() {
-        val receiverTime = requestTime()
-        println("receiverTime:$receiverTime localTime:${LocalDateTime.now()}")
-        return if (receiverTime != null)
-            Duration(receiverTime.toDateTime(), DateTime.now())
-        else
-            null
+        if (_timeCorrectionOffset == null) {
+            val receiverTime = requestTime()
+            _timeCorrectionOffset =
+                    if (receiverTime != null)
+                        Duration(receiverTime.toDateTime(), DateTime.now())
+                    else
+                        null
+        }
+        return _timeCorrectionOffset
     }
 
     var bleEnabled = false
     var rawEnabled = true
+
+    val syncedPages: List<Int> = arrayListOf()
+    val ignoredPages: MutableList<Int> = arrayListOf()
+
     override val serialNumber: String by lazy { requestSerialNumber() }
 
     override val cgmRecords: Sequence<DexcomCgmRecord>
@@ -130,7 +138,11 @@ open class DexcomG4(private val source: BufferedSource,
         private fun updateIterator() {
             val records = @Suppress("UNCHECKED_CAST")(readDataPages(type, pageIndex).flatMap { it.records } as List<T>)
             pageIterator = records.reversed().iterator()
+            if (pageIndex != start)
+                syncedPages as MutableList += pageIndex
             pageIndex -= 1
+            while (pageIndex in ignoredPages)
+                pageIndex -= 1
         }
 
         override fun next(): T {

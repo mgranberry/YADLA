@@ -43,7 +43,7 @@ class NightscoutConfig(val store: SyncStore, val realm: Realm? = null): DataBind
             async() {
                 try {
                     val r = if (!url.isNullOrEmpty()) {
-                        Thread.sleep(500)
+                        Thread.sleep(1500)
                         val testUrl = url.get()
                         if (!testUrl.isNullOrEmpty()) {
                             errorText = NightscoutSync.getInstance().testUrl(testUrl!!)

@@ -5,6 +5,7 @@ import android.databinding.ObservableList
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import com.kludgenics.alrightypump.android.DexcomShareBleConnection
+import com.kludgenics.alrightypump.android.ShareGatt
 import com.kludgenics.alrightypump.device.dexcom.g4.DexcomG4
 import com.kludgenics.cgmlogger.app.databinding.ActivityScanBinding
 import com.kludgenics.cgmlogger.app.viewmodel.ScannerModel
@@ -56,8 +57,6 @@ class ScanActivity :  AppCompatActivity(), AnkoLogger {
 
             override fun onItemRangeChanged(p0: ObservableList<ScannerModel.Result>, p1: Int, p2: Int) {
                 info("onItemRangeChanged ${p0[p1]} + $p2")
-                val conn = DexcomShareBleConnection(applicationContext)
-                conn.connect(p0[p1].device)
             }
 
             override fun onItemRangeMoved(p0: ObservableList<ScannerModel.Result>, p1: Int, p2: Int, p3: Int) {
@@ -67,29 +66,6 @@ class ScanActivity :  AppCompatActivity(), AnkoLogger {
             @Synchronized
             override fun onItemRangeInserted(p0: ObservableList<ScannerModel.Result>, p1: Int, p2: Int) {
                 info("onItemRangeInserted ${p0[p1]} + $p2")
-                connection = DexcomShareBleConnection(applicationContext)
-                connection?.connect(p0[p1].device)
-                async() {
-                    try {
-                        Thread.sleep(15000)
-                        info("Waking the syncer")
-                        val so = Okio.buffer(connection as Source)
-                        val si = Okio.buffer(connection as Sink)
-                        val g4 = DexcomG4(so, si)
-                        info("0")
-                        g4.bleEnabled = true
-                        info("1")
-                        println("${g4.serialNumber}")
-                        val start = DateTime()
-                        g4.rawEnabled = false
-                        println("${g4.cgmRecords.first()}")
-                        val end = DateTime()
-                        info("${Duration(start, end)} offset ${g4.timeCorrectionOffset}")
-                    } catch (e: Throwable) {
-                        error("Exception in record fetch", e)
-                    }
-                }
-
             }
         })
     }
@@ -105,9 +81,6 @@ class ScanActivity :  AppCompatActivity(), AnkoLogger {
     override fun onPause() {
         super.onPause()
         info("onPause")
-        val conn = connection
-        connection?.close()
-        connection = null
         scanner.stopScan()
     }
 }

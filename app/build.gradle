@@ -8,7 +8,7 @@ buildscript {
     dependencies {
         //noinspection GradleDynamicVersion
         classpath 'io.fabric.tools:gradle:1+'
-        classpath 'com.android.tools.build:gradle:2.0.0-rc1'
+        classpath 'com.android.tools.build:gradle:2.0.0-rc2'
         classpath "io.realm:realm-gradle-plugin:0.88.2"
     }
 }
@@ -54,6 +54,7 @@ android {
     packagingOptions {
         exclude 'META-INF/LICENSE.txt'
         exclude 'META-INF/NOTICE.txt'
+        exclude 'org/joda/time///*'
     }
     lintOptions {
         abortOnError false

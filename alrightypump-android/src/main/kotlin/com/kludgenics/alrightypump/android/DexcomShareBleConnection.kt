@@ -9,8 +9,7 @@ import okio.*
 import java.io.Closeable
 import java.util.*
 import java.util.concurrent.ArrayBlockingQueue
-import java.util.concurrent.BlockingQueue
-import java.util.concurrent.LinkedBlockingQueue
+import java.util.concurrent.TimeUnit
 
 object ShareUuids {
     val POWER_LEVEL: UUID by lazy { UUID.fromString("00002a07-0000-1000-8000-00805f9b34fb") }
@@ -56,8 +55,9 @@ object ShareUuids {
 
 }
 
-class ShareGatt(context: Context, val device: BluetoothDevice) : Closeable {
+class ShareGatt(context: Context, val device: BluetoothDevice, private val onConnected: (ShareGatt)->Unit, private val onDisconnected: (ShareGatt)->Unit, private val onError: (ShareGatt, message: String)->Unit) : Closeable {
     val TAG = DexcomShareBleConnection::class.java.simpleName
+
     val shareService: BluetoothGattService by lazy {
         gatt.services.first {
             it.uuid == ShareUuids.UART_SERVICE_1
@@ -99,7 +99,7 @@ class ShareGatt(context: Context, val device: BluetoothDevice) : Closeable {
         }
     }
 
-    private val commandQueue: LinkedBlockingQueue<() -> Unit> = LinkedBlockingQueue()
+    private val commandQueue: ArrayBlockingQueue<() -> Unit> = ArrayBlockingQueue(50)
     @Volatile private var commandPending: Boolean = false
 
     inline private fun BluetoothGatt.execute(crossinline block: () -> Boolean) {
@@ -109,22 +109,22 @@ class ShareGatt(context: Context, val device: BluetoothDevice) : Closeable {
                 commandQueue.add {
                     val result = block()
                     if (result == false)
-                        onFailure("Failed to execute command.")
+                        onError(this@ShareGatt, "Failed to execute command.")
                 }
             } else {
                 Log.d(TAG, "executing command immediately")
                 commandPending = true
                 val result = block()
                 if (result == false)
-                    onFailure("Failed to execute command.")
+                    onError(this@ShareGatt, "Failed to execute command.")
                 else
                     false
             }
         }
     }
 
-    private val readQueue: BlockingQueue<ByteArray> = ArrayBlockingQueue(100)
-    private val writeQueue: BlockingQueue<ByteArray> = ArrayBlockingQueue(100)
+    internal val readQueue = ArrayBlockingQueue<ByteArray>(100)
+    private val writeQueue = ArrayBlockingQueue<ByteArray>(100)
 
     private val gattCallback = object : BluetoothGattCallback() {
 
@@ -142,30 +142,41 @@ class ShareGatt(context: Context, val device: BluetoothDevice) : Closeable {
         }
 
         override fun onConnectionStateChange(gatt: BluetoothGatt, status: Int, newState: Int) {
-            Log.d(TAG, "onConnectionStateChange($gatt, $status, $newState)")
+            Log.d(TAG, "!!!!!!!!!!!!!!onConnectionStateChange($gatt, $status, $newState)")
             when (newState) {
                 BluetoothProfile.STATE_CONNECTED -> {
                     Log.d(TAG, "gatt connected.  Discovering services.")
                     val result = gatt.discoverServices()
                     if (!result)
                         gatt.close()
+                    gatt.requestConnectionPriority(BluetoothGatt.CONNECTION_PRIORITY_HIGH)
+                    // don't actually call onConnected here because service discovery is required
+                    // before the connection is fully established.
                 }
                 BluetoothProfile.STATE_DISCONNECTED -> {
                     gatt.disconnect()
                     gatt.close()
+                    onDisconnected(this@ShareGatt)
                 }
             }
         }
 
         override fun onServicesDiscovered(gatt: BluetoothGatt, status: Int) {
-            Log.d(TAG, "onServicesDiscovered($gatt, $status)")
+            Log.d(TAG, "!!!!!!!!!!!!!!onServicesDiscovered($gatt, $status)")
             Log.d(TAG, "onServicesDiscovered, ${gatt.device} ${gatt.device.bondState}")
+            BluetoothGatt.GATT_CONNECTION_CONGESTED
             setupAuthentication()
             setupReceiver()
+            gatt.execute {
+                commandPending = false
+                onConnected(this@ShareGatt) // call onConnected now that services have been
+                // discovered and parameters have been set
+                true;
+            }
         }
 
         override fun onCharacteristicRead(gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic?, status: Int) {
-            Log.d(TAG, "onCharacteristicRead($gatt, $characteristic, $status)")
+            Log.d(TAG, "!!!!!!!!!!!!!!onCharacteristicRead($gatt, $characteristic, $status)")
             postNextCommand()
             when (status) {
                 BluetoothGatt.GATT_SUCCESS -> {
@@ -184,21 +195,21 @@ class ShareGatt(context: Context, val device: BluetoothDevice) : Closeable {
         }
 
         override fun onDescriptorWrite(gatt: BluetoothGatt, descriptor: BluetoothGattDescriptor?, status: Int) {
-            Log.d(TAG, "onDescriptorWrite($gatt, $descriptor, $status)")
+            Log.d(TAG, "!!!!!!!!!!!!!!onDescriptorWrite($gatt, $descriptor, $status)")
             postNextCommand()
         }
 
         override fun onReadRemoteRssi(gatt: BluetoothGatt, rssi: Int, status: Int) {
-            Log.d(TAG, "onReadRemoteRssi($gatt, $rssi, $status)")
+            Log.d(TAG, "!!!!!!!!!!!!!!onReadRemoteRssi($gatt, $rssi, $status)")
         }
 
         override fun onDescriptorRead(gatt: BluetoothGatt, descriptor: BluetoothGattDescriptor?, status: Int) {
-            Log.d(TAG, "onDescriptorRead($gatt, $descriptor, $status)")
+            Log.d(TAG, "!!!!!!!!!!!!!!onDescriptorRead($gatt, $descriptor, $status)")
             postNextCommand()
         }
 
         override fun onReliableWriteCompleted(gatt: BluetoothGatt, status: Int) {
-            Log.d(TAG, "onReliableWriteCompleted($gatt, $status)")
+            Log.d(TAG, "!!!!!!!!!!!!!!onReliableWriteCompleted($gatt, $status)")
             postNextCommand()
         }
 
@@ -217,18 +228,21 @@ class ShareGatt(context: Context, val device: BluetoothDevice) : Closeable {
         }
 
         override fun onCharacteristicWrite(gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic?, status: Int) {
-            Log.d(TAG, "onCharacteristicWrite($gatt, (${characteristic?.uuid}=${characteristic?.value}), $status)")
+            Log.d(TAG, "!!!!!!!!!!!!!!onCharacteristicWrite($gatt, (${characteristic?.uuid}=${characteristic?.value}), $status)")
             postNextCommand()
             when (status) {
                 BluetoothGatt.GATT_SUCCESS -> {
                     val bytes: ByteArray? = writeQueue.poll()
                     if (bytes != null) {
-                        txCharacteristic.value = bytes
-                        val result = gatt.execute { Log.d(TAG, "writeChar ${txCharacteristic.value.size} bytes"); gatt.writeCharacteristic(txCharacteristic) }
+                        val result = gatt.execute {
+                            txCharacteristic.value = bytes
+                            Log.d(TAG, "writeChar ${txCharacteristic.value.size} bytes");
+                            gatt.writeCharacteristic(txCharacteristic)
+                        }
                         Log.d(TAG, "onCharacteristicWrite result is $result")
                     }
                 }
-                else -> onFailure("Unexpected GATT status $status during write.")
+                else -> onError(this@ShareGatt, "Unexpected GATT status $status during write.")
             }
         }
     }
@@ -238,8 +252,11 @@ class ShareGatt(context: Context, val device: BluetoothDevice) : Closeable {
     private fun setupAuthentication() {
         Log.d(TAG, "authenticating device")
         val bondingKey = "SM50556137000000".toByteArray()
-        authCharacteristic.value = bondingKey
-        gatt.execute { Log.d(TAG, "authCharacteristic"); gatt.writeCharacteristic(authCharacteristic) }
+        gatt.execute {
+            Log.d(TAG, "authCharacteristic")
+            authCharacteristic.value = bondingKey
+            gatt.writeCharacteristic(authCharacteristic)
+        }
     }
 
     private fun setupReceiver() {
@@ -255,28 +272,28 @@ class ShareGatt(context: Context, val device: BluetoothDevice) : Closeable {
     private fun setupNotification(characteristic: BluetoothGattCharacteristic, enabled: Boolean = true) {
         var ret = gatt.setCharacteristicNotification(characteristic, enabled)
         if (!ret) {
-            onFailure("Failed to ${if (enabled) "enable" else "disable"} notifications for ${characteristic.uuid}.")
+            onError(this@ShareGatt, "Failed to ${if (enabled) "enable" else "disable"} notifications for ${characteristic.uuid}.")
             return
         }
-        val descriptor = characteristic.getDescriptor(ShareUuids.CHARACTERISTIC_UPDATE_NOTIFICATION_DESCRIPTOR)
-        descriptor.value = if (enabled) BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE else BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE
-        gatt.execute { Log.d(TAG, "descriptor"); gatt.writeDescriptor(descriptor) }
+        gatt.execute { Log.d(TAG, "descriptor");
+            val descriptor = characteristic.getDescriptor(ShareUuids.CHARACTERISTIC_UPDATE_NOTIFICATION_DESCRIPTOR)
+            descriptor.value = if (enabled) BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE else BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE
+            gatt.writeDescriptor(descriptor)
+        }
     }
 
     private fun setupIndication(characteristic: BluetoothGattCharacteristic, enabled: Boolean = true) {
         var ret = gatt.setCharacteristicNotification(characteristic, enabled)
         if (!ret) {
-            onFailure("Failed to ${if (enabled) "enable" else "disable"} notifications for ${characteristic.uuid}.")
+            onError(this@ShareGatt, "Failed to ${if (enabled) "enable" else "disable"} notifications for ${characteristic.uuid}.")
             return
         }
-        val descriptor = characteristic.getDescriptor(ShareUuids.CHARACTERISTIC_UPDATE_NOTIFICATION_DESCRIPTOR)
-        descriptor.value = if (enabled) BluetoothGattDescriptor.ENABLE_INDICATION_VALUE else BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE
-        gatt.execute { Log.d(TAG, "descriptor"); gatt.writeDescriptor(descriptor) }
-    }
-
-    private fun onFailure(message: String) {
-        close()
-        throw UnsupportedOperationException("not implemented") //To change body of created functions use File | Settings | File Templates.
+        gatt.execute {
+            Log.d(TAG, "descriptor")
+            val descriptor = characteristic.getDescriptor(ShareUuids.CHARACTERISTIC_UPDATE_NOTIFICATION_DESCRIPTOR)
+            descriptor.value = if (enabled) BluetoothGattDescriptor.ENABLE_INDICATION_VALUE else BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE
+            gatt.writeDescriptor(descriptor)
+        }
     }
 
     fun write(bytes: ByteArray) {
@@ -294,9 +311,9 @@ class ShareGatt(context: Context, val device: BluetoothDevice) : Closeable {
        }
     }
 
-    fun read(): ByteArray {
+    fun read(): ByteArray? {
         try {
-            return readQueue.take()
+            return readQueue.poll(5, TimeUnit.SECONDS) ?: null
         } catch (e: InterruptedException) {
             return read()
         }
@@ -311,6 +328,30 @@ class ShareGatt(context: Context, val device: BluetoothDevice) : Closeable {
 class DexcomShareBleConnection(val applicationContext: Context) : Source, Sink {
 
     val TAG = DexcomShareBleConnection::class.java.simpleName
+    var gatt: ShareGatt? = null
+
+    init {
+        //    registerReceiver()
+    }
+
+    companion object {
+        fun source(connection: DexcomShareBleConnection): BufferedSource {
+            return Okio.buffer(timeout(connection).source(connection))
+        }
+
+        fun sink(connection: DexcomShareBleConnection): BufferedSink {
+            return Okio.buffer(timeout(connection).sink(connection))
+        }
+
+        private fun timeout(dexcomShareBleConnection: DexcomShareBleConnection) = object : AsyncTimeout() {
+            override fun timedOut() {
+                super.timedOut()
+                Log.d("Timeout", "Timed out!")
+                //dexcomShareBleConnection.gatt.
+                dexcomShareBleConnection.close()
+            }
+        }
+    }
 
     val connectivityReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
@@ -332,25 +373,20 @@ class DexcomShareBleConnection(val applicationContext: Context) : Source, Sink {
         }
     }
 
-    var gatt: ShareGatt? = null
-
-    init {
-        //    registerReceiver()
-    }
-
     @Synchronized
-    fun connect(device: BluetoothDevice) {
+    fun connect(device: BluetoothDevice, onConnected: (ShareGatt)->Unit,
+                onDisconnected: (ShareGatt)->Unit,
+                onError: (ShareGatt, message: String)->Unit) {
         val immuatableGatt = gatt
         if (immuatableGatt != null && immuatableGatt.device != device) {
             immuatableGatt.close()
         } else if (device != gatt?.device) {
-            gatt = ShareGatt(applicationContext, device)
+            gatt = ShareGatt(applicationContext, device, onConnected,
+                    onDisconnected, onError)
         }
     }
 
-    override fun timeout(): Timeout? {
-        throw UnsupportedOperationException()
-    }
+    override fun timeout(): Timeout = Timeout.NONE
 
     @Synchronized
     override fun close() {
@@ -359,9 +395,11 @@ class DexcomShareBleConnection(val applicationContext: Context) : Source, Sink {
     }
 
     override fun read(sink: Buffer, byteCount: Long): Long {
+        Log.d(TAG, "About to read max $byteCount bytes")
         val bytes = gatt?.read()
         val resultCount = bytes?.size?.toLong() ?: -1L
-        sink.write(bytes)
+        if (bytes != null)
+            sink.write(bytes)
         return resultCount
     }
 
@@ -369,6 +407,7 @@ class DexcomShareBleConnection(val applicationContext: Context) : Source, Sink {
     }
 
     override fun write(source: Buffer, byteCount: Long) {
+        Log.d(TAG, "About to write max $byteCount bytes")
         gatt?.write(source.readByteArray(byteCount))
     }
 }

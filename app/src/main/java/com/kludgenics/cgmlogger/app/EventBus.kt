@@ -6,5 +6,5 @@ import com.squareup.otto.Bus
  * Created by matthias on 3/24/16.
  */
 object EventBus {
-    val instance: Bus by lazy { Bus() }
+    val instance: Bus = Bus()
 }

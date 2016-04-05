@@ -24,7 +24,7 @@
         style="@style/CardView"
         android:layout_margin="8dp"
         app:cardCornerRadius="2dp"
-        app:cardMaxElevation="8dp"
+        app:cardMaxElevation="30dp"
         app:isActive="@{status.active}">
 
         <LinearLayout

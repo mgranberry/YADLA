@@ -13,7 +13,7 @@ object CardBindings {
     val INTERPOLATOR = FastOutSlowInInterpolator()
     @BindingAdapter("isActive") @JvmStatic
     fun setIsActive(view: CardView, isActive: Boolean) {
-        val targets = if (isActive) 2f to 10f else 10f to 2f
+        val targets = if (isActive) 2f to 30f else 30f to 2f
         if (view.cardElevation == targets.first) {
             val animator = ObjectAnimator.ofFloat(view, "cardElevation", targets.first, targets.second);
             animator.interpolator = INTERPOLATOR

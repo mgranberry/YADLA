@@ -147,7 +147,6 @@ class ShareGatt(context: Context, val device: BluetoothDevice, private val onCon
                     val result = gatt.discoverServices()
                     if (!result)
                         gatt.close()
-                    gatt.requestConnectionPriority(BluetoothGatt.CONNECTION_PRIORITY_HIGH)
                     // don't actually call onConnected here because service discovery is required
                     // before the connection is fully established.
                 }
@@ -219,8 +218,9 @@ class ShareGatt(context: Context, val device: BluetoothDevice, private val onCon
                     // keep this to see when new data is available
                 }
                 rxCharacteristic -> {
-                    Log.d(TAG, "received data size ${characteristic.value.size}")
                     readQueue.add(characteristic.value)
+                    if (characteristic.value.size < 20)
+                        gatt.requestConnectionPriority(BluetoothGatt.CONNECTION_PRIORITY_BALANCED)
                 }
             }
         }
@@ -296,6 +296,7 @@ class ShareGatt(context: Context, val device: BluetoothDevice, private val onCon
 
     fun write(bytes: ByteArray) {
         val chunkedBytes = bytes.asSequence().chunked(20).map { it.toByteArray() }
+        gatt.requestConnectionPriority(BluetoothGatt.CONNECTION_PRIORITY_HIGH)
         chunkedBytes.forEach {
             writeQueue.put(it)
             gatt.execute {
@@ -379,7 +380,6 @@ class DexcomShareBleConnection(val applicationContext: Context) : Source, Sink {
     }
 
     override fun read(sink: Buffer, byteCount: Long): Long {
-        Log.d(TAG, "About to read max $byteCount bytes")
         val bytes = gatt?.read()
         val resultCount = bytes?.size?.toLong() ?: -1L
         if (bytes != null)
@@ -391,7 +391,6 @@ class DexcomShareBleConnection(val applicationContext: Context) : Source, Sink {
     }
 
     override fun write(source: Buffer, byteCount: Long) {
-        Log.d(TAG, "About to write max $byteCount bytes")
         gatt?.write(source.readByteArray(byteCount))
     }
 

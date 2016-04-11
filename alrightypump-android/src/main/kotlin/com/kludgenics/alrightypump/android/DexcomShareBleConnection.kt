@@ -1,9 +1,7 @@
 package com.kludgenics.alrightypump.android
 
 import android.bluetooth.*
-import android.content.BroadcastReceiver
 import android.content.Context
-import android.content.Intent
 import android.util.Log
 import okio.*
 import java.io.Closeable
@@ -353,36 +351,22 @@ class DexcomShareBleConnection(val applicationContext: Context) : Source, Sink {
         }
     }
 
-    val connectivityReceiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context, intent: Intent) {
-            when (intent.action) {
-                BluetoothDevice.ACTION_BOND_STATE_CHANGED -> {
-                    val device = intent.getParcelableExtra<BluetoothDevice>(BluetoothDevice.EXTRA_DEVICE)
-                    val currentState = intent.getIntExtra(BluetoothDevice.EXTRA_BOND_STATE, -1)
-                    val previousState = intent.getIntExtra(BluetoothDevice.EXTRA_PREVIOUS_BOND_STATE, -1)
-                    Log.i(TAG, "Bond state changed on device $device from $previousState to $currentState")
-                }
-                BluetoothDevice.ACTION_FOUND -> {
-                    val device = intent.getParcelableExtra<BluetoothDevice>(BluetoothDevice.EXTRA_DEVICE)
-                    val bluetoothClass = intent.getParcelableExtra<BluetoothClass>(BluetoothDevice.EXTRA_CLASS)
-                    val name: String? = intent.getStringExtra(BluetoothDevice.EXTRA_NAME)
-                    val rssi: Int = intent.getIntExtra(BluetoothDevice.EXTRA_RSSI, -1)
-                    Log.i(TAG, "Bond state changed on device $device class $bluetoothClass name $name rssi $rssi")
-                }
-            }
-        }
-    }
-
     @Synchronized
     fun connect(device: BluetoothDevice, onConnected: (ShareGatt)->Unit,
                 onDisconnected: (ShareGatt)->Unit,
                 onError: (ShareGatt, message: String)->Unit) {
-        val immuatableGatt = gatt
-        if (immuatableGatt != null && immuatableGatt.device != device) {
-            immuatableGatt.close()
+        val immutableGatt = gatt
+        if (immutableGatt != null && immutableGatt.device != device) {
+            immutableGatt.close()
         } else if (device != gatt?.device) {
-            gatt = ShareGatt(applicationContext, device, onConnected,
-                    onDisconnected, onError)
+            val connectTimeout = ConnectTimeout(onError)
+            connectTimeout.timeout(30, TimeUnit.SECONDS)
+            connectTimeout.enter()
+            gatt = ShareGatt(applicationContext, device, {shareGatt ->
+                connectTimeout.exit()
+                onConnected(shareGatt)
+            }, onDisconnected, onError)
+            connectTimeout.shareGatt = gatt
         }
     }
 
@@ -409,6 +393,17 @@ class DexcomShareBleConnection(val applicationContext: Context) : Source, Sink {
     override fun write(source: Buffer, byteCount: Long) {
         Log.d(TAG, "About to write max $byteCount bytes")
         gatt?.write(source.readByteArray(byteCount))
+    }
+
+    private class ConnectTimeout(val onError: (ShareGatt, message: String)->Unit) : AsyncTimeout() {
+        var shareGatt: ShareGatt? = null
+        override fun timedOut() {
+            val gatt = shareGatt
+            if (gatt != null) {
+                gatt.close()
+                onError(gatt, "Connection timed out.")
+            }
+        }
     }
 }
 

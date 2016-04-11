@@ -60,8 +60,8 @@ class DeviceSync : AnkoLogger {
     private fun downloadDexcomG4(therapyTimeline: TherapyTimeline, device: DexcomG4,
                                  fetchPredicate: (Record) -> Boolean): Record? {
         therapyTimeline.merge(fetchPredicate,
-                device.cgmRecords, device.calibrationRecords, device.eventRecords,
-                device.eventRecords, device.consumableRecords)
+                device.cgmRecords /*, device.calibrationRecords, device.eventRecords,
+                device.eventRecords, device.consumableRecords*/)
         val event = therapyTimeline.events.lastOrNull()
         info("Synced pages: ${device.syncedPages}")
         return event
@@ -121,8 +121,10 @@ class DeviceSync : AnkoLogger {
         wakelock.acquire()
         connection.connect(device, onDisconnected = {
             info("disconnected")
-            if (wakelock.isHeld)
+            if (wakelock.isHeld) {
+                info("releasing wakelock")
                 wakelock.release()
+            }
         }, onConnected = {
             async() {
                 connection.use {
@@ -137,11 +139,10 @@ class DeviceSync : AnkoLogger {
                         g4.bleEnabled = true
                         val completionEvent = syncDevice(context, g4).get()
                         info("syncDevice result is:$completionEvent")
-                        context.onUiThread {
-                            EventBus.instance.post(completionEvent)
-                        }
+                        EventBus.post(completionEvent)
                     } finally {
                         if (wakelock.isHeld) {
+                            info("releasing wakelock")
                             wakelock.release()
                         }
                     }
@@ -150,8 +151,10 @@ class DeviceSync : AnkoLogger {
         }, onError = { shareGatt: ShareGatt, message: String ->
             error(message)
             info ("wakelock ${wakelock.isHeld}")
-            if (wakelock.isHeld)
+            if (wakelock.isHeld) {
+                info("releasing wakelock")
                 wakelock.release()
+            }
             shareGatt.close()
         })
     }
@@ -177,9 +180,7 @@ class DeviceSync : AnkoLogger {
                     info("calling syncDevice")
                     val completionEvent = syncDevice(context, deviceEntry.device).get()
                     info("syncDevice result is:$completionEvent")
-                    context.onUiThread {
-                        EventBus.instance.post(completionEvent)
-                    }
+                    EventBus.post(completionEvent)
                 }
 
 
@@ -212,9 +213,9 @@ class DeviceSync : AnkoLogger {
                         try {
                             val offset = device.timeCorrectionOffset ?: Duration.ZERO
                             val updateTime = LocalDateTime(getLatestSuccessFor(device) ?:
-                                    (System.currentTimeMillis() - Period.days(30).toStandardSeconds().seconds * 1000L)) - offset
+                                    (System.currentTimeMillis() - Period.days(1).toStandardSeconds().seconds * 1000L)) - offset
                             // Disable large raw fetches over ble
-                            if (Period(updateTime, LocalDateTime.now()).toStandardDays().days >= 1 && device is DexcomG4 && device.bleEnabled)
+                            if (Period(updateTime, LocalDateTime.now()).toStandardHours().hours >= 1 && device is DexcomG4 && device.bleEnabled)
                                 device.rawEnabled = false
                             info("Syncing back to $updateTime")
                             val fetchPredicate = { record: Record -> record.time > updateTime }

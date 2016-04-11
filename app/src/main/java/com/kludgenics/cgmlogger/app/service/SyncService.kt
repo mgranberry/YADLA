@@ -101,17 +101,15 @@ class SyncService : Service(), AnkoLogger {
     @Subscribe
     fun syncCompleted(syncEvent: SyncComplete) {
         info("Nightscout sync initiated")
-        async() {
-            val timeline = PersistedTherapyTimeline()
-            timeline.use {
-                val realm = Realm.getDefaultInstance()
-                realm.use {
-                    val nightscoutInstances = realm.where<SyncStore> {
-                        equalTo("storeType", SyncStore.STORE_TYPE_NIGHTSCOUT)
-                    }.findAll()
-                    nightscoutInstances.toList().forEach {
-                        NightscoutSync.getInstance().uploadToNightscout(timeline, it)
-                    }
+        val timeline = PersistedTherapyTimeline()
+        timeline.use {
+            val realm = Realm.getDefaultInstance()
+            realm.use {
+                val nightscoutInstances = realm.where<SyncStore> {
+                    equalTo("storeType", SyncStore.STORE_TYPE_NIGHTSCOUT)
+                }.findAll()
+                nightscoutInstances.toList().forEach {
+                    NightscoutSync.getInstance().uploadToNightscout(timeline, it)
                 }
             }
         }
@@ -119,7 +117,7 @@ class SyncService : Service(), AnkoLogger {
         val nextSync = if (syncEvent.nextSync?.time ?: 0 > System.currentTimeMillis())
             syncEvent.nextSync!!.time
         else
-            System.currentTimeMillis() + 60000*5
+            System.currentTimeMillis() + 60000 * 5
         val pendingIntent = PendingIntent.getService(applicationContext, 0, Intent(applicationContext, this.javaClass), PendingIntent.FLAG_UPDATE_CURRENT)
         alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, nextSync, pendingIntent)
         unregisterReceiver()
@@ -162,7 +160,7 @@ class SyncService : Service(), AnkoLogger {
             if (!isRegistered) {
                 isRegistered = true
                 info("Registering Receiver")
-                EventBus.instance.register(this)
+                EventBus.register(this)
                 val filter = IntentFilter(ACTION_USB_PERMISSION);
                 filter.addAction(UsbManager.ACTION_USB_DEVICE_DETACHED)
                 registerReceiver(receiver, filter);
@@ -172,14 +170,17 @@ class SyncService : Service(), AnkoLogger {
 
     private fun unregisterReceiver() {
         onUiThread {
-            if (--activeCount == 0)
+            info ("unregisterReceiver called, activeCount=$activeCount")
+            if (--activeCount <= 0) {
+                activeCount = 0
                 stopSelf()
-            if (isRegistered) {
-                isRegistered = false
-                info("Unregistering Receiver")
-                EventBus.instance.unregister(this)
-                unregisterReceiver(receiver)
-                stopSelf()
+                if (isRegistered) {
+                    isRegistered = false
+                    info("Unregistering Receiver")
+                    EventBus.unregister(this)
+                    unregisterReceiver(receiver)
+                    stopSelf()
+                }
             }
         }
     }

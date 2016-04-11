@@ -16,9 +16,9 @@ data class ActivityLifecycleEvent(val canonicalName: String, val event: Int) {
 }
 
 fun Context.postOnPause() {
-    EventBus.instance.post(ActivityLifecycleEvent(this.javaClass.canonicalName, ActivityLifecycleEvent.ON_PAUSE))
+    EventBus.post(ActivityLifecycleEvent(this.javaClass.canonicalName, ActivityLifecycleEvent.ON_PAUSE))
 }
 
 fun Context.postOnResume() {
-    EventBus.instance.post(ActivityLifecycleEvent(this.javaClass.canonicalName, ActivityLifecycleEvent.ON_RESUME))
+    EventBus.post(ActivityLifecycleEvent(this.javaClass.canonicalName, ActivityLifecycleEvent.ON_RESUME))
 }

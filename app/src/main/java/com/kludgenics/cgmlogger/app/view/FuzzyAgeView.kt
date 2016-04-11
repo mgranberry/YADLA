@@ -80,9 +80,9 @@ class FuzzyAgeView : TextView {
     override fun onAttachedToWindow() {
         super.onAttachedToWindow()
         if (!attached) {
-            EventBus.instance.register(this)
+            EventBus.register(this)
             attached = true
-            registerReciever()
+            registerReceiver()
             onTimeChanged()
         }
     }
@@ -90,14 +90,14 @@ class FuzzyAgeView : TextView {
     override fun onDetachedFromWindow() {
         super.onDetachedFromWindow()
         if (attached) {
-            EventBus.instance.unregister(this)
+            EventBus.unregister(this)
             unregisterReceiver()
             attached = false
         }
     }
 
     @Synchronized
-    private fun registerReciever() {
+    private fun registerReceiver() {
         if (!registered) {
             registered = true
             val filter = IntentFilter()
@@ -126,13 +126,14 @@ class FuzzyAgeView : TextView {
         }
     }
 
+    @Suppress("unused")
     @Subscribe
-    fun activityLivecycleAvailable (activityLifecycleEvent: ActivityLifecycleEvent) {
+    fun activityLifecycleAvailable(activityLifecycleEvent: ActivityLifecycleEvent) {
         if (activityLifecycleEvent.canonicalName == context.javaClass.canonicalName)
             when (activityLifecycleEvent.event) {
                 ActivityLifecycleEvent.ON_PAUSE -> unregisterReceiver()
                 ActivityLifecycleEvent.ON_RESUME -> {
-                    registerReciever()
+                    registerReceiver()
                     onTimeChanged()
                 }
             }

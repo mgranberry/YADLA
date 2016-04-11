@@ -73,7 +73,7 @@ class ObservableStatus(private val s: RealmStatus) : DataBindingObservable, Stat
     override var latestRecordTime: Date? by DataBindingDelegates.observable(BR.latestRecordTime, {s.latestRecordTime}, {s.latestRecordTime=it})
 
     @get:Bindable
-    override var nextSync: Date? by DataBindingDelegates.observable(BR._all, {s.nextSync}, {s.nextSync=it})
+    override var nextSync: Date? by DataBindingDelegates.observable(BR.nextSync, {s.nextSync}, {s.nextSync=it})
 
     @get:Bindable
     override var statusText: String? by DataBindingDelegates.observable(BR.statusText, {s.statusText}, {s.statusText=it})
@@ -97,6 +97,6 @@ class ObservableStatus(private val s: RealmStatus) : DataBindingObservable, Stat
     override var syncId: Int by DataBindingDelegates.observable(BR.syncId, {s.syncId}, {s.syncId=it})
 
     @get:Bindable
-    override var clockOffsetMillis: Long? by DataBindingDelegates.observable(BR._all, {s.clockOffsetMillis}, {s.clockOffsetMillis=it})
+    override var clockOffsetMillis: Long? by DataBindingDelegates.observable(BR.clockOffsetMillis, {s.clockOffsetMillis}, {s.clockOffsetMillis=it})
 
 }

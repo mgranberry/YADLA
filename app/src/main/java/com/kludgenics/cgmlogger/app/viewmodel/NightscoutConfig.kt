@@ -16,6 +16,7 @@ import org.jetbrains.anko.async
 import org.jetbrains.anko.info
 import org.jetbrains.anko.error
 import java.io.Closeable
+import java.util.concurrent.Executors
 import java.util.concurrent.Future
 
 /**
@@ -24,14 +25,14 @@ import java.util.concurrent.Future
 class NightscoutConfig(val store: SyncStore, val realm: Realm? = null): DataBindingObservable,
         RealmChangeListener, Closeable, AnkoLogger {
     override var mCallbacks: PropertyChangeRegistry? = null
-
+    private val executor = Executors.newSingleThreadExecutor()
     val url: ObservableString = ObservableString(store.parameters)
 
     @get:Bindable
     var errorText: String? by DataBindingDelegates.observable(BR.errorText, null)
 
     val urlCallback: Observable.OnPropertyChangedCallback = object:Observable.OnPropertyChangedCallback() {
-        var asyncResult: Future<String?>? = null
+        var asyncResult: Future<Unit>? = null
 
         @Synchronized
         override fun onPropertyChanged(sender: Observable?, propertyId: Int) {
@@ -40,17 +41,16 @@ class NightscoutConfig(val store: SyncStore, val realm: Realm? = null): DataBind
                 result.cancel(true)
                 asyncResult = null
             }
-            async() {
+            asyncResult = async(executor) {
                 try {
-                    val r = if (!url.isNullOrEmpty()) {
-                        Thread.sleep(1500)
+                    errorText = if (!url.isNullOrEmpty()) {
+                        Thread.sleep(500)
                         val testUrl = url.get()
                         if (!testUrl.isNullOrEmpty()) {
                             errorText = NightscoutSync.getInstance().testUrl(testUrl!!)
                         }
                         errorText
                     } else null
-                    errorText = r
                 } catch (e: InterruptedException) {
                 } catch (e: Exception) {
                     error("Exception getting result:", e)
@@ -78,6 +78,7 @@ class NightscoutConfig(val store: SyncStore, val realm: Realm? = null): DataBind
         }
     }
 
+    @Suppress("unused")
     fun onSave() {
         val realm = Realm.getDefaultInstance()
         realm.use {

@@ -6,4 +6,4 @@ import java.util.*
  * Created by matthias on 4/4/16.
  */
 
-data class SyncComplete(val serialNumber: String, val nextSync: Date? = null)
+data class SyncCompleteEvent(val serialNumber: String, val nextSync: Date? = null)

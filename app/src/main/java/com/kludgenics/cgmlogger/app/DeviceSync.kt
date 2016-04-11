@@ -13,7 +13,7 @@ import com.kludgenics.alrightypump.device.Device
 import com.kludgenics.alrightypump.device.dexcom.g4.DexcomG4
 import com.kludgenics.alrightypump.device.tandem.TandemPump
 import com.kludgenics.alrightypump.therapy.*
-import com.kludgenics.cgmlogger.app.events.SyncComplete
+import com.kludgenics.cgmlogger.app.events.SyncCompleteEvent
 import com.kludgenics.cgmlogger.app.model.PersistedTherapyTimeline
 import com.kludgenics.cgmlogger.app.viewmodel.RealmStatus
 import com.kludgenics.cgmlogger.app.viewmodel.Status
@@ -42,7 +42,7 @@ class DeviceSync : AnkoLogger {
         fun getInstance() = _instance
     }
     val syncExecutorService = Executors.newCachedThreadPool()
-    val executingSyncs: MutableSet<UsbDevice> = HashSet()
+    val executingSyncs: MutableSet<Any> = HashSet()
     val devices: MutableMap<UsbDevice, AndroidDeviceHelper.DeviceEntry> = HashMap()
     val executingSyncLock = ReentrantLock()
 
@@ -59,9 +59,14 @@ class DeviceSync : AnkoLogger {
 
     private fun downloadDexcomG4(therapyTimeline: TherapyTimeline, device: DexcomG4,
                                  fetchPredicate: (Record) -> Boolean): Record? {
+        device.rawEnabled = false
         therapyTimeline.merge(fetchPredicate,
-                device.cgmRecords /*, device.calibrationRecords, device.eventRecords,
+                device.cgmRecords/*, device.calibrationRecords,
                 device.eventRecords, device.consumableRecords*/)
+        if (device.rawEnabled) {
+            val calibrations = device.calibrationRecords.take(1)
+            therapyTimeline.merge(calibrations)
+        }
         val event = therapyTimeline.events.lastOrNull()
         info("Synced pages: ${device.syncedPages}")
         return event
@@ -116,47 +121,75 @@ class DeviceSync : AnkoLogger {
     }
 
     fun sync(context: Context, device: BluetoothDevice) {
-        val connection = DexcomShareBleConnection(context.getApplicationContext())
-        val wakelock = context.powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "DeviceSync.Bluetooth")
-        wakelock.acquire()
-        connection.connect(device, onDisconnected = {
-            info("disconnected")
-            if (wakelock.isHeld) {
-                info("releasing wakelock")
-                wakelock.release()
+        val shouldSync = executingSyncLock.withLock {
+            if (executingSyncs.contains(device)) {
+                info("$device already in deviceMap: $executingSyncs")
+                false
+            } else {
+                info("Adding $device to deviceMap: $executingSyncs")
+                executingSyncs += device
+                true
             }
-        }, onConnected = {
-            async() {
-                connection.use {
-                    try {
-                        val source = DexcomShareBleConnection.source(it)
-                        val sink = DexcomShareBleConnection.sink(it)
-                        info("Setting timeouts")
-                        source.timeout().timeout(2, TimeUnit.SECONDS)
-                        sink.timeout().timeout(2, TimeUnit.SECONDS)
-                        val g4 = DexcomG4(source, sink)
+        }
+        if (shouldSync) {
+            val connection = DexcomShareBleConnection(context.getApplicationContext())
+            val wakelock = context.powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "DeviceSync.Bluetooth")
+            wakelock.acquire()
+            connection.connect(device, onDisconnected = {
+                info("disconnected")
+                EventBus.post(SyncCompleteEvent(""))
+                if (wakelock.isHeld) {
+                    info("releasing wakelock")
+                    wakelock.release()
+                }
+                executingSyncLock.withLock {
+                    info("Removing $device from deviceMap: $executingSyncs")
+                    executingSyncs -= device
+                }
+            }, onConnected = {
+                async() {
+                    connection.use {
+                        try {
+                            val source = DexcomShareBleConnection.source(it)
+                            val sink = DexcomShareBleConnection.sink(it)
+                            info("Setting timeouts")
+                            source.timeout().timeout(2, TimeUnit.SECONDS)
+                            sink.timeout().timeout(2, TimeUnit.SECONDS)
+                            val g4 = DexcomG4(source, sink)
 
-                        g4.bleEnabled = true
-                        val completionEvent = syncDevice(context, g4).get()
-                        info("syncDevice result is:$completionEvent")
-                        EventBus.post(completionEvent)
-                    } finally {
-                        if (wakelock.isHeld) {
-                            info("releasing wakelock")
-                            wakelock.release()
+                            g4.bleEnabled = true
+                            val completionEvent = syncDevice(context, g4).get()
+                            info("syncDevice result is:$completionEvent")
+                            EventBus.post(completionEvent)
+                        } finally {
+                            if (wakelock.isHeld) {
+                                info("releasing wakelock")
+                                wakelock.release()
+                            }
+                            executingSyncLock.withLock {
+                                info("Removing $device from deviceMap: $executingSyncs")
+                                executingSyncs -= device
+                            }
                         }
                     }
                 }
-            }
-        }, onError = { shareGatt: ShareGatt, message: String ->
-            error(message)
-            info ("wakelock ${wakelock.isHeld}")
-            if (wakelock.isHeld) {
-                info("releasing wakelock")
-                wakelock.release()
-            }
-            shareGatt.close()
-        })
+            }, onError = { shareGatt: ShareGatt, message: String ->
+                error(message)
+                EventBus.post(SyncCompleteEvent(""))
+                info ("wakelock ${wakelock.isHeld}")
+                if (wakelock.isHeld) {
+                    info("releasing wakelock")
+                    wakelock.release()
+                }
+                shareGatt.close()
+                executingSyncLock.withLock {
+                    info("Removing $device from deviceMap: $executingSyncs")
+                    executingSyncs -= device
+                }
+            })
+        } else {
+            EventBus.post(SyncCompleteEvent(""))
+        }
     }
 
     fun sync(context: Context, device: UsbDevice) {
@@ -199,7 +232,7 @@ class DeviceSync : AnkoLogger {
         r?.serialConnection?.close()
     }
 
-    fun syncDevice(context: Context, device: Device): Future<SyncComplete> {
+    fun syncDevice(context: Context, device: Device): Future<SyncCompleteEvent> {
         info("Syncing ${device.serialNumber}")
         Crashlytics.log("Syncing ${device.serialNumber}")
         return context.asyncResult (syncExecutorService) {
@@ -238,10 +271,12 @@ class DeviceSync : AnkoLogger {
                             Crashlytics.logException(e)
                         } catch (e: EOFException) {
                             updateStatus(realm, syncId, Status.CODE_EOF, null, false)
+                        } catch (e: java.io.InterruptedIOException) {
+                            updateStatus(realm, syncId, Status.CODE_EOF, null, false)
                         }
                     }
                 }
-                SyncComplete(device.serialNumber, nextSync = nextSync)
+                SyncCompleteEvent(device.serialNumber, nextSync = nextSync)
             } catch (e: Exception) {
                 info("Exception caught: ${e.message}")
                 e.printStackTrace()

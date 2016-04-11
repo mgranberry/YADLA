@@ -15,7 +15,7 @@ import com.kludgenics.alrightypump.android.AndroidDeviceHelper
 import com.kludgenics.cgmlogger.app.DeviceSync
 import com.kludgenics.cgmlogger.app.EventBus
 import com.kludgenics.cgmlogger.app.NightscoutSync
-import com.kludgenics.cgmlogger.app.events.SyncComplete
+import com.kludgenics.cgmlogger.app.events.SyncCompleteEvent
 import com.kludgenics.cgmlogger.app.model.PersistedTherapyTimeline
 import com.kludgenics.cgmlogger.app.model.SyncStore
 import com.kludgenics.cgmlogger.extension.where
@@ -99,7 +99,7 @@ class SyncService : Service(), AnkoLogger {
 
     @Suppress("unused")
     @Subscribe
-    fun syncCompleted(syncEvent: SyncComplete) {
+    fun syncCompleted(syncEvent: SyncCompleteEvent) {
         info("Nightscout sync initiated")
         val timeline = PersistedTherapyTimeline()
         timeline.use {

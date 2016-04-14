@@ -2,6 +2,7 @@ package com.kludgenics.alrightypump.android
 
 import android.bluetooth.*
 import android.content.Context
+import android.os.Build
 import android.util.Log
 import okio.*
 import java.io.Closeable
@@ -219,7 +220,7 @@ class ShareGatt(context: Context, val device: BluetoothDevice, private val onCon
                 }
                 rxCharacteristic -> {
                     readQueue.add(characteristic.value)
-                    if (characteristic.value.size < 20)
+                    if (characteristic.value.size < 20 && Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)
                         gatt.requestConnectionPriority(BluetoothGatt.CONNECTION_PRIORITY_BALANCED)
                 }
             }
@@ -245,7 +246,7 @@ class ShareGatt(context: Context, val device: BluetoothDevice, private val onCon
         }
     }
 
-    val gatt: BluetoothGatt = device.connectGatt(context, true, gattCallback)
+    val gatt: BluetoothGatt = device.connectGatt(context, false, gattCallback)
 
     private fun setupAuthentication() {
         Log.d(TAG, "authenticating device")
@@ -296,7 +297,8 @@ class ShareGatt(context: Context, val device: BluetoothDevice, private val onCon
 
     fun write(bytes: ByteArray) {
         val chunkedBytes = bytes.asSequence().chunked(20).map { it.toByteArray() }
-        gatt.requestConnectionPriority(BluetoothGatt.CONNECTION_PRIORITY_HIGH)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)
+            gatt.requestConnectionPriority(BluetoothGatt.CONNECTION_PRIORITY_HIGH)
         chunkedBytes.forEach {
             writeQueue.put(it)
             gatt.execute {

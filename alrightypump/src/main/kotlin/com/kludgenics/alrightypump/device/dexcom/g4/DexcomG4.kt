@@ -47,10 +47,7 @@ open class DexcomG4(private val source: BufferedSource,
     override val cgmRecords: DexcomCgmSequence
         get() =
         if (rawEnabled) {
-            val cals = calibrationRecords
-            val egvs = egvRecords
-            val sgvs = sgvRecords
-            DexcomCgmSequence(egvs, sgvs, cals)
+            DexcomCgmSequence(egvRecords, sgvRecords, /*cals*/ null)
         } else
             DexcomCgmSequence(egvRecords, null, null)
 
@@ -92,13 +89,15 @@ open class DexcomG4(private val source: BufferedSource,
 
             init {
                 val bgs: Sequence<Pair<EgvRecord, SgvRecord?>>
-                if (sgvs != null && calIterator != null) {
+                if (sgvs != null) {
                     val currentTime = LocalDateTime()
-                    currentCal = calIterator.next()
-                    while (currentCal!!.displayTime > currentTime && calIterator.hasNext())
-                        currentCal = calIterator.next()
-                    if (currentCal!!.displayTime > currentTime)
-                        currentCal = null
+                    currentCal = calIterator?.next()
+                    if (currentCal != null) {
+                        while (currentCal!!.displayTime > currentTime && calIterator?.hasNext() ?: false)
+                            currentCal = calIterator?.next()
+                        if (currentCal!!.displayTime > currentTime)
+                            currentCal = null
+                    }
                     bgs = egvs.filterNot {
                         if (it.skipped) {
                             calibrationRequired = true
@@ -225,6 +224,7 @@ open class DexcomG4(private val source: BufferedSource,
     }
 
     fun readDataPages(recordType: Int, start: Int, count: Int = 1): List<RecordPage> {
+        println("readDataPages($recordType, $start, $count)")
         val response = commandResponse(ReadDataPages(recordType, start, count))
         return if (response is ReadDataPagesResponse)
             response.pages
@@ -233,6 +233,8 @@ open class DexcomG4(private val source: BufferedSource,
     }
 
     fun readDataPageRange(recordType: Int): Pair<Int, Int>? {
+        println("readDataPage($recordType)")
+
         val response = commandResponse(ReadDataPageRange(recordType))
         return if (response is ReadDataPageRangeResponse)
             response.start to response.end

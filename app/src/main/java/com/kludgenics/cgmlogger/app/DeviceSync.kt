@@ -64,7 +64,6 @@ class DeviceSync : AnkoLogger {
 
     private fun downloadDexcomG4(therapyTimeline: TherapyTimeline, device: DexcomG4,
                                  fetchPredicate: (Record) -> Boolean): Record? {
-        device.rawEnabled = false
         val cgmRecords = device.cgmRecords
         therapyTimeline.merge(fetchPredicate,
                 cgmRecords)
@@ -158,8 +157,8 @@ class DeviceSync : AnkoLogger {
                             val source = DexcomShareBleConnection.source(it)
                             val sink = DexcomShareBleConnection.sink(it)
                             info("Setting timeouts")
-                            source.timeout().timeout(2, TimeUnit.SECONDS)
-                            sink.timeout().timeout(2, TimeUnit.SECONDS)
+                            source.timeout().timeout(5, TimeUnit.SECONDS)
+                            sink.timeout().timeout(5, TimeUnit.SECONDS)
                             val g4 = DexcomG4(source, sink)
 
                             g4.bleEnabled = true

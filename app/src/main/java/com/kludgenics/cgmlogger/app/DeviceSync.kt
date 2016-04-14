@@ -48,31 +48,35 @@ class DeviceSync : AnkoLogger {
 
     private fun downloadTandem(therapyTimeline: TherapyTimeline, device: TandemPump,
                                fetchPredicate: (Record) -> Boolean): Record? {
-        therapyTimeline.merge(fetchPredicate,
-                device.basalRecords, device.bolusRecords,
-                device.smbgRecords, device.consumableRecords,
-                device.profileRecords)
-        val source = device.records.filterIsInstance<Record>().first().source
-        info("source=$source")
-        return therapyTimeline.events.filter { it.source == source }.lastOrNull()
+        info("Syncing basal records")
+        therapyTimeline.merge(fetchPredicate, device.basalRecords)
+        info("Syncing bolus records")
+        therapyTimeline.merge(fetchPredicate, device.bolusRecords)
+        info("Syncing smbg records")
+        therapyTimeline.merge(fetchPredicate, device.smbgRecords)
+        info("Syncing consumable records")
+        therapyTimeline.merge(fetchPredicate, device.consumableRecords)
+        //info("Syncing provile records")
+        //therapyTimeline.merge(fetchPredicate, device.profileRecords)
+        info("Synced all records")
+        return null
     }
 
     private fun downloadDexcomG4(therapyTimeline: TherapyTimeline, device: DexcomG4,
                                  fetchPredicate: (Record) -> Boolean): Record? {
         device.rawEnabled = false
+        val cgmRecords = device.cgmRecords
         therapyTimeline.merge(fetchPredicate,
-                device.cgmRecords/*, device.calibrationRecords,
-                device.eventRecords, device.consumableRecords*/)
-        if (device.rawEnabled) {
-            val calibrations = device.calibrationRecords.take(1)
-            therapyTimeline.merge(calibrations)
-        }
+                cgmRecords)
+        if (cgmRecords.calibrationRequired)
+            therapyTimeline.merge(fetchPredicate, device.calibrationRecords)
         val event = therapyTimeline.events.lastOrNull()
         info("Synced pages: ${device.syncedPages}")
         return event
     }
 
     private fun createStatus(realm: Realm, device: Device): Int {
+        val syncId = (realm.allObjects(RealmStatus::class.java).max("syncId") ?: 0).toInt() + 1
         return realm.create<RealmStatus> {
             syncStartTime = Date()
             modificationTime = syncStartTime
@@ -81,6 +85,7 @@ class DeviceSync : AnkoLogger {
             statusText = Status.IN_PROGRESS
             icon = R.drawable.bluetooth_circle
             active = true
+            this.syncId = syncId
         }.syncId
     }
 
@@ -250,7 +255,7 @@ class DeviceSync : AnkoLogger {
                             // Disable large raw fetches over ble
                             if (Period(updateTime, LocalDateTime.now()).toStandardHours().hours >= 1 && device is DexcomG4 && device.bleEnabled)
                                 device.rawEnabled = false
-                            info("Syncing back to $updateTime")
+                            info("Syncing back to ${device.serialNumber} $updateTime $syncId")
                             val fetchPredicate = { record: Record -> record.time > updateTime }
                             val latestEvent = when (device) {
                                 is DexcomG4 -> downloadDexcomG4(therapyTimeline, device,
@@ -259,13 +264,13 @@ class DeviceSync : AnkoLogger {
                                         fetchPredicate)
                                 else -> null
                             }
-                            info("sync of ${device.serialNumber} ${latestEvent?.time} done")
+                            info("sync of ${device.serialNumber} ${latestEvent?.time} $syncId done")
                             val latestTime = latestEvent?.time
                             updateStatus(realm, syncId, Status.CODE_SUCCESS, latestTime?.toDate(), inProgress = false, clockOffsetMillis = offset.millis)
                             if (latestTime != null)
                                 nextSync = (latestTime + device.timeCorrectionOffset + Period.minutes(5)).toDate()
                         } catch (e: ArrayIndexOutOfBoundsException) {
-                            info("sync of ${device.serialNumber} failed.")
+                            info("sync of ${device.serialNumber} failed.", e)
                             e.printStackTrace()
                             updateStatus(realm, syncId, Status.CODE_FAILURE, null, false)
                             Crashlytics.logException(e)

@@ -16,4 +16,13 @@ data class DexcomCgmRecord(override val id: String,
     constructor(egvRecord: EgvRecord, sgvRecord: SgvRecord?,
                 calSetRecord: CalSetRecord?): this(egvRecord.id, egvRecord.displayTime, DexcomG4GlucoseValue(egvRecord,
             sgvRecord, calSetRecord), egvRecord = egvRecord, sgvRecord = sgvRecord, calSetRecord = calSetRecord)
+
+    override val trendArrow: Int
+        get() = egvRecord.trendArrow
+
+    override val noise: Int
+        get() = egvRecord.noise
+
+    override val rssi: Int?
+        get() = sgvRecord?.rssi
 }

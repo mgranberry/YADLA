@@ -7,7 +7,6 @@ import com.kludgenics.cgmlogger.app.R
 import io.realm.RealmChangeListener
 import io.realm.RealmObject
 import io.realm.annotations.Index
-import java.security.SecureRandom
 import java.util.*
 
 /**
@@ -48,7 +47,7 @@ open class RealmStatus(override var modificationTime: Date = Date(),
                        override var active: Boolean = false,
                        override var icon: Int = R.drawable.bluetooth_circle,
                        override var syncStartTime: Date = Date(),
-                       override var syncId: Int = SecureRandom().nextInt(),
+                       override var syncId: Int = 0,
                        override var nextSync: Date? = null,
                        override var clockOffsetMillis: Long? = null) : Status, RealmObject() {
 }

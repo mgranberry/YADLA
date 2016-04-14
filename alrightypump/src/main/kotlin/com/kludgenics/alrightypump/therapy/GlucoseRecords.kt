@@ -17,4 +17,7 @@ interface CgmRecord : GlucoseRecord {
 
 interface RawCgmRecord: CgmRecord {
     override val value: RawGlucoseValue
+    val trendArrow: Int?
+    val rssi: Int?
+    val noise: Int?
 }

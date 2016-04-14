@@ -208,19 +208,24 @@ open class PersistedRawCgmRecord(override var record: PersistedRecord = Persiste
                                  var _unit: Int = GlucoseUnit.MGDL,
                                  var _filtered: Int? = null,
                                  var _unfiltered: Int? = null,
+                                 var _trendArrow: Int? = null,
+                                 var _noise: Int? = null,
+                                 var _rssi: Int? = null,
                                  @PrimaryKey
                                  override var eventKey: String="") : InflatedRecord, RawCgmRecord, RawGlucoseValue, RealmObject() {
     constructor (record: PersistedRecord, rawCgmRecord: RawCgmRecord) : this(record,
             rawCgmRecord.value.glucose,
             rawCgmRecord.value.unit,
             rawCgmRecord.value.filtered,
-            rawCgmRecord.value.unfiltered)
+            rawCgmRecord.value.unfiltered,
+            rawCgmRecord.trendArrow,
+            rawCgmRecord.noise,
+            rawCgmRecord.rssi)
     constructor (record: PersistedRecord, rawCgmRecord: CgmRecord) : this(record,
             rawCgmRecord.value.glucose,
             rawCgmRecord.value.unit)
     override val eventType: Int
         get() = EventType.GLUCOSE
-
     override var _date: Date
         get() = record._date
         set(value) {
@@ -239,7 +244,9 @@ open class PersistedRawCgmRecord(override var record: PersistedRecord = Persiste
     override val calibration: Calibration? get() = null
     override val filtered: Int? get() = _filtered
     override val unfiltered: Int? get() = _unfiltered
-
+    override val trendArrow: Int? get() = _trendArrow
+    override val rssi: Int? get() = _rssi
+    override val noise: Int? get() = _noise
 }
 
 open class PersistedSmbgRecord(override var record: PersistedRecord = PersistedRecord(),

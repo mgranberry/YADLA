@@ -55,15 +55,12 @@ class NightscoutSync: AnkoLogger {
         val nightscout_url = syncStore.parameters
         info("uploading to $nightscout_url")
         try {
-            info("Trying")
             val nightscout = Nightscout(HttpUrl.parse(nightscout_url), okHttpClient)
             val uploadCalls = nightscout.prepareUploads(timeline.eventsWithoutSource(syncStore)).toList()
             info("cc: ${uploadCalls.count()}")
             uploadCalls.forEach {
                 chunk: Nightscout.ChunkedCall<InflatedRecord> ->
-                info("call")
                 val response = chunk.call.execute();
-                info("executed")
                 val realm = Realm.getDefaultInstance()
                 realm.use {
                     realm.transaction {
@@ -75,7 +72,7 @@ class NightscoutSync: AnkoLogger {
                     }
                 }
             }
-            info("Upload queued")
+            info("Upload to $nightscout_url finished")
         } catch (e: Exception) {
             info("Exception in nightscoutSync", e)
             e.printStackTrace()

@@ -118,7 +118,6 @@ class Nightscout constructor (val url: HttpUrl,
         var (treatmentRecords, entryRecords: List<Pair<T, Record>>) = records.flatMap {
             when (it) {
                 is CalibrationRecord -> sequenceOf(it as T to NightscoutEntryJson(NightscoutCalJson(it)))
-                is DexcomCgmRecord -> sequenceOf(it as T to NightscoutEntryJson(NightscoutSgvJson(it))) // TODO this is the only place where there is a device dependency :(
                 is RawCgmRecord -> sequenceOf(it as T to NightscoutEntryJson(NightscoutSgvJson(it)))
                 is CgmRecord -> sequenceOf(it as T to NightscoutEntryJson(NightscoutSgvJson(it)))
                 is SmbgRecord -> sequenceOf(it as T to NightscoutEntryJson(NightscoutMbgJson(it)))

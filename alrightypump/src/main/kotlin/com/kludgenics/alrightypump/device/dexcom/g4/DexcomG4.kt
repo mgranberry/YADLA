@@ -37,12 +37,14 @@ open class DexcomG4(private val source: BufferedSource,
     var bleEnabled = false
     var rawEnabled = true
 
-    val syncedPages: List<Int> = arrayListOf()
+    data class PageInfo(val recordType: Int, val pageNumber: Int)
+
+    val syncedPages: List<PageInfo> = arrayListOf()
     val ignoredPages: MutableList<Int> = arrayListOf()
 
     override val serialNumber: String by lazy { requestSerialNumber() }
 
-    override val cgmRecords: Sequence<DexcomCgmRecord>
+    override val cgmRecords: DexcomCgmSequence
         get() =
         if (rawEnabled) {
             val cals = calibrationRecords
@@ -78,9 +80,10 @@ open class DexcomG4(private val source: BufferedSource,
     val version: String? by lazy { requestVersion() }
     val databasePartitionInfo: String? by lazy { readDatabasePartitionInfo() }
 
-    private inner class DexcomCgmSequence(private val egvs: Sequence<EgvRecord>,
+    inner class DexcomCgmSequence(private val egvs: Sequence<EgvRecord>,
                                           private val sgvs: Sequence<SgvRecord>?,
                                           private val cals: Sequence<CalSetRecord>?) : Sequence<DexcomCgmRecord> {
+        var calibrationRequired = false
 
         override fun iterator() = object : Iterator<DexcomCgmRecord> {
             var currentCal: CalSetRecord?
@@ -96,7 +99,12 @@ open class DexcomG4(private val source: BufferedSource,
                         currentCal = calIterator.next()
                     if (currentCal!!.displayTime > currentTime)
                         currentCal = null
-                    bgs = egvs.filterNot { it.skipped }.zip(sgvs)
+                    bgs = egvs.filterNot {
+                        if (it.skipped) {
+                            calibrationRequired = true
+                            true
+                        } else false
+                    }.zip(sgvs)
                 } else {
                     currentCal = null
                     bgs = egvs.filterNot { it.skipped }.map { it to null }
@@ -139,7 +147,7 @@ open class DexcomG4(private val source: BufferedSource,
             val records = @Suppress("UNCHECKED_CAST")(readDataPages(type, pageIndex).flatMap { it.records } as List<T>)
             pageIterator = records.reversed().iterator()
             if (pageIndex != start)
-                syncedPages as MutableList += pageIndex
+                syncedPages as MutableList += PageInfo(recordType = type, pageNumber = pageIndex)
             pageIndex -= 1
             while (pageIndex in ignoredPages)
                 pageIndex -= 1
@@ -197,9 +205,8 @@ open class DexcomG4(private val source: BufferedSource,
         return if (offsetResponse != null) {
             val timeResponse = commandResponse(ReadSystemTime()) as? ReadSystemTimeResponse
             if (timeResponse != null) {
-                RecordPage.EPOCH + Duration((timeResponse.time.toLong()+offsetResponse.offset.toLong())*1000)
-            }
-            else
+                RecordPage.EPOCH + Duration((timeResponse.time.toLong() + offsetResponse.offset.toLong()) * 1000)
+            } else
                 null
         } else
             null

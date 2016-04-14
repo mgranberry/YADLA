@@ -241,7 +241,8 @@ class NightscoutJsonAdapter {
                         unfiltered = entry["unfiltered"]?.toDouble()?.toInt(), // this works around an old xDrip bug
                         direction = entry["direction"]!!,
                         noise = entry["noise"]?.toInt(),
-                        rssi = entry["rssi"]?.toInt()))
+                        rssi = entry["rssi"]?.toInt(),
+                        trendArrow = NightscoutSgvJson.stringToDirection(entry["direction"])))
 
             }
             "mbg" -> NightscoutEntryJson(NightscoutMbgJson(id = entry["_id"] as String,
@@ -276,39 +277,31 @@ data class NightscoutSgvJson(override val id: String?,
                              override val noise: Int?,
                              override val filtered: Int?,
                              override val unfiltered: Int?,
+                             override val trendArrow: Int?,
                              override val rssi: Int?) : NightscoutApiSgvEntry {
     override val value: RawGlucoseValue
         get() = NightscoutGlucoseValue(this)
 
     companion object {
+        val directionStrings = arrayListOf("", "DoubleUp", "SingleUp", "FortyFiveUp", "Flat", "FortyFiveDown", "SingleDown", "DoubleDown")
 
-        fun directionString(direction: Int?): String {
-            when (direction) {
-                1 -> return "DoubleUp"
-                2 -> return "SingleUp"
-                3 -> return "FortyFiveUp"
-                4 -> return "Flat"
-                5 -> return "FortyFiveDown"
-                6 -> return "SingleDown"
-                7 -> return "DoubleDown"
-                else -> return ""
-            }
+        fun stringToDirection(direction: String?): Int {
+            return directionStrings.indexOf(direction)
+        }
+
+        fun directionString(direction: Int?): String? {
+            return directionStrings.getOrNull(direction?:-1)
         }
     }
 
-    constructor(record: DexcomCgmRecord) : this(id = record.id, type = "sgv", time = record.time, dateString = record.time.safeDateTime().toString(),
-            source = record.source, sgv = record.value.mgdl!!.toInt(), direction = directionString(record.egvRecord.trendArrow), rssi = record.sgvRecord?.rssi,
-            unfiltered = record.sgvRecord?.unfiltered,
-            filtered = record.sgvRecord?.filtered, noise = record.egvRecord.noise)
-
     constructor(record: RawCgmRecord) : this(id = record.id, type = "sgv", time = record.time, dateString = record.time.safeDateTime().toString(),
-            source = record.source, sgv = record.value.mgdl!!.toInt(), direction = null, rssi = null,
+            source = record.source, sgv = record.value.mgdl!!.toInt(), direction = directionString(record.trendArrow), rssi = record.rssi,
             unfiltered = record.value.unfiltered,
-            filtered = record.value.filtered, noise = null)
+            filtered = record.value.filtered, noise = record.noise, trendArrow = record.trendArrow)
 
     constructor(record: CgmRecord) : this(id = record.id, type = "sgv", time = record.time, dateString = record.time.safeDateTime().toString(),
             source = record.source, sgv = record.value.mgdl!!.toInt(), direction = null, rssi = null, unfiltered = null,
-            filtered = null, noise = null)
+            filtered = null, noise = null, trendArrow = null)
 
 }
 

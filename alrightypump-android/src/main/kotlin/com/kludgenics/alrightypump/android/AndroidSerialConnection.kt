@@ -6,10 +6,7 @@ import android.hardware.usb.UsbDeviceConnection
 import android.hardware.usb.UsbManager
 import com.felhr.usbserial.UsbSerialDevice
 import com.felhr.usbserial.UsbSerialInterface
-import okio.Buffer
-import okio.Source
-import okio.Sink
-import okio.Timeout
+import okio.*
 import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.TimeUnit
 
@@ -34,7 +31,7 @@ class AndroidSerialConnection(context: Context, device: UsbDevice): Source, Sink
         serial.read(readCallback)
     }
 
-    var timeout: Timeout = Timeout.NONE
+    var timeout = Timeout.NONE
 
     override fun read(sink: Buffer, byteCount: Long): Long {
         if (byteCount < 0) throw IllegalArgumentException("byteCount < 0: " + byteCount)

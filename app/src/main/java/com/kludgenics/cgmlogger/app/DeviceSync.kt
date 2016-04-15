@@ -266,6 +266,9 @@ class DeviceSync : AnkoLogger {
                             info("sync of ${device.serialNumber} ${latestEvent?.time} $syncId done")
                             val latestTime = latestEvent?.time
                             updateStatus(realm, syncId, Status.CODE_SUCCESS, latestTime?.toDate(), inProgress = false, clockOffsetMillis = offset.millis)
+                            val lastBg = therapyTimeline.glucoseEvents.lastOrNull()
+                            if (lastBg != null)
+                                EventBus.post(lastBg)
                             if (latestTime != null)
                                 nextSync = (latestTime + device.timeCorrectionOffset + Period.minutes(5)).toDate()
                         } catch (e: ArrayIndexOutOfBoundsException) {

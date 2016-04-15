@@ -7,18 +7,28 @@ import okio.BufferedSink
 import okio.BufferedSource
 import org.joda.time.*
 import org.joda.time.chrono.ISOChronology
+import java.util.concurrent.TimeUnit
 
 /**
  * Created by matthias on 11/5/15.
  */
 
-open class DexcomG4(private val source: BufferedSource,
-                    private val sink: BufferedSink) : ContinuousGlucoseMonitor {
+open class DexcomG4(val source: BufferedSource,
+                    val sink: BufferedSink) : ContinuousGlucoseMonitor {
 
     companion object {
         val source: String get() = "alrightypump-Dexcom-G4-$serial"
         private var _serial = ""
         val serial: String get() = _serial
+    }
+
+    init {
+        if (source.timeout().timeoutNanos() == 0L) {
+            source.timeout().timeout(3, TimeUnit.SECONDS)
+        }
+        if (sink.timeout().timeoutNanos() == 0L) {
+            sink.timeout().timeout(3, TimeUnit.SECONDS)
+        }
     }
 
     private var _timeCorrectionOffset: Duration? = null

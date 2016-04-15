@@ -3,10 +3,6 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <data>
-        <import type="com.kludgenics.cgmlogger.app.viewmodel.ObservableStatus"/>
-        <variable
-            name="status"
-            type="com.kludgenics.cgmlogger.app.viewmodel.ObservableStatus" />
     </data>
 
     <android.support.v4.widget.DrawerLayout
@@ -16,8 +12,7 @@
         android:fitsSystemWindows="true">
 
         <include android:id="@+id/included_list_viewpager"
-            layout="@layout/include_list_viewpager"
-            bind:status="@{status}"/>
+            layout="@layout/include_list_viewpager"/>
 
         <android.support.design.widget.NavigationView
             android:id="@+id/nav_view"

@@ -22,6 +22,7 @@ import com.kludgenics.cgmlogger.extension.where
 import com.squareup.otto.Subscribe
 import io.realm.Realm
 import org.jetbrains.anko.*
+import java.util.*
 
 /**
  * Created by matthias on 3/22/16.
@@ -88,11 +89,10 @@ class SyncService : Service(), AnkoLogger {
                 }
             } catch (e: Exception) {
                 error("sync failed:", e)
+                unregisterReceiver()
             } finally {
                 info("Releasing wakelock, stopping.")
                 wakeLock.release()
-                unregisterReceiver()
-                //stopSelf()
             }
         }
     }
@@ -117,49 +117,66 @@ class SyncService : Service(), AnkoLogger {
         val nextSync = if (syncEvent.nextSync?.time ?: 0 > System.currentTimeMillis())
             syncEvent.nextSync!!.time
         else
-            System.currentTimeMillis() + 60000 * 5
-        val pendingIntent = PendingIntent.getService(applicationContext, 0, Intent(applicationContext, this.javaClass), PendingIntent.FLAG_UPDATE_CURRENT)
-        alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, nextSync, pendingIntent)
+            -1
+        if (nextSync != -1L) {
+            info ("Waking at ${Date(nextSync)}")
+            val pendingIntent = PendingIntent.getService(applicationContext, 0, Intent(applicationContext, this.javaClass), PendingIntent.FLAG_UPDATE_CURRENT)
+            alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, nextSync, pendingIntent)
+        }
         unregisterReceiver()
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        info("onStartCommand() activeCount=${++activeCount}")
+        info("onStartCommand() activeCount=${activeCount}")
+        info ("Waking at ${Date(System.currentTimeMillis() + 60000 * 5)}")
 
         val pendingIntent = PendingIntent.getService(applicationContext, 0, Intent(applicationContext, this.javaClass), PendingIntent.FLAG_UPDATE_CURRENT)
-        alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + 60000*5, pendingIntent)
-
-        registerReceiver()
+        alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + 60000 * 5, pendingIntent)
+        val wakelock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, SyncService::class.java.simpleName)
+        wakelock.acquire(1000)
         async() {
             val permissionIntent = PendingIntent.getBroadcast(this@SyncService, 0, Intent(ACTION_USB_PERMISSION), 0);
             val tandemPumps = AndroidDeviceHelper.getTandemPumps(this@SyncService)
             val dexcomG4s = AndroidDeviceHelper.getDexcomG4s(this@SyncService)
+            var syncCount: Int = 0
             dexcomG4s.forEach { device ->
+                syncCount++
+                registerReceiver()
                 info("requesting permisison for ${device}")
-                usbManager.requestPermission(device, permissionIntent)
+                if (!usbManager.hasPermission(device))
+                    usbManager.requestPermission(device, permissionIntent)
+                else
+                    performDeviceSync(device)
             }
             tandemPumps.forEach { device ->
+                syncCount++
+                registerReceiver()
                 info("requesting permisison for ${device}")
-                usbManager.requestPermission(device, permissionIntent)
+                if (!usbManager.hasPermission(device))
+                    usbManager.requestPermission(device, permissionIntent)
+                else
+                    performDeviceSync(device)
             }
             val bluetoothAdapter = bluetoothManager.adapter
             if (bluetoothAdapter != null) {
                 val device = bluetoothAdapter.getRemoteDevice("E1:A0:CF:AB:96:FE")
+                syncCount++
+                registerReceiver()
                 DeviceSync.getInstance().sync(this@SyncService, device)
             }
-            if (tandemPumps.isEmpty() && dexcomG4s.isEmpty() && false) {
-                unregisterReceiver()
+            if (syncCount == 0)
                 stopSelf()
-            }
         }
         return Service.START_NOT_STICKY
     }
 
     private fun registerReceiver() {
         onUiThread {
+            ++activeCount
+            info("Registering Receiver $activeCount")
+
             if (!isRegistered) {
                 isRegistered = true
-                info("Registering Receiver")
                 EventBus.register(this)
                 val filter = IntentFilter(ACTION_USB_PERMISSION);
                 filter.addAction(UsbManager.ACTION_USB_DEVICE_DETACHED)

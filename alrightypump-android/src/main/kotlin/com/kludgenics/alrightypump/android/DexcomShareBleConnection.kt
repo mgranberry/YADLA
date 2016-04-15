@@ -321,6 +321,7 @@ class ShareGatt(context: Context, val device: BluetoothDevice, private val onCon
     }
 
     override fun close() {
+        gatt.requestConnectionPriority(BluetoothGatt.CONNECTION_PRIORITY_LOW_POWER)
         gatt.disconnect()
         gatt.close()
     }
@@ -330,10 +331,6 @@ class DexcomShareBleConnection(val applicationContext: Context) : Source, Sink {
 
     val TAG = DexcomShareBleConnection::class.java.simpleName
     var gatt: ShareGatt? = null
-
-    init {
-        //    registerReceiver()
-    }
 
     companion object {
         fun source(connection: DexcomShareBleConnection): BufferedSource {
@@ -348,7 +345,6 @@ class DexcomShareBleConnection(val applicationContext: Context) : Source, Sink {
             override fun timedOut() {
                 super.timedOut()
                 Log.d("Timeout", "Timed out!")
-                //dexcomShareBleConnection.gatt.
                 dexcomShareBleConnection.close()
             }
         }

@@ -118,7 +118,6 @@ data class LogSizeResp(val numEntries: Int,
     constructor(buffer: Buffer) : this(buffer.readIntLe(),
             buffer.readIntLe(),
             buffer.readIntLe()) {
-
     }
 
     companion object {
@@ -270,4 +269,11 @@ class Command61() : TandemPayload {
         const val COMMAND: Int = 61
     }
     override val id: Int = COMMAND
+}
+
+class Command154() : TandemPayload {
+    companion object {
+        const val COMMAND: Int = 154
+    }
+    override val id: Int = Command154.COMMAND
 }

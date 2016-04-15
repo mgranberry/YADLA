@@ -3,12 +3,11 @@ package com.kludgenics.alrightypump.android
 import android.content.Context
 import android.hardware.usb.UsbDevice
 import android.hardware.usb.UsbManager
+import android.util.Log
 import com.kludgenics.alrightypump.device.Device
 import com.kludgenics.alrightypump.device.dexcom.g4.DexcomG4
 import com.kludgenics.alrightypump.device.tandem.TandemPump
-import okio.Okio
-import okio.Sink
-import okio.Source
+import okio.*
 import java.util.*
 
 /**
@@ -36,8 +35,8 @@ class AndroidDeviceHelper private constructor() {
             var entry: DeviceEntry? = null
             try {
                 entry = when (device) {
-                    in getTandemPumps(context) -> DeviceEntry(serial, TandemPump(Okio.buffer(serial as Source), Okio.buffer(serial as Sink)))
-                    in getDexcomG4s(context) -> DeviceEntry(serial, DexcomG4(Okio.buffer(serial as Source), Okio.buffer(serial as Sink)))
+                    in getTandemPumps(context) -> DeviceEntry(serial, TandemPump(source(serial), sink(serial)))
+                    in getDexcomG4s(context) -> DeviceEntry(serial, DexcomG4(source(serial), sink(serial)))
                     else -> {
                         null
                     }
@@ -48,5 +47,22 @@ class AndroidDeviceHelper private constructor() {
             }
             return entry
         }
+
+        fun source(connection: AndroidSerialConnection): BufferedSource {
+            return Okio.buffer(timeout(connection).source(connection))
+        }
+
+        fun sink(connection: AndroidSerialConnection): BufferedSink {
+            return Okio.buffer(timeout(connection).sink(connection))
+        }
+
+        private fun timeout(connection: AndroidSerialConnection) = object : AsyncTimeout() {
+            override fun timedOut() {
+                super.timedOut()
+                Log.d("Timeout", "Timed out!")
+                connection.close()
+            }
+        }
+
     }
 }

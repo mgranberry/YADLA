@@ -18,7 +18,7 @@ import java.io.File
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.concurrent.thread
 
-val startTime = LocalDateTime.now() - Period.days(14)
+val startTime = LocalDateTime.now() - Period.days(90)
 val t = DateTime()
 
 private fun downloadRecords(threads: MutableList<Thread>, lastUploads: MutableMap<String, LocalDateTime>, port: SerialPort,
@@ -84,6 +84,8 @@ fun main(args: Array<String>) {
                                 downloadRecords(threads, lastUploads, it) {
                                     connection, predicate ->
                                     val tslim = TandemPump(connection.source(), connection.sink())
+                                    val response = tslim.commandResponse(Command154())
+                                    println("154 response: ${response.parsedPayload}")
                                     println("Final offset: ${tslim.timeCorrectionOffset}")
                                     timeline.merge(predicate, tslim.basalRecords, tslim.bolusRecords,
                                             tslim.smbgRecords, tslim.consumableRecords, tslim.profileRecords)

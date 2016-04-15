@@ -14,11 +14,22 @@ import org.joda.time.Duration
 import org.joda.time.LocalDateTime
 import org.joda.time.chrono.ISOChronology
 import java.util.*
+import java.util.concurrent.TimeUnit
 
 /**
  * Created by matthias on 11/19/15.
  */
-class TandemPump(private val source: BufferedSource, private val sink: BufferedSink) : InsulinPump, Glucometer {
+class TandemPump(val source: BufferedSource, val sink: BufferedSink) : InsulinPump, Glucometer {
+
+    init {
+        if (source.timeout().timeoutNanos() == 0L) {
+            source.timeout().timeout(3, TimeUnit.SECONDS)
+        }
+        if (sink.timeout().timeoutNanos() == 0L) {
+            sink.timeout().timeout(3, TimeUnit.SECONDS)
+        }
+    }
+
     override val timeCorrectionOffset: Duration?
         get() = Duration(commandResponse(VersionReq()).timestamp.toDateTime(), LocalDateTime.now().toDateTime())
 
@@ -58,6 +69,7 @@ class TandemPump(private val source: BufferedSource, private val sink: BufferedS
         get() = ProfileAssemblingSequence()
 
     val logRange: IntRange = LogSizeResp(commandResponse(LogSizeReq()).payload).range
+
     val profiles: List<TandemProfile> get() = readProfiles()
 
     private fun readProfiles() : List<TandemProfile> {

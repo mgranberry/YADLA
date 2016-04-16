@@ -70,9 +70,7 @@ class SerialConnection(private val port: SerialPort) : Closeable {
             timeout.exit()
         }
 
-        override fun timeout(): Timeout? {
-            throw UnsupportedOperationException()
-        }
+        override fun timeout(): Timeout = timeout
 
         override fun close() {
         }

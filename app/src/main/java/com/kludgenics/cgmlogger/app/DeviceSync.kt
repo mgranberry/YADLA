@@ -22,6 +22,7 @@ import com.kludgenics.cgmlogger.extension.where
 import io.realm.Realm
 import io.realm.Sort
 import org.jetbrains.anko.*
+import org.joda.time.DateTime
 import org.joda.time.Duration
 import org.joda.time.LocalDateTime
 import org.joda.time.Period
@@ -266,9 +267,9 @@ class DeviceSync : AnkoLogger {
                             info("sync of ${device.serialNumber} ${latestEvent?.time} $syncId done")
                             val latestTime = latestEvent?.time
                             updateStatus(realm, syncId, Status.CODE_SUCCESS, latestTime?.toDate(), inProgress = false, clockOffsetMillis = offset.millis)
-                            val lastBg = therapyTimeline.glucoseEvents.lastOrNull()
-                            if (lastBg != null)
-                                EventBus.post(lastBg)
+                            val lastBgs = therapyTimeline.glucoseEvents.toList().reversed().take(2)
+                            if (lastBgs.size == 2)
+                                EventBus.post(lastBgs.component2() to lastBgs.component1())
                             if (latestTime != null)
                                 nextSync = (latestTime + device.timeCorrectionOffset + Period.minutes(5)).toDate()
                         } catch (e: ArrayIndexOutOfBoundsException) {

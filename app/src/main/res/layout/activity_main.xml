@@ -3,6 +3,9 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <data>
+        <variable
+            name="overview"
+            type="com.kludgenics.cgmlogger.app.viewmodel.DailyOverview"/>
     </data>
 
     <android.support.v4.widget.DrawerLayout
@@ -11,8 +14,10 @@
         android:layout_height="match_parent"
         android:fitsSystemWindows="true">
 
+
         <include android:id="@+id/included_list_viewpager"
-            layout="@layout/include_list_viewpager"/>
+            layout="@layout/include_list_viewpager"
+            bind:overview="@{overview}"/>
 
         <android.support.design.widget.NavigationView
             android:id="@+id/nav_view"

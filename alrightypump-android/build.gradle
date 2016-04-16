@@ -51,5 +51,6 @@ dependencies {
     compile 'com.github.felHR85:UsbSerial:4.1.1'
     testCompile 'junit:junit:4.12'
     compile 'com.squareup.okio:okio:1.6.0'
+    compile "com.polidea.rxandroidble:rxandroidble:1.0.1"
     compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
 }

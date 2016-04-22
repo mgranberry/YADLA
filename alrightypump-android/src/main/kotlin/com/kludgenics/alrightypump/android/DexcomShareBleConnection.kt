@@ -126,6 +126,7 @@ class ShareGatt(context: Context, val device: BluetoothDevice, private val onCon
     private val writeQueue = ArrayBlockingQueue<ByteArray>(100)
 
     private val gattCallback = object : BluetoothGattCallback() {
+        var attempts = 0
 
         fun postNextCommand() {
             val next = commandQueue.poll()
@@ -152,9 +153,14 @@ class ShareGatt(context: Context, val device: BluetoothDevice, private val onCon
                     // before the connection is fully established.
                 }
                 BluetoothProfile.STATE_DISCONNECTED -> {
-                    gatt.disconnect()
-                    gatt.close()
-                    onDisconnected(this@ShareGatt)
+                    if (status == 19 && ++attempts < 3) {
+                        Log.d(TAG, "reattempting connection")
+                        gatt.connect()
+                    } else {
+                        gatt.disconnect()
+                        gatt.close()
+                        onDisconnected(this@ShareGatt)
+                    }
                 }
             }
         }
@@ -163,8 +169,8 @@ class ShareGatt(context: Context, val device: BluetoothDevice, private val onCon
             Log.d(TAG, "!!!!!!!!!!!!!!onServicesDiscovered($gatt, $status)")
             Log.d(TAG, "onServicesDiscovered, ${gatt.device} ${gatt.device.bondState}")
             BluetoothGatt.GATT_CONNECTION_CONGESTED
-            setupAuthentication()
             setupReceiver()
+            setupAuthentication()
             gatt.execute {
                 commandPending = false
                 onConnected(this@ShareGatt) // call onConnected now that services have been
@@ -259,13 +265,12 @@ class ShareGatt(context: Context, val device: BluetoothDevice, private val onCon
     }
 
     private fun setupReceiver() {
+        Log.d(TAG, "configuring heartbeat characteristic")
+        setupNotification(heartbeatCharacteristic)
         Log.d(TAG, "configuring rx characteristic")
         setupIndication(rxCharacteristic)
         Log.d(TAG, "configuring response characteristic")
         setupIndication(responseCharacteristic)
-        Log.d(TAG, "configuring heartbeat characteristic")
-        setupNotification(heartbeatCharacteristic)
-
     }
 
     private fun setupNotification(characteristic: BluetoothGattCharacteristic, enabled: Boolean = true) {

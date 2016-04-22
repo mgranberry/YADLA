@@ -29,8 +29,8 @@ interface GlucoseValue {
     val unit: Int
 }
 
-open class BaseGlucoseValue(override val glucose: Double,
-                                   override val unit: Int) : GlucoseValue {
+open class BaseGlucoseValue(override val glucose: Double?,
+                            override val unit: Int) : GlucoseValue {
     override fun toString(): String {
         return "${this.javaClass.simpleName}(glucose=$glucose, unit=$unit)"
     }

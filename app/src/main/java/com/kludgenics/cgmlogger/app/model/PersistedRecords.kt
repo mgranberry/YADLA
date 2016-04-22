@@ -8,6 +8,7 @@ import com.kludgenics.cgmlogger.extension.where
 import io.realm.Realm
 import io.realm.RealmList
 import io.realm.RealmObject
+import io.realm.annotations.Index
 import io.realm.annotations.PrimaryKey
 import org.joda.time.Duration
 import org.joda.time.LocalDateTime
@@ -204,7 +205,7 @@ class ProxyGlucoseValue(glucoseValue: GlucoseValue) : GlucoseValue by glucoseVal
 class ProxyRawGlucoseValue(glucoseValue: RawGlucoseValue) : RawGlucoseValue by glucoseValue
 
 open class PersistedRawCgmRecord(override var record: PersistedRecord = PersistedRecord(),
-                                 var _glucose: Double? = null,
+                                 @Index var _glucose: Int? = null,
                                  var _unit: Int = GlucoseUnit.MGDL,
                                  var _filtered: Int? = null,
                                  var _unfiltered: Int? = null,
@@ -213,20 +214,23 @@ open class PersistedRawCgmRecord(override var record: PersistedRecord = Persiste
                                  var _rssi: Int? = null,
                                  override var _date: Date = Date(),
                                  @PrimaryKey
-                                 override var eventKey: String="") : InflatedRecord, RawCgmRecord, RawGlucoseValue, RealmObject() {
+                                 override var eventKey: String="",
+                                 @Index var millisOfDay: Int = -1) : InflatedRecord, RawCgmRecord, RawGlucoseValue, RealmObject() {
     constructor (record: PersistedRecord, rawCgmRecord: RawCgmRecord) : this(record,
-            rawCgmRecord.value.glucose,
+            rawCgmRecord.value.glucose?.toInt(),
             rawCgmRecord.value.unit,
             rawCgmRecord.value.filtered,
             rawCgmRecord.value.unfiltered,
             rawCgmRecord.trendArrow,
             rawCgmRecord.noise,
             rawCgmRecord.rssi,
-            record._date)
+            record._date,
+            millisOfDay = record.time.millisOfDay)
     constructor (record: PersistedRecord, rawCgmRecord: CgmRecord) : this(record,
-            rawCgmRecord.value.glucose,
+            rawCgmRecord.value.glucose?.toInt(),
             rawCgmRecord.value.unit,
-            _date = record._date)
+            _date = record._date,
+            millisOfDay = record.time.millisOfDay)
     override val eventType: Int
         get() = EventType.GLUCOSE
     override val id: String?
@@ -237,7 +241,7 @@ open class PersistedRawCgmRecord(override var record: PersistedRecord = Persiste
         get() = record._source
 
     override val value: ProxyRawGlucoseValue get() = ProxyRawGlucoseValue(this)
-    override val glucose: Double? get() = _glucose
+    override val glucose: Double? get() = _glucose?.toDouble()
     override val unit: Int get() = _unit
     override val calibration: Calibration? get() = null
     override val filtered: Int? get() = _filtered

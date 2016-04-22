@@ -17,7 +17,7 @@ class OnBootReceiver: BroadcastReceiver() {
             val configuration = RealmConfiguration.Builder(context.applicationContext)
                     .build()
             Realm.compactRealm(configuration)
-            context.startService(Intent(context, SyncService::class.java))
+            SyncService.scheduleSync(context)
         }
     }
 }

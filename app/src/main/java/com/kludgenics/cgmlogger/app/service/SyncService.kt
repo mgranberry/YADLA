@@ -29,8 +29,21 @@ import java.util.*
  */
 
 class SyncService : Service(), AnkoLogger {
-    companion object {
+    companion object: AnkoLogger {
         val ACTION_USB_PERMISSION = "com.kludgenics.cgmlogger.ACTION_USB_PERMISSION"
+        private var nextSync: Long = -1
+        fun scheduleSync(context: Context) {
+
+            if (nextSync == -1L) {
+                // Something unusual has happened, most likely a reboot or reinstall.
+                // Give it a minute to settle down and connect.
+                nextSync = System.currentTimeMillis() + 60000
+            }
+            info ("Waking at ${Date(nextSync)}")
+
+            val pendingIntent = PendingIntent.getService(context.applicationContext, 0, Intent(context.applicationContext, SyncService::class.java), PendingIntent.FLAG_UPDATE_CURRENT)
+            context.alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, nextSync, pendingIntent)
+        }
     }
 
     val receiver: BroadcastReceiver = IntentReceiver()
@@ -114,14 +127,12 @@ class SyncService : Service(), AnkoLogger {
             }
         }
 
-        val nextSync = if (syncEvent.nextSync?.time ?: 0 > System.currentTimeMillis())
+        nextSync = if (syncEvent.nextSync?.time ?: 0 > System.currentTimeMillis())
             syncEvent.nextSync!!.time
         else
             -1
         if (nextSync != -1L) {
-            info ("Waking at ${Date(nextSync)}")
-            val pendingIntent = PendingIntent.getService(applicationContext, 0, Intent(applicationContext, this.javaClass), PendingIntent.FLAG_UPDATE_CURRENT)
-            alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, nextSync, pendingIntent)
+            scheduleSync(this)
         }
         unregisterReceiver()
     }
@@ -130,8 +141,8 @@ class SyncService : Service(), AnkoLogger {
         info("onStartCommand() activeCount=${activeCount}")
         info ("Waking at ${Date(System.currentTimeMillis() + 60000 * 5)}")
 
-        val pendingIntent = PendingIntent.getService(applicationContext, 0, Intent(applicationContext, this.javaClass), PendingIntent.FLAG_UPDATE_CURRENT)
-        alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + 60000 * 5, pendingIntent)
+        nextSync = System.currentTimeMillis() + 60000 * 5
+        scheduleSync(this)
         val wakelock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, SyncService::class.java.simpleName)
         wakelock.acquire(1000)
         async() {
@@ -191,6 +202,7 @@ class SyncService : Service(), AnkoLogger {
             if (--activeCount <= 0) {
                 activeCount = 0
                 stopSelf()
+
                 if (isRegistered) {
                     isRegistered = false
                     info("Unregistering Receiver")

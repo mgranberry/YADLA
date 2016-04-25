@@ -4,13 +4,9 @@ import android.content.Intent
 import android.databinding.DataBindingUtil
 import android.os.Bundle
 import android.support.design.widget.CollapsingToolbarLayout
-import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.LinearLayoutManager
-import android.support.v7.widget.Toolbar
 import android.view.Menu
 import android.view.MenuItem
-import android.view.View
-import com.kludgenics.alrightypump.therapy.GlucoseRecord
 import com.kludgenics.cgmlogger.app.adapter.CardAdapter
 import com.kludgenics.cgmlogger.app.databinding.ActivityMainBinding
 import com.kludgenics.cgmlogger.app.databinding.DialogConfigureNightscoutBinding
@@ -70,6 +66,30 @@ class MainActivity :  BaseActivity(), AnkoLogger {
     override fun onPause() {
         super.onPause()
         EventBus.unregister(this)
+    }
+
+    @Subscribe
+    fun onBgAvailable(glucose: Pair<PersistedRawCgmRecord, PersistedRawCgmRecord>) {
+        info("onBgAvailable($glucose)")
+        val currentBg = glucose.second.glucose
+        val currentTime = glucose.second.time
+
+        val previousBg = glucose.first.glucose
+        val previousTime = glucose.first.time
+        val delta = if (currentBg != null && previousBg != null)
+            currentBg - previousBg
+        else null
+        val deltaString = if (Duration(previousTime.toDateTime(), currentTime.toDateTime()).toStandardMinutes().minutes <= 6)
+            """(${if (delta?.compareTo(0)?:0 >= 0) "+" else ""}${delta?:"-"})"""
+        else
+            "--"
+
+        onUiThread {
+            info("Setting title to $currentBg $deltaString")
+            supportActionBar?.title = "$currentBg $deltaString"
+            toolbarLayout.title = "$currentBg $deltaString"
+
+        }
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {

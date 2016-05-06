@@ -42,7 +42,6 @@
             android:fitsSystemWindows="true"
             app:contentScrim="?attr/colorPrimary"
             app:title="@{overview.currentBg}"
-            app:expandedTitleMarginBottom="90dp"
             app:expandedTitleMarginStart="56dp"
             app:expandedTitleMarginEnd="64dp">
 

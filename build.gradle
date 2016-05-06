@@ -2,7 +2,7 @@
 
 buildscript {
     ext.kotlin_version = '1.0.1'
-    ext.realm_version = '0.88.1'
+    ext.realm_version = '0.89.1'
     ext.play_services_version = '8.1.0'
     ext.android_support_version = '23.1.0'
 
@@ -10,7 +10,7 @@ buildscript {
         jcenter()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:2.0.0'
+        classpath 'com.android.tools.build:gradle:2.1.0'
         classpath 'com.neenbedankt.gradle.plugins:android-apt:1.4'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
         // NOTE: Do not place your application dependencies here; they belong

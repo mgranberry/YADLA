@@ -68,30 +68,6 @@ class MainActivity :  BaseActivity(), AnkoLogger {
         EventBus.unregister(this)
     }
 
-    @Subscribe
-    fun onBgAvailable(glucose: Pair<PersistedRawCgmRecord, PersistedRawCgmRecord>) {
-        info("onBgAvailable($glucose)")
-        val currentBg = glucose.second.glucose
-        val currentTime = glucose.second.time
-
-        val previousBg = glucose.first.glucose
-        val previousTime = glucose.first.time
-        val delta = if (currentBg != null && previousBg != null)
-            currentBg - previousBg
-        else null
-        val deltaString = if (Duration(previousTime.toDateTime(), currentTime.toDateTime()).toStandardMinutes().minutes <= 6)
-            """(${if (delta?.compareTo(0)?:0 >= 0) "+" else ""}${delta?:"-"})"""
-        else
-            "--"
-
-        onUiThread {
-            info("Setting title to $currentBg $deltaString")
-            supportActionBar?.title = "$currentBg $deltaString"
-            toolbarLayout.title = "$currentBg $deltaString"
-
-        }
-    }
-
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         menuInflater.inflate(R.menu.main, menu);
         return true

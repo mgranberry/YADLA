@@ -5,7 +5,9 @@ import android.databinding.BindingAdapter
 import android.databinding.BindingConversion
 import android.databinding.PropertyChangeRegistry
 import android.graphics.Color
+import android.graphics.Paint
 import android.graphics.PointF
+import android.graphics.RectF
 import com.github.mikephil.charting.charts.LineChart
 import com.github.mikephil.charting.components.LimitLine
 import com.github.mikephil.charting.components.XAxis
@@ -20,10 +22,14 @@ import com.kludgenics.cgmlogger.app.BR
 import com.kludgenics.cgmlogger.app.R
 import com.kludgenics.cgmlogger.app.model.PersistedRawCgmRecord
 import com.kludgenics.cgmlogger.extension.where
+import com.kludgenics.justgivemeachart.BasicLine
+import com.kludgenics.justgivemeachart.ChartView
 import io.realm.Realm
 import io.realm.RealmResults
 import io.realm.Sort
 import org.jetbrains.anko.AnkoLogger
+import org.jetbrains.anko.async
+import org.jetbrains.anko.dip
 import org.jetbrains.anko.info
 import org.joda.time.DateTime
 import org.joda.time.Duration
@@ -163,6 +169,31 @@ object BindingConversion : AnkoLogger {
         } else
             null
         return format?.format(value.glucose)
+    }
+
+    @JvmStatic
+    @BindingAdapter("app:period")
+    fun addLineToChartView(view: ChartView, period: Int?) {
+        if (period != null)
+            async() {
+                val realm = Realm.getDefaultInstance()
+                realm.use {
+                    realm.executeTransaction {
+                        info("Drawing chart")
+                        val results = realm.where<PersistedRawCgmRecord> {
+                            between("_date", Date(System.currentTimeMillis() - period), Date())
+                        }.findAllSorted("_date")
+                        val adapter = BloodGlucoseValueAdapter(results, minMillis = results.first()._date.time, maxMillis = Date().time)
+                        val paint = Paint()
+                        val dips = view.dip(1.75f).toFloat()
+                        paint.strokeWidth = dips
+                        paint.color = view.resources.getColor(R.color.color_primary)
+                        val line = BasicLine(valueAdapter = adapter, primaryPaint = paint, drawPoints = results.size <= 50)
+                        view.setLines(line)
+                        info("Done drawing chart")
+                    }
+                }
+            }
     }
 
     @JvmStatic

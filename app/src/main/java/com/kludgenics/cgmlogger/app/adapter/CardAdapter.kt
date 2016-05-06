@@ -41,7 +41,13 @@ class CardAdapter(private val results: RealmResults<out RealmObject>) : AnkoLogg
         when (holder.binding) {
             is CardDeviceStatusBinding -> holder.binding.status = ObservableStatus(results[position] as RealmStatus)
             is CardChartBinding -> {
-                holder.binding.period = 60000 * 60 * (position - results.lastIndex) * (position - results.lastIndex) * 3
+                val periodHours = when (position - results.lastIndex) {
+                    1 -> 3
+                    2 -> 12
+                    3 -> 24
+                    else -> 0
+                }
+                holder.binding.period = 60000 * 60 * periodHours
             }
         }
         holder.binding.executePendingBindings()
@@ -52,7 +58,7 @@ class CardAdapter(private val results: RealmResults<out RealmObject>) : AnkoLogg
         results.removeChangeListener(this)
     }
 
-    override fun getItemCount(): Int = results.size + 15
+    override fun getItemCount(): Int = results.size + 3
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BindingViewHolder {
         return when (viewType) {

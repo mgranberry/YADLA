@@ -24,8 +24,7 @@ interface Card {
     var type: Int
     var key: String
     @get:LayoutRes
-    @set:LayoutRes
-    var layoutId: Int
+    val layoutId: Int
 }
 
 open class CardMetaData(@Index override var time: Date = Date(0),
@@ -48,8 +47,7 @@ open class DeviceSyncCard(@Index override var time: Date = Date(0),
                      var subtitleText: String? = null,
                      var shortText: String? = null,
                      var extraText: String? = null) : Card, RealmObject() {
-    @LayoutRes
-    override var layoutId: Int = R.layout.card_device_status
+    override val layoutId: Int get() = R.layout.card_device_status
     override var type: Int = Card.TYPE_DEVICE_SYNC
 }
 
@@ -68,7 +66,6 @@ open class BloodGlucoseCard(@Index override var time: Date = Date(0),
         const val SHOW_HIGH_LINE = 64
         const val SHOW_LOW_LINE = 128
     }
-    @LayoutRes
-    override var layoutId: Int = R.layout.card_bloodglucose
+    override val layoutId: Int get() = R.layout.card_bloodglucose
     override var type: Int = Card.TYPE_BLOOD_GLUCOSE
 }

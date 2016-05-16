@@ -4,23 +4,16 @@ import android.content.Intent
 import android.databinding.DataBindingUtil
 import android.os.Bundle
 import android.support.design.widget.CollapsingToolbarLayout
-import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.LinearLayoutManager
-import android.support.v7.widget.Toolbar
 import android.view.Menu
 import android.view.MenuItem
-import android.view.View
-import com.kludgenics.alrightypump.therapy.GlucoseRecord
 import com.kludgenics.cgmlogger.app.adapter.CardAdapter
 import com.kludgenics.cgmlogger.app.databinding.ActivityMainBinding
 import com.kludgenics.cgmlogger.app.databinding.DialogConfigureNightscoutBinding
 import com.kludgenics.cgmlogger.app.model.PersistedRawCgmRecord
 import com.kludgenics.cgmlogger.app.model.SyncStore
 import com.kludgenics.cgmlogger.app.service.SyncService
-import com.kludgenics.cgmlogger.app.viewmodel.DailyOverview
-import com.kludgenics.cgmlogger.app.viewmodel.NightscoutConfig
-import com.kludgenics.cgmlogger.app.viewmodel.ObservableStatus
-import com.kludgenics.cgmlogger.app.viewmodel.RealmStatus
+import com.kludgenics.cgmlogger.app.viewmodel.*
 import com.kludgenics.cgmlogger.extension.where
 import com.squareup.otto.Subscribe
 import io.realm.Realm
@@ -43,7 +36,7 @@ class MainActivity :  BaseActivity(), AnkoLogger {
         val binding: ActivityMainBinding = DataBindingUtil.setContentView(this, R.layout.activity_main)
         toolbarLayout = binding.includedListViewpager.collapsingToolbar
         setSupportActionBar(binding.includedListViewpager.toolbar)
-        binding.overview=DailyOverview(realm, DateTime().withTimeAtStartOfDay().plusDays(1), listOf(1,7,28).map { Period.days(it) }, 70.0, 180.0)
+        binding.overview=DailyOverview(realm, DateTime().withTimeAtStartOfDay().plusDays(1), listOf(1,7,28).map { Period.days(it) }, 70, 180)
         val start = DateTime()
         // TODO this is a query on the UI thread.  It would be nice if it could be done async, but the async versions of queries don't play well with
         binding.includedListViewpager.recycler.adapter = CardAdapter(
@@ -73,30 +66,6 @@ class MainActivity :  BaseActivity(), AnkoLogger {
     override fun onPause() {
         super.onPause()
         EventBus.unregister(this)
-    }
-
-    @Subscribe
-    fun onBgAvailable(glucose: Pair<PersistedRawCgmRecord, PersistedRawCgmRecord>) {
-        info("onBgAvailable($glucose)")
-        val currentBg = glucose.second.glucose
-        val currentTime = glucose.second.time
-
-        val previousBg = glucose.first.glucose
-        val previousTime = glucose.first.time
-        val delta = if (currentBg != null && previousBg != null)
-            currentBg - previousBg
-        else null
-        val deltaString = if (Duration(previousTime.toDateTime(), currentTime.toDateTime()).toStandardMinutes().minutes <= 6)
-            """(${if (delta?.compareTo(0)?:0 >= 0) "+" else ""}${delta?:"-"})"""
-        else
-            "--"
-
-        onUiThread {
-            info("Setting title to $currentBg $deltaString")
-            supportActionBar?.title = "$currentBg $deltaString"
-            toolbarLayout.title = "$currentBg $deltaString"
-
-        }
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {

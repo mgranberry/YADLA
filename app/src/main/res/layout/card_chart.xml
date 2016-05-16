@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+    <data>
+        <variable
+            name="period"
+            type="Integer"/>
+    </data>
+    <android.support.v7.widget.CardView
+        android:id="@+id/card"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        style="@style/CardView"
+        android:layout_margin="8dp"
+        app:cardCornerRadius="2dp"
+        app:cardMaxElevation="30dp">
+
+    <LinearLayout
+        android:padding="0dp"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        style="@style/Widget.CardContent"
+        android:orientation="vertical">
+    <com.kludgenics.justgivemeachart.ChartView
+            android:id="@+id/chart"
+            android:layout_width="match_parent"
+            android:layout_height="120dp"
+            app:period="@{period}"
+        />
+    </LinearLayout>
+    </android.support.v7.widget.CardView>
+</layout>

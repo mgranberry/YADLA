@@ -5,7 +5,13 @@ import android.databinding.BindingAdapter
 import android.databinding.BindingConversion
 import android.databinding.PropertyChangeRegistry
 import android.graphics.Color
+import android.graphics.Paint
 import android.graphics.PointF
+import android.graphics.RectF
+import com.github.mikephil.charting.charts.LineChart
+import com.github.mikephil.charting.components.LimitLine
+import com.github.mikephil.charting.components.XAxis
+import com.github.mikephil.charting.data.LineData
 import com.hookedonplay.decoviewlib.DecoView
 import com.hookedonplay.decoviewlib.charts.SeriesItem
 import com.hookedonplay.decoviewlib.events.DecoEvent
@@ -13,16 +19,23 @@ import com.kludgenics.alrightypump.therapy.BaseGlucoseValue
 import com.kludgenics.alrightypump.therapy.GlucoseUnit
 import com.kludgenics.alrightypump.therapy.GlucoseValue
 import com.kludgenics.cgmlogger.app.BR
+import com.kludgenics.cgmlogger.app.R
 import com.kludgenics.cgmlogger.app.model.PersistedRawCgmRecord
 import com.kludgenics.cgmlogger.extension.where
+import com.kludgenics.justgivemeachart.BasicLine
+import com.kludgenics.justgivemeachart.ChartView
 import io.realm.Realm
 import io.realm.RealmResults
+import io.realm.Sort
 import org.jetbrains.anko.AnkoLogger
+import org.jetbrains.anko.async
+import org.jetbrains.anko.dip
 import org.jetbrains.anko.info
 import org.joda.time.DateTime
 import org.joda.time.Duration
 import org.joda.time.Period
 import java.text.DecimalFormat
+import java.util.*
 
 /**
  * Created by matthias on 4/15/16.
@@ -30,13 +43,17 @@ import java.text.DecimalFormat
 class DailyOverview(val realm: Realm,
                     val endTime: DateTime,
                     val periods: List<Period>,
-                    val lowValue: Double,
-                    val highValue: Double): AnkoLogger, DataBindingObservable {
+                    val lowValue: Int,
+                    val highValue: Int): AnkoLogger, DataBindingObservable {
     override var mCallbacks: PropertyChangeRegistry? = null
     private val bgResults = realm.allObjects(PersistedRawCgmRecord::class.java)
     init {
         info("Adding listener")
-        bgResults.addChangeListener { notifyPropertyChanged(BR.dataSeries); info("Change Detected") }
+        bgResults.addChangeListener {
+            notifyPropertyChanged(BR.dataSeries)
+            notifyPropertyChanged(BR.currentBg)
+            notifyPropertyChanged(BR.timeline)
+        }
     }
 
     private fun getResultsFor(period: Period): RealmResults<PersistedRawCgmRecord> {
@@ -44,11 +61,34 @@ class DailyOverview(val realm: Realm,
         info ("Records from ${(endTime - period).toDate()} to ${endTime.toDate()}")
         val results = realm.where<PersistedRawCgmRecord> {
             between("_date", (endTime - period).toDate(), endTime.toDate())
+            greaterThanOrEqualTo("_glucose", 39)
         }.findAll()
         val end = DateTime()
         info("Found ${results.count()} results in ${Duration(start, end)}")
         return results
     }
+
+    @get:Bindable
+    val currentBg: GlucoseInfo? get() {
+        val realm = Realm.getDefaultInstance()
+        realm.use {
+            val results = realm.where<PersistedRawCgmRecord> {
+                isNotNull("_glucose")
+            }.findAllSorted("_date", Sort.DESCENDING).take(2)
+            return when(results.size) {
+                0 -> null
+                else -> return GlucoseInfo(BaseGlucoseValue(results.component1().value.glucose,
+                                                            results.component1().value.unit),
+                                           results.component1()._date,
+                                GlucoseInfo(BaseGlucoseValue(results.component2().value.glucose,
+                                                             results.component2().value.unit),
+                                            results.component2()._date, null))
+            }
+        }
+    }
+
+    @get:Bindable
+    val timeline: Timeline get() = Timeline(realm, DateTime.now(), Period.hours(3))
 
     @get:Bindable
     val dataSeries: List<SeriesItem> get() {
@@ -96,7 +136,26 @@ class DailyOverview(val realm: Realm,
     }
 }
 
+data class GlucoseInfo(val glucose: GlucoseValue, val date: Date, val previous: GlucoseInfo?) {
+    fun format(): String {
+        val glucoseFormat = if (glucose.unit == GlucoseUnit.MGDL) DecimalFormat("###") else DecimalFormat("###.0")
+        val delta = if (glucose.glucose != null && previous?.glucose?.glucose != null)
+            glucose.glucose?.minus(previous?.glucose?.glucose ?: 0.0)
+        else null
+        val currentString = if (glucose.glucose != null) glucoseFormat.format(glucose!!.glucose) else "—"
+        val deltaString = if (delta != null) glucoseFormat.format(delta) else "—"
+        val glucoseString = """$currentString ($deltaString)"""
+        return glucoseString
+    }
+}
+
 object BindingConversion : AnkoLogger {
+
+    @JvmStatic
+    @BindingConversion
+    fun convertGlucoseInfoToString(value: GlucoseInfo?): String? {
+        return value?.format()?:"—"
+    }
 
     @JvmStatic
     @BindingConversion
@@ -113,9 +172,54 @@ object BindingConversion : AnkoLogger {
     }
 
     @JvmStatic
+    @BindingAdapter("app:period")
+    fun addLineToChartView(view: ChartView, period: Int?) {
+        if (period != null)
+            async() {
+                val realm = Realm.getDefaultInstance()
+                realm.use {
+                    realm.executeTransaction {
+                        info("Drawing chart")
+                        val results = realm.where<PersistedRawCgmRecord> {
+                            between("_date", Date(System.currentTimeMillis() - period), Date())
+                        }.findAllSorted("_date")
+                        val adapter = BloodGlucoseValueAdapter(results, minMillis = results.first()._date.time, maxMillis = Date().time)
+                        val paint = Paint()
+                        val dips = view.dip(1.75f).toFloat()
+                        paint.strokeWidth = dips
+                        paint.color = view.resources.getColor(R.color.color_primary)
+                        val line = BasicLine(valueAdapter = adapter, primaryPaint = paint, drawPoints = results.size <= 50)
+                        view.setLines(line)
+                        info("Done drawing chart")
+                    }
+                }
+            }
+    }
+
+    @JvmStatic
     @BindingAdapter("app:series")
     fun addSeriesToDecoView(view: DecoView, series: List<SeriesItem>?) {
         info("adding series:$series")
         series?.forEach { view.addSeries(it) }
+    }
+
+    @JvmStatic
+    @BindingAdapter("app:refreshData")
+    fun addDataToLineChart(view: LineChart, data: LineData) {
+        view.data = data
+        if (view.axisLeft.limitLines.size == 0) {
+            val highLimit = LimitLine(180f)
+            val lowLimit = LimitLine(70f)
+            view.axisLeft.addLimitLine(highLimit)
+            view.axisLeft.addLimitLine(lowLimit)
+            view.axisLeft.setAxisMaxValue(400f)
+            view.axisLeft.setAxisMinValue(40f)
+        }
+        view.axisRight.isEnabled = false
+        view.legend.isEnabled = false
+        view.xAxis.position = XAxis.XAxisPosition.BOTTOM_INSIDE
+        view.xAxis.axisLineColor = view.context.resources.getColor(R.color.label_text_dark)
+        view.setTouchEnabled(false)
+        view.invalidate()
     }
 }

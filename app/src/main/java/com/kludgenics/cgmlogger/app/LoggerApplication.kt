@@ -1,24 +1,20 @@
 package com.kludgenics.cgmlogger.app
 
 import android.app.Application
-import io.realm.Realm
-import io.realm.RealmConfiguration
 import org.jetbrains.anko.AnkoLogger
 import org.jetbrains.anko.debug
 import io.fabric.sdk.android.Fabric;
 import com.crashlytics.android.Crashlytics;
 import com.kludgenics.alrightypump.android.BleClient
 import com.kludgenics.alrightypump.therapy.GlucoseRecord
-import com.kludgenics.cgmlogger.app.model.EventType
-import com.kludgenics.cgmlogger.app.model.PersistedRawCgmRecord
-import com.kludgenics.cgmlogger.app.model.PersistedRecord
-import com.kludgenics.cgmlogger.app.model.TypedRecord
+import com.kludgenics.cgmlogger.app.model.*
 import com.squareup.otto.Produce
 import net.danlew.android.joda.JodaTimeAndroid
 import com.kludgenics.cgmlogger.extension.*
-import io.realm.Sort
+import io.realm.*
 import org.jetbrains.anko.collections.forEachReversed
 import org.jetbrains.anko.info
+import java.util.*
 
 /**
  * Created by matthiasgranberry on 5/28/15.
@@ -33,12 +29,11 @@ class LoggerApplication : Application(), AnkoLogger {
         Fabric.with(this, Crashlytics());
 
         val configuration = RealmConfiguration.Builder(this@LoggerApplication)
-                .deleteRealmIfMigrationNeeded()
+                .schemaVersion(YadlaMigration.CURRENT_VERSION)
+                .migration(YadlaMigration())
                 .build()
         Realm.setDefaultConfiguration(configuration)
         EventBus.register(this)
-
-        val realm = Realm.getDefaultInstance()
     }
 
     @Suppress("unused")

@@ -41,7 +41,8 @@
             app:layout_scrollFlags="scroll|exitUntilCollapsed"
             android:fitsSystemWindows="true"
             app:contentScrim="?attr/colorPrimary"
-            app:expandedTitleMarginStart="48dp"
+            app:title="@{overview.currentBg}"
+            app:expandedTitleMarginStart="56dp"
             app:expandedTitleMarginEnd="64dp">
 
             <include layout="@layout/include_day_overview"

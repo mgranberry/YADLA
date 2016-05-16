@@ -272,10 +272,10 @@ class ShareGatt(context: Context, val device: BluetoothDevice, private val onCon
     }
 
     private fun setupReceiver() {
-        Log.d(TAG, "configuring rx characteristic")
-        setupIndication(rxCharacteristic)
         Log.d(TAG, "configuring heartbeat characteristic")
         setupNotification(heartbeatCharacteristic)
+        Log.d(TAG, "configuring rx characteristic")
+        setupIndication(rxCharacteristic)
         Log.d(TAG, "configuring response characteristic")
         setupIndication(responseCharacteristic)
     }

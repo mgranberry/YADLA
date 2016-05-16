@@ -9,19 +9,25 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.hardware.usb.UsbDevice
 import android.hardware.usb.UsbManager
+import android.os.Bundle
 import android.os.IBinder
 import android.os.PowerManager
 import com.kludgenics.alrightypump.android.AndroidDeviceHelper
+import com.kludgenics.alrightypump.cloud.nightscout.NightscoutSgvJson
 import com.kludgenics.cgmlogger.app.DeviceSync
 import com.kludgenics.cgmlogger.app.EventBus
 import com.kludgenics.cgmlogger.app.NightscoutSync
 import com.kludgenics.cgmlogger.app.events.SyncCompleteEvent
+import com.kludgenics.cgmlogger.app.model.PersistedRawCgmRecord
 import com.kludgenics.cgmlogger.app.model.PersistedTherapyTimeline
 import com.kludgenics.cgmlogger.app.model.SyncStore
+import com.kludgenics.cgmlogger.app.xdrip.XdripBroadcast
 import com.kludgenics.cgmlogger.extension.where
 import com.squareup.otto.Subscribe
 import io.realm.Realm
+import io.realm.Sort
 import org.jetbrains.anko.*
+import org.joda.time.Duration
 import java.util.*
 
 /**
@@ -29,8 +35,21 @@ import java.util.*
  */
 
 class SyncService : Service(), AnkoLogger {
-    companion object {
+    companion object: AnkoLogger {
         val ACTION_USB_PERMISSION = "com.kludgenics.cgmlogger.ACTION_USB_PERMISSION"
+        private var nextSync: Long = -1
+        fun scheduleSync(context: Context) {
+
+            if (nextSync == -1L) {
+                // Something unusual has happened, most likely a reboot or reinstall.
+                // Give it a minute to settle down and connect.
+                nextSync = System.currentTimeMillis() + 60000
+            }
+            info ("Waking at ${Date(nextSync)}")
+
+            val pendingIntent = PendingIntent.getService(context.applicationContext, 0, Intent(context.applicationContext, SyncService::class.java), PendingIntent.FLAG_UPDATE_CURRENT)
+            context.alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, nextSync, pendingIntent)
+        }
     }
 
     val receiver: BroadcastReceiver = IntentReceiver()
@@ -114,24 +133,40 @@ class SyncService : Service(), AnkoLogger {
             }
         }
 
-        val nextSync = if (syncEvent.nextSync?.time ?: 0 > System.currentTimeMillis())
+        nextSync = if (syncEvent.nextSync?.time ?: 0 > System.currentTimeMillis())
             syncEvent.nextSync!!.time
         else
             -1
         if (nextSync != -1L) {
-            info ("Waking at ${Date(nextSync)}")
-            val pendingIntent = PendingIntent.getService(applicationContext, 0, Intent(applicationContext, this.javaClass), PendingIntent.FLAG_UPDATE_CURRENT)
-            alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, nextSync, pendingIntent)
+            scheduleSync(this)
         }
         unregisterReceiver()
     }
+
+    @Suppress("unused")
+    @Subscribe
+    fun onBgAvailable(glucose: Pair<PersistedRawCgmRecord, PersistedRawCgmRecord>) {
+        info("onBgAvailable($glucose)")
+        val currentBg = glucose.second.glucose
+        val currentTime = glucose.second.time
+         val bundle = Bundle()
+        if (currentBg != null)
+            bundle.putDouble(XdripBroadcast.EXTRA_BG_ESTIMATE, currentBg.toDouble())
+        bundle.putString(XdripBroadcast.EXTRA_BG_SLOPE_NAME, NightscoutSgvJson.directionString(glucose.second.trendArrow))
+        bundle.putLong(XdripBroadcast.EXTRA_TIMESTAMP, currentTime.toDate().time)
+        val intent =  Intent(XdripBroadcast.ACTION_NEW_BG_ESTIMATE);
+        intent.putExtras(bundle);
+        intent.addFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES);
+        sendBroadcast(intent, XdripBroadcast.RECEIVER_PERMISSION);
+    }
+
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         info("onStartCommand() activeCount=${activeCount}")
         info ("Waking at ${Date(System.currentTimeMillis() + 60000 * 5)}")
 
-        val pendingIntent = PendingIntent.getService(applicationContext, 0, Intent(applicationContext, this.javaClass), PendingIntent.FLAG_UPDATE_CURRENT)
-        alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + 60000 * 5, pendingIntent)
+        nextSync = System.currentTimeMillis() + 60000 * 5
+        scheduleSync(this)
         val wakelock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, SyncService::class.java.simpleName)
         wakelock.acquire(1000)
         async() {
@@ -191,6 +226,7 @@ class SyncService : Service(), AnkoLogger {
             if (--activeCount <= 0) {
                 activeCount = 0
                 stopSelf()
+
                 if (isRegistered) {
                     isRegistered = false
                     info("Unregistering Receiver")

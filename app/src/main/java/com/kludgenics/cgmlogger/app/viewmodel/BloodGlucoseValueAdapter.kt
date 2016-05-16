@@ -27,7 +27,7 @@ class BloodGlucoseValueAdapter(val results: RealmResults<PersistedRawCgmRecord>,
 
     override val points: List<ValueAdapter.Point<PersistedRawCgmRecord, Date>?> = {
         var latestMillis = results.first()._date.time
-        results.flatMap {
+        results.filter { it._glucose != null && it._glucose!! >= 39f }.flatMap {
             val list = arrayListOf<ValueAdapter.Point<PersistedRawCgmRecord, Date>?>(ValueAdapter.Point(it, it._date))
             if (it._date.time - latestMillis > (60000 * 6)) {
                 list.add(0, null)

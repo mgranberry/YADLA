@@ -16,9 +16,9 @@ import org.jetbrains.anko.layoutInflater
 /**
  * Created by matthias on 3/22/16.
  */
-class CardAdapter(private val results: RealmResults<out RealmObject>) : AnkoLogger, RecyclerView.Adapter<BindingViewHolder>(), RealmChangeListener{
+class CardAdapter(private val results: RealmResults<RealmStatus>) : AnkoLogger, RecyclerView.Adapter<BindingViewHolder>(), RealmChangeListener<RealmResults<RealmStatus>>{
 
-    val positionMap = hashMapOf<RealmObject, Pair<Int, RealmChangeListener>>()
+    val positionMap = hashMapOf<RealmObject, Pair<Int, RealmChangeListener<RealmObject>>>()
     init {
         results.addChangeListener(this)
         /*
@@ -85,26 +85,12 @@ class CardAdapter(private val results: RealmResults<out RealmObject>) : AnkoLogg
         }
     }
 
-    override fun onChange() {
-        println("results onChange()")
-        /*
-        Use this once Realm supports fine-grained change notifications.
-
-        results.filterNotNull().forEachIndexed { idx, realmObject ->
-            val oldListener = positionMap[realmObject]?.second
-            if (oldListener != null)
-                realmObject.removeChangeListener(oldListener)
-            val newListener = RealmChangeListener { onItemChanged(realmObject) }
-            positionMap[realmObject] = idx to newListener
-            realmObject.addChangeListener (positionMap[realmObject]?.second)
-        } */
+    override fun onChange(realmObject: RealmResults<RealmStatus>) {
         notifyDataSetChanged()
-    }
-
-    fun onItemChanged(realmObject: RealmObject) {
-        println("results object changed: $realmObject")
+        /*println("results object changed: $realmObject")
         val result = positionMap[realmObject]
         if (result != null)
             notifyItemChanged(result.first)
+            */
     }
 }

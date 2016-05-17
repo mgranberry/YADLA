@@ -11,6 +11,7 @@ import com.kludgenics.cgmlogger.extension.transaction
 import com.kludgenics.cgmlogger.extension.where
 import io.realm.Realm
 import io.realm.RealmChangeListener
+import io.realm.RealmObject
 import org.jetbrains.anko.AnkoLogger
 import org.jetbrains.anko.async
 import org.jetbrains.anko.info
@@ -23,7 +24,7 @@ import java.util.concurrent.Future
  * Created by matthias on 3/29/16.
  */
 class NightscoutConfig(val store: SyncStore, val realm: Realm? = null): DataBindingObservable,
-        RealmChangeListener, Closeable, AnkoLogger {
+        RealmChangeListener<Realm>, Closeable, AnkoLogger {
     override var mCallbacks: PropertyChangeRegistry? = null
     private val executor = Executors.newSingleThreadExecutor()
     val url: ObservableString = ObservableString(store.parameters)
@@ -71,7 +72,7 @@ class NightscoutConfig(val store: SyncStore, val realm: Realm? = null): DataBind
         realm?.removeChangeListener(this)
     }
 
-    override fun onChange() {
+    override fun onChange(item: Realm) {
         if (store.isValid) {
             info("forwarding model URL change")
             url.set(store.parameters)

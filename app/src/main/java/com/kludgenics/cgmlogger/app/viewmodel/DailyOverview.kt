@@ -8,10 +8,6 @@ import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.PointF
 import android.graphics.RectF
-import com.github.mikephil.charting.charts.LineChart
-import com.github.mikephil.charting.components.LimitLine
-import com.github.mikephil.charting.components.XAxis
-import com.github.mikephil.charting.data.LineData
 import com.hookedonplay.decoviewlib.DecoView
 import com.hookedonplay.decoviewlib.charts.SeriesItem
 import com.hookedonplay.decoviewlib.events.DecoEvent
@@ -52,7 +48,6 @@ class DailyOverview(val realm: Realm,
         bgResults.addChangeListener {
             notifyPropertyChanged(BR.dataSeries)
             notifyPropertyChanged(BR.currentBg)
-            notifyPropertyChanged(BR.timeline)
         }
     }
 
@@ -86,9 +81,6 @@ class DailyOverview(val realm: Realm,
             }
         }
     }
-
-    @get:Bindable
-    val timeline: Timeline get() = Timeline(realm, DateTime.now(), Period.hours(3))
 
     @get:Bindable
     val dataSeries: List<SeriesItem> get() {
@@ -187,7 +179,7 @@ object BindingConversion : AnkoLogger {
                         val paint = Paint()
                         val dips = view.dip(1.75f).toFloat()
                         paint.strokeWidth = dips
-                        paint.color = view.resources.getColor(R.color.color_primary)
+                        paint.color = view.resources.getColor(R.color.color_primary, null)
                         val line = BasicLine(valueAdapter = adapter, primaryPaint = paint, drawPoints = results.size <= 50)
                         view.setLines(line)
                         info("Done drawing chart")
@@ -201,25 +193,5 @@ object BindingConversion : AnkoLogger {
     fun addSeriesToDecoView(view: DecoView, series: List<SeriesItem>?) {
         info("adding series:$series")
         series?.forEach { view.addSeries(it) }
-    }
-
-    @JvmStatic
-    @BindingAdapter("app:refreshData")
-    fun addDataToLineChart(view: LineChart, data: LineData) {
-        view.data = data
-        if (view.axisLeft.limitLines.size == 0) {
-            val highLimit = LimitLine(180f)
-            val lowLimit = LimitLine(70f)
-            view.axisLeft.addLimitLine(highLimit)
-            view.axisLeft.addLimitLine(lowLimit)
-            view.axisLeft.setAxisMaxValue(400f)
-            view.axisLeft.setAxisMinValue(40f)
-        }
-        view.axisRight.isEnabled = false
-        view.legend.isEnabled = false
-        view.xAxis.position = XAxis.XAxisPosition.BOTTOM_INSIDE
-        view.xAxis.axisLineColor = view.context.resources.getColor(R.color.label_text_dark)
-        view.setTouchEnabled(false)
-        view.invalidate()
     }
 }

@@ -52,14 +52,14 @@ open class RealmStatus(override var modificationTime: Date = Date(),
                        override var clockOffsetMillis: Long? = null) : Status, RealmObject() {
 }
 
-class ObservableStatus(private val s: RealmStatus) : DataBindingObservable, Status, RealmChangeListener {
+class ObservableStatus(private val s: RealmStatus) : DataBindingObservable, Status, RealmChangeListener<RealmStatus> {
 
     init {
         if (s.isValid)
             s.addChangeListener(this)
     }
 
-    override fun onChange() {
+    override fun onChange(item: RealmStatus) {
         notifyChange()
     }
 

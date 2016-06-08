@@ -9,23 +9,18 @@ import android.view.Menu
 import android.view.MenuItem
 import com.kludgenics.cgmlogger.app.adapter.CardAdapter
 import com.kludgenics.cgmlogger.app.databinding.ActivityMainBinding
-import com.kludgenics.cgmlogger.app.databinding.DialogConfigureNightscoutBinding
-import com.kludgenics.cgmlogger.app.model.PersistedRawCgmRecord
-import com.kludgenics.cgmlogger.app.model.SyncStore
 import com.kludgenics.cgmlogger.app.service.SyncService
-import com.kludgenics.cgmlogger.app.viewmodel.*
+import com.kludgenics.cgmlogger.app.viewmodel.DailyOverview
+import com.kludgenics.cgmlogger.app.viewmodel.RealmStatus
 import com.kludgenics.cgmlogger.extension.where
-import com.squareup.otto.Subscribe
 import io.realm.Realm
 import io.realm.Sort
 import org.jetbrains.anko.AnkoLogger
-import org.jetbrains.anko.alert
 import org.jetbrains.anko.info
-import org.jetbrains.anko.onUiThread
+import org.jetbrains.anko.*
 import org.joda.time.DateTime
 import org.joda.time.Duration
 import org.joda.time.Period
-import java.util.*
 
 class MainActivity :  BaseActivity(), AnkoLogger {
 
@@ -34,18 +29,18 @@ class MainActivity :  BaseActivity(), AnkoLogger {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val binding: ActivityMainBinding = DataBindingUtil.setContentView(this, R.layout.activity_main)
-        toolbarLayout = binding.includedListViewpager.collapsingToolbar
-        setSupportActionBar(binding.includedListViewpager.toolbar)
+        toolbarLayout = binding.collapsingToolbar
+        setSupportActionBar(binding.toolbar)
         binding.overview=DailyOverview(realm, DateTime().withTimeAtStartOfDay().plusDays(1), listOf(1,7,28).map { Period.days(it) }, 70, 180)
         val start = DateTime()
         // TODO this is a query on the UI thread.  It would be nice if it could be done async, but the async versions of queries don't play well with
-        binding.includedListViewpager.recycler.adapter = CardAdapter(
+        binding.recycler.adapter = CardAdapter(
                 realm.where<RealmStatus>()
                         .findAllSorted("modificationTime", Sort.DESCENDING)
                         .distinct("serialNumber"))
         val end = DateTime()
         info("Sync status query took ${Duration(start, end)} to complete.")
-        binding.includedListViewpager.recycler.layoutManager = LinearLayoutManager(this)
+        binding.recycler.layoutManager = LinearLayoutManager(this)
     }
 
     override fun onDestroy() {
@@ -81,6 +76,8 @@ class MainActivity :  BaseActivity(), AnkoLogger {
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
+            startActivity<SettingsActivity>()
+            /*
             alert {
                 title("Nightscout URL")
                 message("Set this to your Nightscout's address.")
@@ -91,7 +88,7 @@ class MainActivity :  BaseActivity(), AnkoLogger {
                     this.cancel()
                 }
                 positiveButton("SAVE", { binding.config.onSave() })
-            }.show()
+            }.show() */
         }
 
         return super.onOptionsItemSelected(item)

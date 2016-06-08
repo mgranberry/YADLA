@@ -22,4 +22,7 @@
         <item name="android:statusBarColor">@android:color/transparent</item>
     </style>
 
+    <style name="Unlogger.CardView" parent="CardView">
+        <item name="android:layout_margin">8dp</item>
+    </style>
 </resources>

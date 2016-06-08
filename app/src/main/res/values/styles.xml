@@ -13,6 +13,11 @@
         <item name="android:alertDialogTheme">@style/Theme.Unlogger.Dialog</item>
     </style>
 
+    <style name="Theme.Unlogger.ActionBar" parent="Theme.Unlogger">
+        <item name="windowActionBar">true</item>
+        <item name="windowNoTitle">false</item>
+    </style>
+
     <style name="Theme.Unlogger.Dialog" parent="Theme.AppCompat.Light.Dialog.Alert">
         <item name="android:windowSoftInputMode">stateHidden|adjustResize</item>
         <item name="android:windowBackground">@color/window_background</item>
@@ -38,4 +43,7 @@
         <item name="android:backgroundDimEnabled">false</item>
     </style>
 
+    <style name="Unlogger.CardView" parent="CardView">
+        <item name="android:layout_margin">0dp</item>
+    </style>
 </resources>

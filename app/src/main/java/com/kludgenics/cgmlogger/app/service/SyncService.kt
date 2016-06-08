@@ -9,6 +9,7 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.hardware.usb.UsbDevice
 import android.hardware.usb.UsbManager
+import android.os.Build
 import android.os.Bundle
 import android.os.IBinder
 import android.os.PowerManager
@@ -48,7 +49,11 @@ class SyncService : Service(), AnkoLogger {
             info ("Waking at ${Date(nextSync)}")
 
             val pendingIntent = PendingIntent.getService(context.applicationContext, 0, Intent(context.applicationContext, SyncService::class.java), PendingIntent.FLAG_UPDATE_CURRENT)
-            context.alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, nextSync, pendingIntent)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                context.alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, nextSync, pendingIntent)
+            } else {
+                context.alarmManager.setExact(AlarmManager.RTC_WAKEUP, nextSync, pendingIntent)
+            }
         }
     }
 
